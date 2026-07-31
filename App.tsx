@@ -13,6 +13,9 @@ import SearchScreen from './src/screens/SearchScreen';
 import AiSearchScreen from './src/screens/AiSearchScreen';
 import FilterScreen from './src/screens/FilterScreen';
 import AddPropertyScreen from './src/screens/AddPropertyScreen';
+import ProjectListScreen from './src/screens/ProjectListScreen';
+import ProjectDetailsScreen from './src/screens/ProjectDetailsScreen';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -85,7 +88,6 @@ function App() {
             component={EnquiryScreen}
         />
 
-
         <Stack.Screen
             name="AiSearchScreen"
             component={AiSearchScreen}
@@ -95,12 +97,21 @@ function App() {
             name="FilterScreen"
             component={FilterScreen}
         />
+
         <Stack.Screen
              name="AddPropertyScreen"
              component={AddPropertyScreen}
-             />
+        />
 
-</Stack.Navigator>
+        <Stack.Screen  name="ProjectList" component={ProjectListScreen} />
+
+        <Stack.Screen name="ProjectDetails" component={ProjectDetailsScreen}
+            options={{
+                headerShown:false,
+            }}
+        />
+
+        </Stack.Navigator>
 
     </NavigationContainer>
   );

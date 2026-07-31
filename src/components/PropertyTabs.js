@@ -4,49 +4,74 @@ import {View, Text, StyleSheet, TouchableOpacity, ScrollView} from 'react-native
 const PropertyTabs = ({
   selectedProperty,
   onTabChange,
+  navigation,
+  setShowProjects,
+
 }) => {
   const [selectedType, setSelectedType] = useState('Buy');
 
-  const tabs =
-    selectedType === 'Buy'
-      ? ['3 BHK', '2 BHK', '1 BHK', 'Villa', 'Plots', 'Shop']
-      : ['Flat', 'House', 'Boys PG', 'Girls PG', 'Shop', 'Marriage Garden'];
+let tabs = [];
+
+if (selectedType === 'Buy') {
+  tabs = [
+    '3 BHK',
+    '2 BHK',
+    '1 BHK',
+    'Villa',
+    'Plots',
+    'Shop',
+    'Farm House'
+  ];
+} else if (selectedType === 'Rent') {
+  tabs = [
+    'Flat',
+    'House',
+    'Boys PG',
+    'Girls PG',
+    'Office',
+    'Shop',
+    'Showroom',
+    'Warehouse'
+  ];
+} else if (selectedType === 'Projects') {
+  tabs = [
+    'Ready to Move',
+    'New Launch',
+    'Under Construction',
+  ];
+}
 
   return (
     <View style={styles.wrapper}>
 
       {/* BUY / RENT SWITCH */}
-      <View style={styles.switchRow}>
-        <TouchableOpacity
-          style={[
-            styles.switchBtn,
-            selectedType === 'Buy' && styles.activeSwitch,
-          ]}
-          onPress={() => setSelectedType('Buy')}>
-          <Text
-            style={[
-              styles.switchText,
-              selectedType === 'Buy' && styles.activeText,
-            ]}>
-            Buy 1
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.switchBtn,
-            selectedType === 'Rent' && styles.activeSwitch,
-          ]}
-          onPress={() => setSelectedType('Rent')}>
-          <Text
-            style={[
-              styles.switchText,
-              selectedType === 'Rent' && styles.activeText,
-            ]}>
-            Rent
-          </Text>
-        </TouchableOpacity>
-      </View>
+     
+     <View style={styles.switchRow}>
+  {['Buy', 'Rent', 'Projects'].map(type => (
+    <TouchableOpacity
+      key={type}
+      style={[
+        styles.switchBtn,
+        selectedType === type && styles.activeSwitch,
+      ]}
+      onPress={() => 
+      {      
+            if (type === 'Projects') {
+                setShowProjects(true);
+                return;
+            }
+            setSelectedType(type);
+      }}>
+      <Text
+        style={[
+          styles.switchText,
+          selectedType === type && styles.activeText,
+        ]}>
+        {type}
+      </Text>
+    </TouchableOpacity>
+  ))}
+</View>
 
       {/* FOOTER STYLE STRIP */}
       <View style={styles.footerStrip}>
@@ -57,20 +82,36 @@ const PropertyTabs = ({
             <TouchableOpacity
               key={item}
               style={styles.item}
-              onPress={() => onTabChange(item)}
-            >
+              onPress={() => {
+                alert(item);
+                onTabChange(item);
+              }}>
 
               {/* ICON */}
-              <Text style={styles.icon}>
-                {item === '3 BHK' ? '🏠' :
-                 item === '2 BHK' ? '🏡' :
-                 item === '1 BHK' ? '🏘️' :
-                 item === 'House' ? '🏠' :
-                 item === 'Plots' ? '📍' :
-                 item === 'Shop' ? '🏪' :
-                 item === 'Boys PG' ? '👨‍🎓' :
-                 item === 'Girls PG' ? '👩‍🎓' :
-                 item === 'Marriage Garden' ? '💒' : '🏢'}
+            <Text style={styles.icon}>
+              {
+                    item === '3 BHK' ? '🏠' :
+                    item === '2 BHK' ? '🏡' :
+                    item === '1 BHK' ? '🏘️' :
+                    item === 'Villa' ? '🏡' :
+                    item === 'House' ? '🏠' :
+                    item === 'Plots' ? '📍' :
+                    item === 'Farm House' ? '🌳' :
+                    item === 'Penthouse' ? '🏙️' :
+                    item === 'Studio Apartment' ? '🛋️' :
+                    item === 'Flat' ? '🏢' :
+                    item === 'Boys PG' ? '👨‍🎓' :
+                    item === 'Girls PG' ? '👩‍🎓' :
+                    item === 'Office' ? '💼' :
+                    item === 'Shop' ? '🏪' :
+                    item === 'Showroom' ? '🏬' :
+                    item === 'Warehouse' ? '📦' :
+                    item === 'Co-working' ? '💻' :
+                    item === 'Ready to Move' ? '🏠' :
+                    item === 'New Launch' ? '🚀' :
+                    item === 'Under Construction' ? '🏗️' :
+                    '🏢'
+                }
               </Text>
 
               {/* LABEL */}

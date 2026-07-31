@@ -10,13 +10,18 @@ import {
   Linking,
   Alert,
 } from 'react-native';
- import Share from 'react-native-share';  
+import Share from 'react-native-share';  
+import LoginPopup from '../screens/LoginPopup';
 import {getProperties} from '../services/PropertyApi';
 import ImageRotator from '../components/ImageRotator';
 import PropImageRotator from '../components/PropImgRotator';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import PropertyTabs from '../components/PropertyTabs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { formatPrice } from '../helpers/priceHelper';
+import ProjectPopup from '../components/ProjectListing/ProjectPopup';
+
+
 
 const API_URL111 = 'http://192.168.1.6:7045/api/property';
 const API_URL = 'https://savariyaproperty.in';
@@ -35,6 +40,26 @@ const [favorites, setFavorites] = useState([]);
 const lastOffset = useRef(0);
 const [wishlist, setWishlist] = useState([]);
 const [likedItems, setLikedItems] = useState([]);
+const [showPopup, setShowPopup] = useState(false);
+const [pendingAction, setPendingAction] = useState(null);
+const [showProjects,setShowProjects]=useState(false);
+
+const checkLogin = async (action) => {
+  try {
+     const token = await AsyncStorage.getItem("userToken");
+     const loginStatus = await AsyncStorage.getItem('userLogin');
+     const mobile = await AsyncStorage.getItem('userMobile');
+
+    if (loginStatus) {
+      action();
+    } else {
+      setPendingAction(() => action);
+      setShowPopup(true);
+    }
+  } catch (e) {
+    console.log(e);
+  }
+};
 
 const loadWishlist = async () => {
   const data = await AsyncStorage.getItem('wishlist');
@@ -113,7 +138,7 @@ const loadProperties = async () => {
 
 <View style={styles.priceRow}>
   <Text style={styles.price}>
-    ₹ {Number(item.price).toLocaleString('en-IN')}
+    ₹ {formatPrice(item.price)}
   </Text>
 
   <View style={styles.iconContainer}>
@@ -132,7 +157,8 @@ const loadProperties = async () => {
     
 
     <TouchableOpacity
-      onPress={() => openWhatsApp(item)}>
+    onPress={() =>
+  checkLogin(() => openWhatsApp(item))}>
       <Icon
         name="whatsapp"
         size={25}
@@ -141,7 +167,8 @@ const loadProperties = async () => {
     </TouchableOpacity>
 
     <TouchableOpacity
-      onPress={() => shareProperty(item)}
+    onPress={() =>
+  checkLogin(() => shareProperty(item))}
       style={{marginLeft: 10}}>
       <Icon
         name="share-alt"
@@ -151,7 +178,9 @@ const loadProperties = async () => {
     </TouchableOpacity>
    
 <TouchableOpacity
-  onPress={() => addToWishlist(item)}
+  onPress={() =>
+  checkLogin(() => addToWishlist(item))
+}
   style={{marginLeft: 15}}>
 
   <Icon
@@ -214,30 +243,33 @@ const loadProperties = async () => {
 
         <View style={styles.buttonRow}>
           <TouchableOpacity style={styles.contactBtn}
-            onPress={() => navigation.navigate('ContactOwner')}>
+            onPress={() => checkLogin(() =>  navigation.navigate('ContactOwner'))}>
             <Text style={styles.contactBtnText}>
               Contact Owner
             </Text>
           </TouchableOpacity>
-         <TouchableOpacity style={styles.detailsBtn} onPress={() =>
-                  navigation.navigate('PropertyDetails', {
-                    property: item,
-                    id: item.id,
-                  })
-                }>
+
+         <TouchableOpacity
+            style={styles.detailsBtn}
+            onPress={() =>
+              checkLogin(() =>
+                navigation.navigate('PropertyDetails', {
+                  property: item,
+                  id: item.id,
+                })
+              )
+            }>
             <Text style={styles.detailsBtnText}>
               View Details
             </Text>
           </TouchableOpacity>
-   
- <TouchableOpacity
-  style={styles.enquiryBtn}
-  onPress={() => navigation.navigate('EnquiryScreen')}>
-  <Text style={styles.enquiryBtnText}>
-    Enquiry
-  </Text>
-</TouchableOpacity> 
-
+          <TouchableOpacity
+              style={styles.enquiryBtn}
+              onPress={() => navigation.navigate('EnquiryScreen')}>
+              <Text style={styles.enquiryBtnText}>
+                Enquiry
+              </Text>
+            </TouchableOpacity> 
         </View>
       </View>
     </TouchableOpacity>
@@ -406,17 +438,38 @@ const openWhatsApp1 = () => {
           <ImageRotator />
 
              {showTopFilters && (
-              <PropertyTabs
-      selectedProperty={selectedProperty}
-      onTabChange={setSelectedProperty}
-      showTopFilters={showTopFilters}
-      
-            />
+                <PropertyTabs
+                      navigation={navigation}
+                      selectedProperty={selectedProperty}
+                      onTabChange={setSelectedProperty}
+                      showTopFilters={showTopFilters}
+                      setShowProjects={setShowProjects}
+                  />
           )}
- 
           </>
         }
       />
+
+      <ProjectPopup
+      visible={showProjects}
+      navigation={navigation}
+      onClose={() => setShowProjects(false)}
+    />
+
+
+  <LoginPopup
+  visible={showPopup}
+  onClose={() => setShowPopup(false)}
+  onGuest={() => setShowPopup(false)}
+  onLogin={() => {
+    setShowPopup(false);
+    navigation.navigate("Login");
+  }}
+  onRegister={() => {
+    setShowPopup(false);
+    navigation.navigate("Register");
+  }}
+/>
     </View>
   );
 };

@@ -30,54 +30,77 @@ function LoginScreen({navigation}) {
 
   // ================= LOGIN =================
 
-  const handleLogin = async () => {
+ const handleLogin = async () => {
 
-    const savedMobile =
-      await AsyncStorage.getItem('userMobile');
+  if (mobile === '') {
+    Alert.alert('Error', 'Please enter mobile number');
+    return;
+  }
 
-    const savedPassword =
-      await AsyncStorage.getItem('userPassword');
+  if (mobile.length !== 10) {
+    Alert.alert('Error', 'Please enter valid mobile number');
+    return;
+  }
 
-    const savedName =
-      await AsyncStorage.getItem('userName');
+  if (password === '') {
+    Alert.alert('Error', 'Please enter password');
+    return;
+  }
 
-    // VALIDATION
+  try {
 
-    if (mobile === '') {
-      Alert.alert('Error', 'Please enter mobile number');
-      return;
+    const response = await fetch(
+      'https://savariyaproperty.in/api/Login',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type':'application/json',
+        },
+        body: JSON.stringify({
+          mobile,
+          password,
+        }),
+      },
+    );
+
+    const result = await response.json();
+
+    if(response.ok && result.success){
+
+      await AsyncStorage.setItem('userLogin','true');
+      await AsyncStorage.setItem('userId',result.userId.toString());
+      await AsyncStorage.setItem('userName',result.name);
+      await AsyncStorage.setItem('userMobile',result.mobile);
+      await AsyncStorage.setItem('userEmail',result.email);
+
+      Alert.alert(
+        'Success',
+        result.message,
+        [
+          {
+            text:'OK',
+            onPress:()=>navigation.replace('Home'),
+          },
+        ],
+      );
+
+    }else{
+
+      Alert.alert('Error',result.message);
+
     }
 
-    if (mobile.length !== 10) {
-      Alert.alert('Error', 'Please enter valid 10 digit mobile number');
-      return;
-    }
+  }catch(error){
 
-    if (password === '') {
-      Alert.alert('Error', 'Please enter password');
-      return;
-    }
+    console.log(error);
 
-    // CHECK LOGIN
+    Alert.alert(
+      'Error',
+      'Unable to connect server.'
+    );
 
-    if (
-      mobile !== savedMobile ||
-      password !== savedPassword
-    ) {
-      Alert.alert('Error', 'Invalid Mobile Number or Password');
-      return;
-    }
-
-    // SAVE LOGIN SESSION
-    await AsyncStorage.setItem('userLogin', 'true');
-
-    // 🔥 THIS IS MISSING (IMPORTANT FIX)
-    await AsyncStorage.setItem('registeredName', savedName || 'User');
-
-    Alert.alert('Success', 'Login Successful');
-
-    navigation.replace('Home');
-  };
+  }
+};
 
 return (
   <SafeAreaView style={styles.safeContainer} >

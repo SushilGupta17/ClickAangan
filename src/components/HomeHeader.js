@@ -11,7 +11,7 @@ import {
 
 import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Menu from './Menu'; // apne path ke hisab se
+//import Menu from '../components/Menu'; // apne path ke hisab se
 import {useFocusEffect} from '@react-navigation/native';
 import {useCallback} from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome5';

@@ -39,19 +39,18 @@ import Footer from '../components/Footer';
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    // ================= REGISTER =================
+  // ================= REGISTER =================
 
-    const handleRegister = async () => {
-
-      // NAME VALIDATION
-
+    
+  const handleRegister = async () => {
+  
+  // ================= VALIDATIONS =================
+    // NAME VALIDATION
       if (name === '') {
-
         Alert.alert(
           'Error',
           'Please enter name',
         );
-
         return;
       }
 
@@ -65,104 +64,103 @@ import Footer from '../components/Footer';
     Alert.alert('Error', 'Mobile number must be 10 digits');
     return;
   }
-
-
-
-      // EMAIL VALIDATION
-
-  
+ // EMAIL VALIDATION
   if (email != '')
   {
       if (!email.includes('@')) {
 
         Alert.alert(
           'Error',
-          'Please enter valid email',
+          'Please enter valid email', 
         );
-
         return;
       }
     }
 
-      // PASSWORD VALIDATION
-
+ // PASSWORD VALIDATION
       if (password === '') {
-
         Alert.alert(
           'Error',
           'Please enter password',
         );
-
         return;
       }
 
       if (password.length < 6) {
-
         Alert.alert(
           'Error',
           'Password must be minimum 6 characters',
         );
-
         return;
       }
 
       // CONFIRM PASSWORD
-
       if (confirmPassword === '') {
-
         Alert.alert(
           'Error',
           'Please confirm password',
         );
-
         return;
       }
 
       if (password !== confirmPassword) {
-
         Alert.alert(
           'Error',
           'Passwords do not match',
         );
-
         return;
       }
 
-      // SAVE DATA
 
-      await AsyncStorage.setItem(
-        'userName',
-        mobile,
-      );
 
+  try {
+    const response = await fetch(
+      'https://savariyaproperty.in/api/Register',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: name,
+          mobile: mobile,
+          email: email,
+          password: password,
+        }),
+      },
+    );
+
+    const result = await response.json();
+
+    if (response.ok && result.success) {
+      // Login Session
+      await AsyncStorage.setItem('userLogin', 'true');
+      await AsyncStorage.setItem('userId', result.userId.toString());
+      await AsyncStorage.setItem('userName', name);
+     // await AsyncStorage.setItem('userName', name);
       await AsyncStorage.setItem('userMobile', mobile);
-
-      await AsyncStorage.setItem(
-        'userEmail',
-        email,
-      );
-
-      await AsyncStorage.setItem(
-        'userPassword',
-        password,
-      );
-
+      await AsyncStorage.setItem('userEmail', email);
       // SAVE LOGIN SESSION
-
-      await AsyncStorage.setItem(
-        'userLogin',
-        'true',
-      );
-
+      //Alert.alert('Success', result.message);
       Alert.alert(
         'Success',
         'Registration Successful',
       );
 
-      // GO TO HOME PAGE
-
       navigation.replace('Home');
-
+    } else {
+      Alert.alert('Error', result.message);
+    }
+  } catch (error) {
+    console.log(error);
+    Alert.alert('Error', 'Server connection failed');
+  }
+      Alert.alert(
+        'Success',
+        'Registration Successful',
+      );
+      // GO TO HOME PAGE
+      navigation.replace('Home');
     };
      return (
   <SafeAreaView style={styles.safeContainer} >

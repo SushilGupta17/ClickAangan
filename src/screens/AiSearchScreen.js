@@ -19,6 +19,7 @@ import Footer from '../components/Footer';
 
 
 const AiSearchScreen = ({navigation}) => {
+  
   const flatListRef = useRef(null);
 
   const [query, setQuery] = useState('');

@@ -1,19 +1,19 @@
-import React, {useState} from 'react';
-
 import {
   StyleSheet,
   TouchableOpacity,
   Text,
 } from 'react-native';
+import React, {useState, useEffect} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import HomeHeader from '../components/HomeHeader';
 import Footer from '../components/Footer';
 import PropertyListScreen from '../screens/PropertyListScreen';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { addWhitelistedNativeProps } from 'react-native-reanimated/lib/typescript/ConfigHelper';
+import LoginPopup from '../screens/LoginPopup';
 
 function HomeScreen({navigation}) {
-
+const [showPopup, setShowPopup] = useState(false);
 const [showTopFilters, setShowTopFilters] = useState(true);
 const [lastOffset, setLastOffset] = useState(0);
 const [selectedType, setSelectedType] =
@@ -21,22 +21,48 @@ const [selectedType, setSelectedType] =
 
 const [selectedProperty, setSelectedProperty] =
   useState('3 BHK');
-
   
+  useEffect(() => {
+  checkUserLogin();
+}, []);
+
+const checkUserLogin = async () => {
+  try {
+    const loginStatus = await AsyncStorage.getItem('userLogin');
+
+    if (loginStatus !== 'true') {
+      setShowPopup(true);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const checkLoginAndProceed = async (callback) => {
+  try {
+    const loginStatus = await AsyncStorage.getItem('userLogin');
+
+    if (loginStatus === 'true') {
+      setShowPopup(false);
+      callback();
+    } else {
+      setShowPopup(true);
+    }
+  } catch (e) {
+    console.log(e);
+  }
+};
 
   return (
-    
     <SafeAreaView style={styles.container} edges={['top']}>
-
     <HomeHeader />
-   
   {/* <PropertyTabs
       selectedProperty={selectedProperty}
       onTabChange={setSelectedProperty}
       showTopFilters={showTopFilters}
   /> */}
  
-     <PropertyListScreen
+<PropertyListScreen
   navigation={navigation}
   selectedProperty={selectedProperty}
   setShowTopFilters={setShowTopFilters}
@@ -45,8 +71,12 @@ const [selectedProperty, setSelectedProperty] =
 <TouchableOpacity
   style={styles.floatingAddProperty}
   activeOpacity={0.8}
-  onPress={() => navigation.navigate('AddPropertyScreen')}
->
+  onPress={() =>
+    checkLoginAndProceed(() => {
+      navigation.navigate('AddPropertyScreen');
+    })
+  }>
+
  <Text style={styles.floatingText}>
   Post Property{" "}
   <Text style={styles.freeText}>FREE</Text>
@@ -56,14 +86,29 @@ const [selectedProperty, setSelectedProperty] =
 <TouchableOpacity
   style={styles.floatingAiSearch}
   activeOpacity={0.8}
-  onPress={() => navigation.navigate('AiSearchScreen')}>
+  onPress={() =>
+    checkLoginAndProceed(() => {
+      navigation.navigate('AiSearchScreen');
+    })
+  }>
   <Text style={styles.floatingAiText}>
   AI Search
   </Text>
 </TouchableOpacity>
-
+ <LoginPopup
+        visible={showPopup}
+        onClose={() => setShowPopup(false)}
+        onGuest={() => setShowPopup(false)}
+        onLogin={() => {
+          setShowPopup(false);
+          navigation.navigate('Login');
+        }}
+        onRegister={() => {
+          setShowPopup(false);
+          navigation.navigate('Register');
+        }}
+      />
       <Footer />
-
     </SafeAreaView>
   );
 }
