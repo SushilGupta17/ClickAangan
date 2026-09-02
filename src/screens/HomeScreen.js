@@ -2,7 +2,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   Text,
+  Animated,
+  PanResponder,
 } from 'react-native';
+
 import React, {useState, useEffect} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -11,6 +14,7 @@ import Footer from '../components/Footer';
 import PropertyListScreen from '../screens/PropertyListScreen';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LoginPopup from '../screens/LoginPopup';
+import RentalListScreen from '../screens/RentalListScreen';
 
 function HomeScreen({navigation}) {
 const [showPopup, setShowPopup] = useState(false);
@@ -56,11 +60,6 @@ const checkLoginAndProceed = async (callback) => {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
     <HomeHeader />
-  {/* <PropertyTabs
-      selectedProperty={selectedProperty}
-      onTabChange={setSelectedProperty}
-      showTopFilters={showTopFilters}
-  /> */}
  
 <PropertyListScreen
   navigation={navigation}
@@ -83,7 +82,7 @@ const checkLoginAndProceed = async (callback) => {
 </Text>
 </TouchableOpacity>
 
-<TouchableOpacity
+{/* <TouchableOpacity
   style={styles.floatingAiSearch}
   activeOpacity={0.8}
   onPress={() =>
@@ -94,7 +93,7 @@ const checkLoginAndProceed = async (callback) => {
   <Text style={styles.floatingAiText}>
   AI Search
   </Text>
-</TouchableOpacity>
+</TouchableOpacity> */}
  <LoginPopup
         visible={showPopup}
         onClose={() => setShowPopup(false)}

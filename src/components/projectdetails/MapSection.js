@@ -76,7 +76,7 @@ borderRadius:15
 
 heading:{
 fontWeight:'700',
-fontSize:20,
+fontSize:16,
 marginBottom:15
 },
 

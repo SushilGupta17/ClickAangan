@@ -24,7 +24,7 @@ const renderItem=({item})=>(
 
 name="check-decagram"
 
-size={32}
+size={18}
 
 color="#2E7D32"
 
@@ -47,12 +47,11 @@ return(
 <Text style={styles.heading}>
 
 Amenities
-
 </Text>
 
 <FlatList
 
-numColumns={3}
+numColumns={4}
 
 scrollEnabled={false}
 
@@ -82,19 +81,23 @@ borderRadius:15
 
 heading:{
 fontWeight:'700',
-fontSize:20,
+fontSize:16,
 marginBottom:15
 },
 
-item:{
-flex:1,
-alignItems:'center',
-marginBottom:20
+item: {
+  flex: 1,
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginBottom: 15,
+  paddingHorizontal: 2,
 },
 
-text:{
-marginTop:8,
-textAlign:'center'
-}
+text: {
+  marginTop: 5,
+  textAlign: 'center',
+  fontSize: 10,   // Ya 10 kar sakte ho
+  color: '#444',
+},
 
 });

@@ -1,12 +1,13 @@
 import axios from 'axios';
 import {API_BASE_URL} from '../config';
 
-const API_URL = 'http://192.168.1.3:7045/api/project';
+const API_URL2 = 'http://192.168.1.3:7045/api/project';
+const API_URL = 'https://savariyaproperty.in/api/project';
 
 export const addProject = async (formData) => {
   
   const response = await axios.post(
-    'https://savariyaproperty.in/api/project',
+    API_URL,
     formData,
     {
       headers: {
@@ -17,8 +18,6 @@ export const addProject = async (formData) => {
 
   return response.data;
 };
-
-
 
 export const getProjects = async () => {
   try {

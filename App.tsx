@@ -14,13 +14,17 @@ import AiSearchScreen from './src/screens/AiSearchScreen';
 import FilterScreen from './src/screens/FilterScreen';
 import AddPropertyScreen from './src/screens/AddPropertyScreen';
 import ProjectListScreen from './src/screens/ProjectListScreen';
+import RentalListScreen from './src/screens/RentalListScreen';
+import RentHomeScreen from './src/screens/RentHomeScreen';
 import ProjectDetailsScreen from './src/screens/ProjectDetailsScreen';
-
+import RoleBasedRegistrationScreen from './src/screens/RoleBasedRegistrationScreen'
+import OTPScreen  from './src/screens/OTPScreen'
 
 const Stack = createNativeStackNavigator();
 
 const linking = {
   prefixes: ['propertyapp://'],
+  
   config: {
     screens: {
       PropertyDetails: 'property/:id',
@@ -53,9 +57,22 @@ function App() {
           component={HomeScreen}
         />
 
+ <Stack.Screen
+          name="RentHome"
+          component={RentHomeScreen}
+        />
+
+<Stack.Screen
+  name="RoleBasedRegistration"
+  component={RoleBasedRegistrationScreen}
+/>
         <Stack.Screen
           name="Login"
           component={LoginScreen}
+        />
+        <Stack.Screen
+          name="OTP"
+          component={OTPScreen}
         />
 
         <Stack.Screen
@@ -104,6 +121,8 @@ function App() {
         />
 
         <Stack.Screen  name="ProjectList" component={ProjectListScreen} />
+        
+        <Stack.Screen  name="RentalList" component={RentalListScreen} />
 
         <Stack.Screen name="ProjectDetails" component={ProjectDetailsScreen}
             options={{

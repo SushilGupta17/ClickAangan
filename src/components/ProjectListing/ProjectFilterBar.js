@@ -65,7 +65,6 @@ const ProjectFilterBar = ({
               }
               style={[
                 styles.chip,
-
                 selected && styles.selectedChip,
               ]}>
 
@@ -74,7 +73,7 @@ const ProjectFilterBar = ({
                 size={13}
                 color={
                   selected
-                    ? '#FFF'
+                    ? '#1959A2'
                     : '#1959A2'
                 }
               />
@@ -111,7 +110,7 @@ const styles = StyleSheet.create({
 
   container: {
 
-    paddingVertical: 12,
+    paddingVertical: 8,
 
     backgroundColor: '#F5F7FA',
 
@@ -127,11 +126,11 @@ const styles = StyleSheet.create({
 
     marginLeft: 12,
 
-    paddingHorizontal: 18,
+    paddingHorizontal: 24,
 
-    paddingVertical: 11,
+    paddingVertical: 5,
 
-    borderRadius: 24,
+    borderRadius: 18,
 
     borderWidth: 1,
 
@@ -143,8 +142,6 @@ const styles = StyleSheet.create({
 
   selectedChip: {
 
-    backgroundColor: '#1959A2',
-
     borderColor: '#1959A2',
 
   },
@@ -155,7 +152,7 @@ const styles = StyleSheet.create({
 
     fontWeight: '600',
 
-    color: '#1959A2',
+    color: '#1c1f22',
 
     fontSize: 13,
 
@@ -163,7 +160,7 @@ const styles = StyleSheet.create({
 
   selectedText: {
 
-    color: '#FFF',
+    color: '#1c1f22',
 
   },
 

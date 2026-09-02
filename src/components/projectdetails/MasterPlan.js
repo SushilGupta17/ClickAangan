@@ -9,6 +9,10 @@ StyleSheet
 
 } from 'react-native';
 
+const API_URL = 'https://savariyaproperty.in/';
+const API_URL1 = 'http://192.168.1.3:7045';
+
+
 const MasterPlan=({image})=>{
 
 if(!image){
@@ -28,13 +32,9 @@ Master Plan
 </Text>
 
 <Image
-
-source={{uri:image}}
-
-style={styles.image}
-
-resizeMode="cover"
-
+  source={{ uri: `${API_URL}${image}` }}
+  style={styles.image}
+  resizeMode="cover"
 />
 
 </View>
@@ -49,15 +49,15 @@ const styles=StyleSheet.create({
 
 card:{
 backgroundColor:'#fff',
-margin:15,
-padding:18,
-borderRadius:15
+margin:12,
+padding:7,
+borderRadius:8
 },
 
 heading:{
 fontWeight:'700',
-fontSize:20,
-marginBottom:15
+fontSize:16,
+marginBottom:14
 },
 
 image:{

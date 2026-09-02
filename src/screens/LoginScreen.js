@@ -47,59 +47,62 @@ function LoginScreen({navigation}) {
     return;
   }
 
-  try {
-
-    const response = await fetch(
-      'https://savariyaproperty.in/api/Login',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type':'application/json',
-        },
-        body: JSON.stringify({
-          mobile,
-          password,
-        }),
+try {
+  const response = await fetch(
+    'https://savariyaproperty.in/api/Login',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        mobile,
+        password,
+      }),
+    },
+  );
+
+  const result = await response.json();
+  console.log('LOGIN RESPONSE:', result);
+  if (
+    response.ok &&
+    result.success === true &&
+    result.statusCode === 1 &&
+    result.data
+  ) {
+    const user = result.data;
+
+    await AsyncStorage.setItem('userLogin', 'true');
+    await AsyncStorage.setItem('userId', user.id.toString());
+    await AsyncStorage.setItem('userName', user.name || '');
+    await AsyncStorage.setItem('userMobile', user.mobile || '');
+    await AsyncStorage.setItem('userEmail', user.email || '');
+    await AsyncStorage.setItem('userRole', 'Builder');
+ 
+    Alert.alert(
+      'Success',
+      result.message || 'Login Successful-1',
+      [
+        {
+          text: 'OK',
+          onPress: () => navigation.replace('Home'),
+        },
+      ],
     );
-
-    const result = await response.json();
-
-    if(response.ok && result.success){
-
-      await AsyncStorage.setItem('userLogin','true');
-      await AsyncStorage.setItem('userId',result.userId.toString());
-      await AsyncStorage.setItem('userName',result.name);
-      await AsyncStorage.setItem('userMobile',result.mobile);
-      await AsyncStorage.setItem('userEmail',result.email);
-
-      Alert.alert(
-        'Success',
-        result.message,
-        [
-          {
-            text:'OK',
-            onPress:()=>navigation.replace('Home'),
-          },
-        ],
-      );
-
-    }else{
-
-      Alert.alert('Error',result.message);
-
-    }
-
-  }catch(error){
-
-    console.log(error);
-
+  } else {
     Alert.alert(
       'Error',
-      'Unable to connect server.'
+      result.message || 'Invalid Mobile Number or Password',
     );
-
   }
+} catch (error) {
+  console.log('LOGIN ERROR:', error);
+
+  Alert.alert(
+    'Error',
+    'Unable to connect server.',
+  );
+}
 };
 
 return (

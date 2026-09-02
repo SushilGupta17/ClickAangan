@@ -24,10 +24,8 @@ const renderItem=({item})=>(
 
 </Text>
 
-<Text>
-
-{item.area} Sq.Ft.
-
+<Text style={styles.area}>
+  {item.area} Sq.Ft.
 </Text>
 
 <Text style={styles.price}>
@@ -82,27 +80,34 @@ borderRadius:15
 
 heading:{
 fontWeight:'700',
-fontSize:20,
-marginBottom:15
+fontSize:16,
+marginBottom:7
 },
 
 box:{
 width:150,
 backgroundColor:'#F7F7F7',
-padding:15,
-borderRadius:12,
+padding:8,
+borderRadius:8,
 marginRight:12
 },
 
 type:{
 fontWeight:'700',
-fontSize:18
+fontSize:11
 },
 
 price:{
+fontSize: 12,  
 marginTop:8,
 fontWeight:'700',
 color:'#2E7D32'
-}
+},
+
+area: {
+  fontSize: 11,      // ya 10 agar aur chhota chahiye
+  color: '#666',
+  marginTop: 2,
+},
 
 });

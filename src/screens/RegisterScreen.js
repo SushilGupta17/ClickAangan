@@ -1,383 +1,419 @@
-  // RegisterScreen.js
+// RoleSelectionScreen.js
 
-  import React, {useState} from 'react';
+import React, {useState} from 'react';
+import {
+  View,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  StatusBar,
+} from 'react-native';
 
-  import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-  import {
-    ScrollView,
-    SafeAreaView,
-    View,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    StatusBar,
-    StyleSheet,
-    Alert,
-  } from 'react-native';
-
-
-
-  import Header from '../components/Header';
+import Header from '../components/Header';
 import Footer from '../components/Footer';
 
+function RegisterScreen({navigation}) {
+  const [selectedRole, setSelectedRole] = useState(null);
 
-  function RegisterScreen({navigation}) {
+  const roles = [
+    {
+      id: 'BUILDER_INVESTOR',
+      title: 'Builder / Investor',
+      subtitle: 'Manage projects & investments',
+      icon: 'office-building-outline',
+    },
+    {
+      id: 'PROPERTY_EXECUTIVE',
+      title: 'Property Executive',
+      subtitle: 'Manage properties & clients',
+      icon: 'account-tie-outline',
+    },
+    {
+      id: 'OWNER',
+      title: 'Property Owner',
+      subtitle: 'Sell or rent your property',
+      icon: 'home-account',
+    },
+    {
+      id: 'CUSTOMER',
+      title: 'Property Seeker',
+      subtitle: 'Buy or rent a property',
+      icon: 'home-search-outline',
+    },
+  ];
 
-    const [name, setName] = useState('');
-
-    const [mobile, setMobile] = useState('');
-
-    const [email, setEmail] = useState('');
-
-    const [password, setPassword] =
-      useState('');
-
-    const [confirmPassword, setConfirmPassword] =
-      useState('');
-
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  // ================= REGISTER =================
-
-    
-  const handleRegister = async () => {
-  
-  // ================= VALIDATIONS =================
-    // NAME VALIDATION
-      if (name === '') {
-        Alert.alert(
-          'Error',
-          'Please enter name',
-        );
-        return;
-      }
-
-  // MOBILE VALIDATION
-  if (mobile === '') {
-    Alert.alert('Error', 'Please enter mobile number');
-    return;
-  }
-
-  if (mobile.length !== 10) {
-    Alert.alert('Error', 'Mobile number must be 10 digits');
-    return;
-  }
- // EMAIL VALIDATION
-  if (email != '')
-  {
-      if (!email.includes('@')) {
-
-        Alert.alert(
-          'Error',
-          'Please enter valid email', 
-        );
-        return;
-      }
+  const handleContinue = async () => {
+    if (!selectedRole) {
+      return;
     }
 
- // PASSWORD VALIDATION
-      if (password === '') {
-        Alert.alert(
-          'Error',
-          'Please enter password',
-        );
-        return;
-      }
+    await AsyncStorage.setItem('selectedRole', selectedRole);
 
-      if (password.length < 6) {
-        Alert.alert(
-          'Error',
-          'Password must be minimum 6 characters',
-        );
-        return;
-      }
+   navigation.navigate('RoleBasedRegistration', {role: selectedRole,});
+  };
 
-      // CONFIRM PASSWORD
-      if (confirmPassword === '') {
-        Alert.alert(
-          'Error',
-          'Please confirm password',
-        );
-        return;
-      }
+  return (
+    <SafeAreaView style={styles.safeContainer}>
+      <Header />
 
-      if (password !== confirmPassword) {
-        Alert.alert(
-          'Error',
-          'Passwords do not match',
-        );
-        return;
-      }
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#F5F7FA"
+      />
 
-
-
-  try {
-    const response = await fetch(
-      'https://savariyaproperty.in/api/Register',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: name,
-          mobile: mobile,
-          email: email,
-          password: password,
-        }),
-      },
-    );
-
-    const result = await response.json();
-
-    if (response.ok && result.success) {
-      // Login Session
-      await AsyncStorage.setItem('userLogin', 'true');
-      await AsyncStorage.setItem('userId', result.userId.toString());
-      await AsyncStorage.setItem('userName', name);
-     // await AsyncStorage.setItem('userName', name);
-      await AsyncStorage.setItem('userMobile', mobile);
-      await AsyncStorage.setItem('userEmail', email);
-      // SAVE LOGIN SESSION
-      //Alert.alert('Success', result.message);
-      Alert.alert(
-        'Success',
-        'Registration Successful',
-      );
-
-      navigation.replace('Home');
-    } else {
-      Alert.alert('Error', result.message);
-    }
-  } catch (error) {
-    console.log(error);
-    Alert.alert('Error', 'Server connection failed');
-  }
-      Alert.alert(
-        'Success',
-        'Registration Successful',
-      );
-      // GO TO HOME PAGE
-      navigation.replace('Home');
-    };
-     return (
-  <SafeAreaView style={styles.safeContainer} >
-
-    <Header />
-
-     <ScrollView
+      <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{paddingBottom: 100}}>
+        contentContainerStyle={styles.scrollContent}>
 
-      <View style={styles.registerCard}>
-        <Text style={styles.heading}>Create Account</Text>
-
-        <Text style={styles.subHeading}>
-          Register yourself to explore properties and connect with property owners.
-        </Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Full Name"
-          placeholderTextColor="#999"
-          value={name}
-          onChangeText={setName}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Mobile Number"
-          placeholderTextColor="#999"
-          keyboardType="phone-pad"
-          maxLength={10}
-          value={mobile}
-          onChangeText={setMobile}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Email Address"
-          placeholderTextColor="#999"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-
-       <View style={styles.passwordContainer}>
-  <TextInput
-    style={styles.passwordInput}
-    placeholder="Enter Password"
-    placeholderTextColor="#999"
-    secureTextEntry={!showPassword}
-    value={password}
-    onChangeText={setPassword}
-  />
-
-  <TouchableOpacity
-    onPress={() => setShowPassword(!showPassword)}>
-    <Icon
-      name={showPassword ? 'eye-off' : 'eye'}
-      size={22}
-      color="#666"
-    />
-  </TouchableOpacity>
-</View>
-
-<View style={styles.passwordContainer}>
-  <TextInput
-    style={styles.passwordInput}
-    placeholder="Confirm Password"
-    placeholderTextColor="#999"
-    secureTextEntry={!showConfirmPassword}
-    value={confirmPassword}
-    onChangeText={setConfirmPassword}
-  />
-
-  <TouchableOpacity
-    onPress={() =>
-      setShowConfirmPassword(!showConfirmPassword)
-    }>
-    <Icon
-      name={
-        showConfirmPassword
-          ? 'eye-off'
-          : 'eye'
-      }
-      size={22}
-      color="#666"
-    />
-  </TouchableOpacity>
-</View>
-
-
-        <TouchableOpacity
-          style={styles.registerButton}
-          onPress={handleRegister}>
-          <Text style={styles.registerButtonText}>
-            Create Account
+      
+        {/* Title */}
+        <View style={styles.titleSection}>
+             <Text style={styles.title}>
+            How would you like to continue?
           </Text>
+
+          <Text style={styles.description}>
+            Select your role to get a personalized
+            property experience.
+          </Text>
+        </View>
+
+        {/* Role Cards */}
+        <View style={styles.rolesContainer}>
+
+          {roles.map(role => {
+            const isSelected = selectedRole === role.id;
+
+            return (
+              <TouchableOpacity
+                key={role.id}
+                activeOpacity={0.85}
+                onPress={() => setSelectedRole(role.id)}
+                style={[
+                  styles.roleCard,
+                  isSelected && styles.selectedRoleCard,
+                ]}>
+
+                {/* Icon */}
+                <View
+                  style={[
+                    styles.iconContainer,
+                    isSelected && styles.selectedIconContainer,
+                  ]}>
+                  <Icon
+                    name={role.icon}
+                    size={30}
+                    color={isSelected ? '#FFFFFF' : '#1F6FEB'}
+                  />
+                </View>
+
+                {/* Text */}
+                <View style={styles.roleContent}>
+                  <Text
+                    style={[
+                      styles.roleTitle,
+                      isSelected && styles.selectedRoleTitle,
+                    ]}>
+                    {role.title}
+                  </Text>
+
+                  <Text style={styles.roleSubtitle}>
+                    {role.subtitle}
+                  </Text>
+                </View>
+
+                {/* Selection */}
+                <View
+                  style={[
+                    styles.radioOuter,
+                    isSelected && styles.radioOuterSelected,
+                  ]}>
+
+                  {isSelected && (
+                    <View style={styles.radioInner}>
+                      <Icon
+                        name="check"
+                        size={13}
+                        color="#FFFFFF"
+                      />
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Continue Button */}
+        <TouchableOpacity
+          activeOpacity={0.85}
+          disabled={!selectedRole}
+          onPress={handleContinue}
+          style={[
+            styles.continueButton,
+            !selectedRole && styles.disabledButton,
+          ]}>
+
+          <Text style={styles.continueText}>
+            Continue
+          </Text>
+
+          <Icon
+            name="arrow-right"
+            size={22}
+            color="#FFFFFF"
+          />
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.loginContainer}
-          onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.loginText}>
-            Already have an account?{' '}
-            <Text style={styles.loginLink}>Login</Text>
+        {/* Bottom Note */}
+        <View style={styles.bottomNote}>
+          <Icon
+            name="shield-check-outline"
+            size={18}
+            color="#6B7280"
+          />
+
+          <Text style={styles.bottomNoteText}>
+            Your role helps us personalize your experience
           </Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+        </View>
+ 
 
-    <Footer />
-  </SafeAreaView>
-    );
-  }
+      </ScrollView>
+      <Footer />
+    </SafeAreaView>
+  );
+}
 
- const styles = StyleSheet.create({
+const styles = StyleSheet.create({
+
   safeContainer: {
     flex: 1,
     backgroundColor: '#F5F7FA',
   },
 
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 25,
+    paddingBottom: 35,
   },
 
-  registerCard: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 25,
+  /* Header */
 
+  header: {
+    alignItems: 'center',
+    marginBottom: 1,
+  },
+
+  logoCircle: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: '#1F6FEB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    elevation: 5,
+    shadowColor: '#1F6FEB',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+  },
+
+  appName: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#111827',
+    letterSpacing: 0.2,
+  },
+
+  tagline: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 4,
+  },
+
+  /* Title */
+
+  titleSection: {
+    marginBottom: 22,
+  },
+
+  welcomeText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F6FEB',
+    marginBottom: 5,
+  },
+
+  title: {
+    fontSize: 19,
+    fontWeight: '600',
+    color: '#111827',
+    lineHeight: 32,
+  },
+
+  description: {
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 21,
+    marginTop: 8,
+  },
+
+  /* Roles */
+
+  rolesContainer: {
+    gap: 13,
+  },
+
+  roleCard: {
+    minHeight: 88,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingHorizontal: 15,
+    paddingVertical: 14,
+
+    flexDirection: 'row',
+    alignItems: 'center',
+
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 3,
+      height: 2,
     },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOpacity: 0.06,
+    shadowRadius: 5,
   },
 
-  heading: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#222',
-    textAlign: 'center',
-    marginBottom: 10,
+  selectedRoleCard: {
+    borderColor: '#1F6FEB',
+    borderWidth: 2,
+    backgroundColor: '#F0F6FF',
+    elevation: 4,
   },
 
-  subHeading: {
-    fontSize: 15,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 30,
+  /* Icon */
+
+  iconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 15,
+    backgroundColor: '#EEF5FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
   },
 
-  input: {
-    height: 55,
-    backgroundColor: '#FAFAFA',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    paddingHorizontal: 16,
+  selectedIconContainer: {
+    backgroundColor: '#1F6FEB',
+  },
+
+  /* Content */
+
+  roleContent: {
+    flex: 1,
+    paddingRight: 8,
+  },
+
+  roleTitle: {
     fontSize: 16,
-    color: '#222',
-    marginBottom: 16,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 4,
   },
 
-  registerButton: {
-    height: 55,
-    backgroundColor: '#0A8754',
+  selectedRoleTitle: {
+    color: '#1456B8',
+  },
+
+  roleSubtitle: {
+    fontSize: 12.5,
+    color: '#6B7280',
+    lineHeight: 18,
+  },
+
+  /* Radio */
+
+  radioOuter: {
+    width: 24,
+    height: 24,
     borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#D1D5DB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  radioOuterSelected: {
+    borderColor: '#1F6FEB',
+    backgroundColor: '#1F6FEB',
+  },
+
+  radioInner: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  /* Button */
+
+  continueButton: {
+    height: 56,
+    borderRadius: 14,
+    backgroundColor: '#1F6FEB',
+    marginTop: 25,
+
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    elevation: 4,
+    shadowColor: '#1F6FEB',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 7,
+  },
+
+  disabledButton: {
+    backgroundColor: '#B8C4D6',
+    elevation: 0,
+  },
+
+  continueText: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '700',
+    marginRight: 8,
+  },
+
+  /* Bottom */
+
+  bottomNote: {
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 10,
-    elevation: 3,
+    marginTop: 22,
+    paddingHorizontal: 10,
   },
 
-  registerButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+  bottomNoteText: {
+    fontSize: 11.5,
+    color: '#6B7280',
+    marginLeft: 6,
+    textAlign: 'center',
   },
-
-  loginContainer: {
-    marginTop: 25,
-    alignItems: 'center',
-  },
-
-  loginText: {
-    fontSize: 15,
-    color: '#666',
-  },
-
-  loginLink: {
-    color: '#0A8754',
-    fontWeight: '700',
-  },
-  passwordContainer: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  backgroundColor: '#FAFAFA',
-  borderWidth: 1,
-  borderColor: '#E5E7EB',
-  borderRadius: 12,
-  paddingHorizontal: 16,
-  height: 55,
-  marginBottom: 16,
-},
-
-passwordInput: {
-  flex: 1,
-  fontSize: 16,
-  color: '#222',
-},
 });
 
-  export default RegisterScreen;
+export default RegisterScreen;

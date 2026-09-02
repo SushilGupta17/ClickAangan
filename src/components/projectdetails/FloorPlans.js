@@ -1,74 +1,59 @@
 import React from 'react';
-
 import {
-
-FlatList,
-Image,
-TouchableOpacity,
-StyleSheet
-
+  View,
+  Text,
+  Image,
+  FlatList,
+  StyleSheet,
 } from 'react-native';
 
-const FloorPlans=({floorPlans=[]})=>{
+const API_URL = 'https://savariyaproperty.in/';
+const API_URL1 = 'http://192.168.1.3:7045';
 
-const renderItem=({item})=>(
+const FloorPlan = ({ images = [] }) => {
+  if (images.length === 0) {
+    return null;
+  }
 
-<TouchableOpacity>
+  return (
+    <View style={styles.card}>
+      <Text style={styles.heading}>Floor Plans</Text>
 
-<Image
+      <FlatList
+        horizontal
+        data={images}
+        keyExtractor={(item, index) => index.toString()}
+        showsHorizontalScrollIndicator={false}
+        renderItem={({ item }) => (
+          <Image
+            source={{ uri: `${API_URL}${item}` }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        )}
+      />
+    </View>
+  );
+};
 
-source={{uri:item.image}}
+export default FloorPlan;
 
-style={styles.image}
-
-/>
-
-</TouchableOpacity>
-
-)
-
-return(
-
-<FlatList
-
-horizontal
-
-data={floorPlans}
-
-renderItem={renderItem}
-
-showsHorizontalScrollIndicator={false}
-
-contentContainerStyle={styles.container}
-
-/>
-
-)
-
-}
-
-export default FloorPlans;
-
-const styles=StyleSheet.create({
-
-container:{
-
-paddingHorizontal:15,
-
-paddingBottom:20
-
-},
-
-image:{
-
-width:280,
-
-height:180,
-
-borderRadius:15,
-
-marginRight:15
-
-}
-
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: '#fff',
+    margin: 12,
+    padding: 10,
+    borderRadius: 10,
+  },
+  heading: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+  image: {
+    width: 280,
+    height: 200,
+    borderRadius: 10,
+    marginRight: 10,
+  },
 });

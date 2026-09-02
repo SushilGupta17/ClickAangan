@@ -89,9 +89,9 @@ const LoginPopup = ({
           <Text style={styles.registerText}>Create Account</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={onGuest}>
+        {/* <TouchableOpacity onPress={onGuest}>
           <Text style={styles.guest}>Continue as Guest</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </Animated.View>
     </Animated.View>
   );

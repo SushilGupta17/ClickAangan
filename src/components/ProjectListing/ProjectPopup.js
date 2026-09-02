@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   },
 
   closeText: {
-    fontSize: 24,
+    fontSize: 13,
     fontWeight: 'bold',
   },
 

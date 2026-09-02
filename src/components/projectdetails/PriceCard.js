@@ -13,7 +13,7 @@ Price Range
 
 <Text style={styles.price}>
 
-₹ {project.priceFrom?.toLocaleString()} - ₹ {project.priceTo?.toLocaleString()}
+₹ {project.minPrice?.toLocaleString()} - ₹ {project.maxPrice?.toLocaleString()}
 
 </Text>
 
@@ -44,11 +44,11 @@ elevation:3
 
 title:{
 fontWeight:'700',
-fontSize:20
+fontSize:16
 },
 
 price:{
-fontSize:28,
+fontSize:15,
 fontWeight:'bold',
 color:'#2E7D32',
 marginTop:12

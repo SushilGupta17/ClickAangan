@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
   },
 
   heading:{
-    fontSize:20,
+    fontSize:16,
     fontWeight:'700',
     marginBottom:10
   },
@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
   description:{
     color:'#555',
     lineHeight:24,
-    fontSize:15
+    fontSize:12
   }
 
 });

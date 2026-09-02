@@ -12,19 +12,22 @@ import {formatPrice} from '../../helpers/priceHelper';
 import ProjectImageSlider from './ProjectImageSlider';
 import PropImageRotator from '../../components/PropImgRotator';
 
-//const API_URL = "https://savariyaproperty.in";
-const API_URL = "http://192.168.1.3:7045/";
+const API_URL = 'https://savariyaproperty.in/';
+const API_URL1 = 'http://192.168.1.3:7045';
+
 const ProjectCard = ({item, navigation}) => {
+const isVilla =
+  item.propertyType?.toLowerCase() === "villa project";
 
   return (
+   
    <TouchableOpacity
       style={styles.card}
       activeOpacity={0.9}
       onPress={() =>
         navigation &&
         navigation.navigate('ProjectDetails', {
-          property: item,
-          id: item.id,
+          project: item
         })
       }>
 
@@ -39,7 +42,7 @@ const ProjectCard = ({item, navigation}) => {
 
         <View style={styles.statusBadge}>
           <Text style={styles.statusText}>
-            {item.projectStatus}
+            {item.projectStatus} 
           </Text>
         </View>
 
@@ -101,123 +104,9 @@ const ProjectCard = ({item, navigation}) => {
 
         </View>
 
-        <View style={styles.unitRow}>
+        
 
-          <View style={styles.unitChip}>
-
-            <Text style={styles.unitText}>
-              {item.unitTypes}
-            </Text>
-
-          </View>
-
-        </View>
-
-        <View style={styles.infoRow}>
-
-          <View style={styles.infoBox}>
-
-            <Icon
-              name="building"
-              size={16}
-              color="#1959A2"
-            />
-
-            <Text style={styles.infoTitle}>
-              Towers
-            </Text>
-
-            <Text style={styles.infoValue}>
-              {item.totalTowers}
-            </Text>
-
-          </View>
-
-          <View style={styles.infoBox}>
-
-            <Icon
-              name="home"
-              size={16}
-              color="#1959A2"
-            />
-
-            <Text style={styles.infoTitle}>
-              Units
-            </Text>
-
-            <Text style={styles.infoValue}>
-              {item.totalUnits}
-            </Text>
-
-          </View>
-
-          <View style={styles.infoBox}>
-
-            <Icon
-              name="swimming-pool"
-              size={16}
-              color="#1959A2"
-            />
-
-            <Text style={styles.infoTitle}>
-              Amenities
-            </Text>
-
-            <Text style={styles.infoValue}>
-              {item.amenityCount}
-            </Text>
-
-          </View>
-
-        </View>
-
-        <View style={styles.actionRow}>
-
-          <TouchableOpacity
-            style={styles.iconBtn}>
-
-            <Icon
-              name="heart"
-              color="#E53935"
-              size={18}
-            />
-
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.iconBtn}>
-
-            <Icon
-              name="phone"
-              color="#28A745"
-              size={18}
-            />
-
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.iconBtn}>
-
-            <Icon
-              name="whatsapp"
-              color="#25D366"
-              size={22}
-            />
-
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.iconBtn}>
-
-            <Icon
-              name="share-alt"
-              color="#0B6EF6"
-              size={18}
-            />
-
-          </TouchableOpacity>
-
-        </View>
+       
 
         <TouchableOpacity
           style={styles.detailsBtn}
@@ -326,8 +215,8 @@ const styles = StyleSheet.create({
   },
 
   price:{
-    fontSize:22,
-    color:"#1959A2",
+    fontSize:14,
+    color:"#555",
     fontWeight:"bold"
   },
 
@@ -344,14 +233,14 @@ const styles = StyleSheet.create({
   },
 
   unitText:{
-    color:"#1959A2",
+    color:"#555",
     fontWeight:"700"
   },
 
   infoRow:{
     flexDirection:"row",
     justifyContent:"space-between",
-    marginTop:20
+    marginTop:15
   },
 
   infoBox:{
@@ -370,8 +259,8 @@ const styles = StyleSheet.create({
 
   infoValue:{
     marginTop:4,
-    fontWeight:"700",
-    fontSize:16
+    fontWeight:"350",
+    fontSize:12
   },
 
   actionRow:{
@@ -391,7 +280,7 @@ const styles = StyleSheet.create({
 
   detailsBtn:{
     marginTop:18,
-    backgroundColor:"#1959A2",
+    backgroundColor:"#102a47",
     paddingVertical:14,
     borderRadius:10
   },

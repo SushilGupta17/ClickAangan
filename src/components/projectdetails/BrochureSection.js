@@ -28,30 +28,6 @@ return(
 
 <View style={styles.card}>
 
-<Text style={styles.heading}>
-
-Project Brochure
-
-</Text>
-
-<TouchableOpacity
-style={styles.button}
-onPress={download}>
-
-<Icon
-name="file-pdf-box"
-size={26}
-color="red"
-/>
-
-<Text style={styles.text}>
-
-Download Brochure
-
-</Text>
-
-</TouchableOpacity>
-
 </View>
 
 )
@@ -71,7 +47,7 @@ borderRadius:15
 
 heading:{
 fontWeight:'700',
-fontSize:20,
+fontSize:16,
 marginBottom:15
 },
 

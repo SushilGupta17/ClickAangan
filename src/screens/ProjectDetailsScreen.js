@@ -15,13 +15,15 @@ import OverviewCard from '../components/projectdetails/OverviewCard';
 import PriceCard from '../components/projectdetails/PriceCard';
 import UnitTypesCard from '../components/projectdetails/UnitTypesCard';
 import AmenitiesGrid from '../components/projectdetails/AmenitiesGrid';
+import ProjectTitle from '../components/projectdetails/ProjectTitle';
+import ProjectStatusCard from '../components/projectdetails/ProjectStatusCard';
+
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 import MapSection from '../components/projectdetails/MapSection';
 import NearbyPlaces from '../components/projectdetails/NearbyPlaces';
 import BuilderCard from '../components/projectdetails/BuilderCard';
-import BrochureSection from '../components/projectdetails/BrochureSection';
 import VideoSection from '../components/projectdetails/VideoSection';
 import FloorPlans from '../components/projectdetails/FloorPlans';
 import MasterPlan from '../components/projectdetails/MasterPlan';
@@ -33,8 +35,10 @@ import { getProjectDetails } from '../services/ProjectService';
 
 const ProjectDetailsScreen = ({ route }) => {
 
-    const { projectId, project: projectData } = route.params;
+    const { project: projectData } = route.params;
 
+    const projectId =  projectData.projectId || projectData.ProjectId;
+    
     const [project, setProject] = useState(projectData);
 
     const [loading, setLoading] = useState(true);
@@ -44,9 +48,8 @@ const ProjectDetailsScreen = ({ route }) => {
     const loadProject = async () => {
 
         try {
-
             const response = await getProjectDetails(projectId);
-debugger;
+
             setProject(response);
 
         } catch (e) {
@@ -101,6 +104,7 @@ debugger;
             />
 
             <ScrollView
+            
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl
@@ -108,44 +112,68 @@ debugger;
                         onRefresh={onRefresh}
                     />
                 }
-                contentContainerStyle={{ paddingBottom: 90 }}
-            >
+                contentContainerStyle={{ paddingBottom: 150 }}>
 
                 <ImageCarousel project={project} />
 
-                 <OverviewCard project={project} />
+                <ProjectTitle project={project} />
+
+                <ProjectStatusCard project={project} />
+
+                
 
                 <PriceCard project={project} />
 
-                <UnitTypesCard units={project?.units || []} />
+                            {Array.isArray(project?.units) &&
+                project.units.length > 0 && (
+                    <UnitTypesCard
+                    units={project.units}
+                    />
+                )}
 
-                <AmenitiesGrid amenities={project?.amenities || []} />
+                {Array.isArray(project?.amenities) &&
+                project.amenities.length > 0 && (
+                    <AmenitiesGrid
+                    amenities={project.amenities}
+                    />
+                )}
 
-                <FloorPlans floorPlans={project?.floorPlans || []} />
+                {project?.masterPlan &&
+                project.masterPlan.length > 0 && (
+                <MasterPlan
+                    image={project.masterPlan}
+                />
+                )}
 
-                <MasterPlan image={project?.masterPlan || []} />
+               
+                
+                {project && (
+                     <OverviewCard project={project} />
+                )}
 
-                {/* <EnquiryForm projectId={project?.projectId} /> 
-
-
-                <NearbyPlaces nearby={project?.nearby || []} />
+                <FloorPlans image={project?.FloorPlans || []} />
 
                 <BuilderCard project={project} />
 
-                <MapSection project={project} />
+{Array.isArray(project?.nearby) &&
+  project.nearby.length > 0 && (
+    <NearbyPlaces
+      nearby={project.nearby}
+    />
+  )}
 
-                <BrochureSection project={project} />
+{/* 
+ <VideoSection project={project} />
+<MapSection project={project} /> */}
+{/* 
 
-                <VideoSection project={project} /> */}
+*/}
 
-                
-            </ScrollView>
-
-            <StickyBottomBar project={project} />
-<Footer />
-        </SafeAreaView>
-
-    );
+ </ScrollView>
+ <StickyBottomBar project={project} />
+        <Footer />
+ </SafeAreaView>
+);
 
 };
 

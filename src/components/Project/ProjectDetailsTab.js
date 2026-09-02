@@ -133,8 +133,8 @@ const ProjectDetailsTab = ({
     style={[styles.input,{marginTop:15}]}
     placeholder="RERA Number"
     placeholderTextColor="#999"
-    value={property.builderRera}
-    onChangeText={text => update('builderRera', text)}
+    value={property.reraNumber}
+    onChangeText={text => update('reraNumber', text)}
   />
 
   <TextInput
@@ -241,6 +241,27 @@ const ProjectDetailsTab = ({
           keyboardType="numeric"
           value={property.projectArea}
           onChangeText={text => update('projectArea', text)}
+        />
+      <TextInput
+          style={[styles.input, {marginTop: 15}]}
+          placeholder="Minimum Price"
+          placeholderTextColor="#999"
+          keyboardType="numeric"
+          value={property.minPrice}
+          onChangeText={text =>
+            update('minPrice', text.replace(/[^0-9]/g, ''))
+          }
+        />
+
+        <TextInput
+          style={[styles.input, {marginTop: 15}]}
+          placeholder="Maximum Price"
+          placeholderTextColor="#999"
+          keyboardType="numeric"
+          value={property.maxPrice}
+          onChangeText={text =>
+            update('maxPrice', text.replace(/[^0-9]/g, ''))
+          }
         />
 
         <TextInput

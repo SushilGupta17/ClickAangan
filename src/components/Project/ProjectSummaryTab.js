@@ -118,7 +118,7 @@ const ProjectSummaryTab = ({
     formData.append("ProjectName", property.projectName || "");
     formData.append("BuilderName", property.builderName || "");
     formData.append("CompanyName", property.companyName || "");
-    formData.append("BuilderRera", property.builderRera || "");
+    formData.append("ReraNumber", property.reraNumber || "");
 
     formData.append("ContactPerson", property.contactPerson || "");
     formData.append("ContactMobile", property.contactMobile || "");
@@ -134,6 +134,8 @@ const ProjectSummaryTab = ({
     formData.append("TotalFloors", property.totalFloors || "");
     formData.append("TotalUnits", property.totalUnits || "");
     formData.append("PossessionDate", property.possessionDate || "");
+    formData.append("MinPrice", property.minPrice || "");
+    formData.append("MaxPrice", property.maxPrice || "");
 
     //==============================
     // LOCATION
@@ -398,6 +400,9 @@ const ProjectSummaryTab = ({
           <Row label="RERA Number" value={property.reraNumber} />
           <Row label="Category" value={property.category} />
           <Row label="Property Type" value={property.propertyType} />
+          <Row label="Min Price" value={property.minPrice} />
+          <Row label="Max Price" value={property.maxPrice} />
+
 
         </SummaryCard>
 

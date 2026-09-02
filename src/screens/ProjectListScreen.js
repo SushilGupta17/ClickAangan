@@ -19,8 +19,8 @@ import ProjectCard from '../components/ProjectListing/ProjectCard';
 
 import {getProjects} from '../services/ProjectService';
 
-const API_URL = 'http://192.168.1.3:7045';
-const API_URL2 = 'https://savariyaproperty.in';
+const API_URL1 = 'http://192.168.1.3:7045';
+const API_URL = 'https://savariyaproperty.in';
 
 const ProjectListScreen = ({navigation}) => {
 
@@ -39,6 +39,7 @@ const ProjectListScreen = ({navigation}) => {
 
     try {
 
+   
       const data = await getProjects();
 
       if (Array.isArray(data)) {
@@ -145,6 +146,10 @@ const ProjectListScreen = ({navigation}) => {
 
     <SafeAreaView style={styles.container}>
 
+<ProjectFilterBar
+    selectedStatus={status}
+    onStatusChange={setStatus}
+  />
 
       <FlatList
 
@@ -173,18 +178,6 @@ const ProjectListScreen = ({navigation}) => {
 
         }
 
-        ListHeaderComponent={
-
-          <>
-            
-            <ProjectFilterBar
-              selectedStatus={status}
-              onStatusChange={setStatus}
-            />
-
-          </>
-
-        }
 
         ListEmptyComponent={
 

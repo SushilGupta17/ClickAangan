@@ -14,13 +14,11 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import ImageViewing from 'react-native-image-viewing';
 import Share from 'react-native-share';
-
+import { formatPrice } from '../../helpers/priceHelper';
 const {width} = Dimensions.get('window');
-
-const API_URL = 'http://192.168.1.3:7045';
-
+const API_URL = 'https://savariyaproperty.in/';
+const API_URL1 = 'http://192.168.1.3:7045';
 const IMAGE_HEIGHT = 300;
-
 
 const tabs = [
   {
@@ -130,7 +128,7 @@ ${project.builderName}
 
 ${project.locality}, ${project.city}
 
-₹ ${project.minPrice?.toLocaleString()} - ₹ ${project.maxPrice?.toLocaleString()}
+₹ ${formatPrice(project.minPrice)} - ₹ ${formatPrice(project.maxPrice)}
 
 
 https://savariyaproperty.in`,
@@ -335,9 +333,7 @@ selectedTab===tab.id&&styles.activeTabText
 
     <Text style={styles.price}>
 
-        ₹ {project.minPrice?.toLocaleString()}
-        {'  -  '}
-        ₹ {project.maxPrice?.toLocaleString()}
+       ₹ {formatPrice(project.minPrice)} - ₹ {formatPrice(project.maxPrice)}
 
     </Text>
 

@@ -5,10 +5,10 @@ import axios from 'axios';
 // ===============================
 
 // Local
- //const BASE_URL = 'http://192.168.1.4:7045/api/';
+ const BASE_URL2 = 'http://192.168.1.3:7045/api/';
 
 // Live
-const BASE_URL = 'https://savariyaproperty.in/api/';
+const BASE_URL= 'https://savariyaproperty.in/api/';
 
 const api = axios.create({
   baseURL: BASE_URL,
