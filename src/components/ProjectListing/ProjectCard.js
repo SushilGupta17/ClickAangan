@@ -1,75 +1,443 @@
-import React from 'react';
+
+import React, {useMemo, useState} from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from 'react-native';
 
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import Video from 'react-native-video';
 
 import {formatPrice} from '../../helpers/priceHelper';
-import ProjectImageSlider from './ProjectImageSlider';
 import PropImageRotator from '../../components/PropImgRotator';
 
-const API_URL = 'https://savariyaproperty.in/';
-const API_URL1 = 'http://192.168.1.3:7045';
+const API_URL = 'https://savariyaproperty.in';
+
+/*
+==================================================
+STATIC VIDEO URL
+==================================================
+
+Testing ke liye abhi static video laga hua hai.
+
+IMPORTANT:
+Is URL par actual MP4 video available hona chahiye.
+Baad mein API wala URL yahan laga denge.
+*/
+
+
 
 const ProjectCard = ({item, navigation}) => {
-const isVilla =
-  item.propertyType?.toLowerCase() === "villa project";
+
+  const [videoPaused, setVideoPaused] = useState(true);
+  // ==========================================
+  // IMAGE URL HELPER
+  // ==========================================
+
+  const getMediaUrl = path => {
+    if (!path) {
+      return '';
+    }
+
+    const cleanPath = String(path)
+      .replace(/\\/g, '/')
+      .replace(/^\/+/, '');
+
+    if (
+      cleanPath.startsWith('http://') ||
+      cleanPath.startsWith('https://')
+    ) {
+      return cleanPath;
+    }
+
+    return `${API_URL}/${cleanPath}`;
+  };
+
+
+  // ==========================================
+  // VIDEO URL HELPER
+  // ==========================================
+
+  const getVideoUrl = path => {
+    if (!path) {
+      return '';
+    }
+
+    const cleanPath = String(path)
+      .replace(/\\/g, '/')
+      .trim();
+
+    if (
+      cleanPath.startsWith('http://') ||
+      cleanPath.startsWith('https://')
+    ) {
+      return cleanPath;
+    }
+
+    return `${API_URL}/${cleanPath.replace(/^\/+/, '')}`;
+  };
+
+
+  // ==========================================
+  // PROJECT IMAGES
+  // ==========================================
+
+  const projectImages = useMemo(() => {
+
+    if (!item?.images) {
+      return [];
+    }
+
+    // ------------------------------------------
+    // COMMA SEPARATED STRING
+    // ------------------------------------------
+
+    if (typeof item.images === 'string') {
+      return item.images
+        .split(',')
+        .map(x => x.trim())
+        .filter(Boolean)
+        .map(x => getMediaUrl(x))
+        .filter(Boolean);
+    }
+
+
+    // ------------------------------------------
+    // ARRAY
+    // ------------------------------------------
+
+    if (Array.isArray(item.images)) {
+
+      return item.images
+        .map(x => {
+
+          const imagePath =
+            x?.imageUrl ||
+            x?.ImageUrl ||
+            x?.url ||
+            x?.Url ||
+            x;
+
+          if (!imagePath) {
+            return null;
+          }
+
+          return getMediaUrl(imagePath);
+        })
+        .filter(Boolean);
+    }
+
+    return [];
+
+  }, [item?.images]);
+
+
+  // ==========================================
+  // VIDEO PATH FROM API
+  // ==========================================
+
+ const videoPath =
+  item?.videoUrl ||
+  item?.VideoUrl ||
+  item?.videoPath ||
+  item?.VideoPath ||
+  item?.video ||
+  item?.Video ||
+  '';
+
+const videoUrl = useMemo(() => {
+  return getVideoUrl(videoPath);
+}, [videoPath]);
+
+
+
+
+  // ==========================================
+  // CONDITIONS
+  // ==========================================
+
+  const hasImages = projectImages.length > 0;
+
+  /*
+  Abhi STATIC VIDEO testing ke liye
+  API videoPath ko use nahi kar rahe.
+
+  Jab static video confirm ho jayega,
+  tab isko API URL par wapas kar denge.
+  */
+
+  const hasVideo =
+    typeof videoUrl === 'string' &&
+    videoUrl.trim() !== '';
+
+
+  // ==========================================
+  // OPEN PROJECT
+  // ==========================================
+
+  const openProject = () => {
+    navigation?.navigate('ProjectDetails', {
+      project: item,
+    });
+  };
+
+
+  // ==========================================
+  // RETURN
+  // ==========================================
 
   return (
-   
-   <TouchableOpacity
-      style={styles.card}
-      activeOpacity={0.9}
-      onPress={() =>
-        navigation &&
-        navigation.navigate('ProjectDetails', {
-          project: item
-        })
-      }>
+    <View style={styles.card}>
 
-<PropImageRotator
-  images={ item.images
-  ? item.images.split(',').map(x =>
-      `${API_URL}/${x.trim().replace(/\\/g, '/')}`
-    )
-  : []} />
-      
+      {/* ======================================
+          MEDIA SECTION
+
+          Priority:
+          1. Images
+          2. Video
+          3. No Media
+
+          IMPORTANT:
+          Ye section NON-CLICKABLE hai.
+      ====================================== */}
+
+      <View style={styles.mediaSection}>
+{hasImages ? (
+  <PropImageRotator
+    images={projectImages}
+  />
+) : hasVideo ? (
+<View style={styles.videoContainer}>
+
+  <Video
+    source={{
+      uri: videoUrl,
+    }}
+    style={styles.video}
+    resizeMode="cover"
+
+    // ==========================================
+    // VIDEO STARTS PAUSED
+    // ==========================================
+    paused={videoPaused}
+
+    muted={true}
+
+    repeat={false}
+
+    controls={false}
+
+    playInBackground={false}
+    playWhenInactive={false}
+
+    ignoreSilentSwitch="ignore"
+
+    // ==========================================
+    // VIDEO LOADED
+    // ==========================================
+    onLoad={data => {
+      console.log('================================');
+      console.log('PROJECT VIDEO LOADED');
+      console.log(
+        'PROJECT:',
+        item?.projectName,
+      );
+      console.log(
+        'VIDEO URL:',
+        videoUrl,
+      );
+      console.log(
+        'DURATION:',
+        data?.duration,
+      );
+      console.log('================================');
+    }}
+
+    // ==========================================
+    // READY
+    // ==========================================
+    onReadyForDisplay={() => {
+      console.log(
+        'PROJECT VIDEO READY:',
+        videoUrl,
+      );
+    }}
+
+    // ==========================================
+    // VIDEO END
+    // ==========================================
+    onEnd={() => {
+      console.log(
+        'PROJECT VIDEO ENDED:',
+        videoUrl,
+      );
+
+      // Video end hone ke baad pause
+      setVideoPaused(true);
+    }}
+
+    // ==========================================
+    // ERROR
+    // ==========================================
+    onError={error => {
+      console.log('================================');
+      console.log('PROJECT VIDEO ERROR');
+      console.log(
+        'PROJECT:',
+        item?.projectName,
+      );
+      console.log(
+        'VIDEO URL:',
+        videoUrl,
+      );
+      console.log(
+        'ERROR:',
+        JSON.stringify(
+          error,
+          null,
+          2,
+        ),
+      );
+      console.log('================================');
+    }}
+  />
+
+  {/* ==========================================
+      VIDEO CLICK AREA
+
+      IMPORTANT:
+      Video ke upar full clickable layer
+  ========================================== */}
+
+  <TouchableOpacity
+    activeOpacity={0.95}
+    style={styles.videoTouchArea}
+    onPress={() => {
+      console.log(
+        'PROJECT VIDEO CLICKED:',
+        videoUrl,
+      );
+
+      setVideoPaused(prev => !prev);
+    }}
+  />
+
+  {/* ==========================================
+      PLAY ICON
+  ========================================== */}
+
+  {videoPaused && (
+    <View
+      pointerEvents="none"
+      style={styles.playButton}
+    >
+      <Icon
+        name="play"
+        size={22}
+        color="#fff"
+      />
+    </View>
+  )}
+
+  {/* ==========================================
+      PAUSE ICON
+  ========================================== */}
+
+  {!videoPaused && (
+    <View
+      pointerEvents="none"
+      style={styles.pauseButton}
+    >
+      <Icon
+        name="pause"
+        size={20}
+        color="#fff"
+      />
+    </View>
+  )}
+
+</View>
+
+) : (
+  <View style={styles.noMedia}>
+
+    <Icon
+      name="image"
+      size={35}
+      color="#999"
+    />
+
+    <Text style={styles.noMediaText}>
+      No Media Available
+    </Text>
+
+  </View>
+)}
+
+      </View>
+
+
+      {/* ======================================
+          STATUS BADGES
+      ====================================== */}
+
       <View style={styles.statusRow}>
 
         <View style={styles.statusBadge}>
+
           <Text style={styles.statusText}>
-            {item.projectStatus} 
+            {item?.projectStatus}
           </Text>
+
         </View>
 
+
         <View style={styles.reraBadge}>
+
           <Icon
             name="check-circle"
             color="#28A745"
             size={12}
           />
+
           <Text style={styles.reraText}>
             Verified
           </Text>
+
         </View>
 
       </View>
 
+
+      {/* ======================================
+          BODY
+
+          ONLY THIS AREA IS CLICKABLE
+      ====================================== */}
+
       <View style={styles.body}>
+
+        {/* PROJECT NAME */}
 
         <Text
           numberOfLines={1}
-          style={styles.projectName}>
-          {item.projectName}
+          style={styles.projectName}
+        >
+          {item?.projectName}
         </Text>
 
+
+        {/* BUILDER */}
+
         <Text style={styles.builder}>
-          By {item.builderName}
+          By {item?.builderName}
         </Text>
+
+
+        {/* LOCATION */}
 
         <View style={styles.locationRow}>
 
@@ -81,43 +449,38 @@ const isVilla =
 
           <Text
             numberOfLines={1}
-            style={styles.location}>
-
-            {item.locality}, {item.city}
-
+            style={styles.location}
+          >
+            {item?.locality}, {item?.city}
           </Text>
 
         </View>
+
+
+        {/* PRICE */}
 
         <View style={styles.priceRow}>
 
           <Text style={styles.price}>
-
-            ₹ {formatPrice(item.minPrice)}
-            {"  "}
-            -
-
-            {"  "}
-            ₹ {formatPrice(item.maxPrice)}
-
+            ₹ {formatPrice(item?.minPrice)}
+            {'  -  '}
+            ₹ {formatPrice(item?.maxPrice)}
           </Text>
 
         </View>
 
-        
 
-       
+        {/* ==================================
+            VIEW PROJECT DETAILS BUTTON
+
+            ONLY CLICKABLE AREA
+        ================================== */}
 
         <TouchableOpacity
           style={styles.detailsBtn}
-          onPress={() =>
-            navigation.navigate(
-              'ProjectDetails',
-              {
-                project: item,
-              },
-            )
-          }>
+          activeOpacity={0.8}
+          onPress={openProject}
+        >
 
           <Text style={styles.detailsText}>
             View Project Details
@@ -127,169 +490,252 @@ const isVilla =
 
       </View>
 
-    </TouchableOpacity>
-
+    </View>
   );
-
 };
 
 export default ProjectCard;
 
+
+// ==========================================
+// STYLES
+// ==========================================
+
 const styles = StyleSheet.create({
 
-  card:{
-    margin:12,
-    backgroundColor:"#FFF",
-    borderRadius:18,
-    overflow:"hidden",
-    elevation:5
+  // ========================================
+  // CARD
+  // ========================================
+
+  card: {
+    margin: 12,
+    backgroundColor: '#FFF',
+    borderRadius: 18,
+    overflow: 'hidden',
+    elevation: 5,
   },
 
-  body:{
-    padding:15
+
+  // ========================================
+  // MEDIA SECTION
+  // ========================================
+
+  mediaSection: {
+    width: '100%',
+    height: 220,
   },
 
-  statusRow:{
-    position:"absolute",
-    top:15,
-    left:15,
-    right:15,
-    flexDirection:"row",
-    justifyContent:"space-between"
+
+  // ========================================
+  // VIDEO
+  // ========================================
+
+  videoContainer: {
+    width: '100%',
+    height: 220,
+    backgroundColor: '#000',
+    position: 'relative',
   },
 
-  statusBadge:{
-    backgroundColor:"#28A745",
-    paddingHorizontal:12,
-    paddingVertical:6,
-    borderRadius:20
+  video: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#000',
   },
 
-  statusText:{
-    color:"#FFF",
-    fontWeight:"700",
-    fontSize:12
+
+  // ========================================
+  // PLAY BUTTON
+  // ========================================
+
+  playButton: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    width: 55,
+    height: 55,
+    borderRadius: 28,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+
+    transform: [
+      {
+        translateX: -27.5,
+      },
+      {
+        translateY: -27.5,
+      },
+    ],
   },
 
-  reraBadge:{
-    flexDirection:"row",
-    backgroundColor:"#FFF",
-    paddingHorizontal:10,
-    paddingVertical:6,
-    borderRadius:20,
-    alignItems:"center"
+
+  // ========================================
+  // NO MEDIA
+  // ========================================
+
+  noMedia: {
+    width: '100%',
+    height: 220,
+    backgroundColor: '#F2F2F2',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
-  reraText:{
-    marginLeft:5,
-    fontSize:11,
-    fontWeight:"700"
+  noMediaText: {
+    marginTop: 8,
+    color: '#999',
+    fontSize: 13,
   },
 
-  projectName:{
-    fontSize:20,
-    fontWeight:"700",
-    color:"#222"
+
+  // ========================================
+  // BODY
+  // ========================================
+
+  body: {
+    padding: 15,
   },
 
-  builder:{
-    marginTop:4,
-    color:"#666",
-    fontSize:14
+
+  // ========================================
+  // STATUS
+  // ========================================
+
+  statusRow: {
+    position: 'absolute',
+    top: 15,
+    left: 15,
+    right: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    zIndex: 10,
   },
 
-  locationRow:{
-    flexDirection:"row",
-    alignItems:"center",
-    marginTop:10
+  statusBadge: {
+    backgroundColor: '#28A745',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
 
-  location:{
-    marginLeft:8,
-    color:"#555",
-    flex:1
+  statusText: {
+    color: '#FFF',
+    fontWeight: '700',
+    fontSize: 12,
   },
 
-  priceRow:{
-    marginTop:14
+  reraBadge: {
+    flexDirection: 'row',
+    backgroundColor: '#FFF',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignItems: 'center',
   },
 
-  price:{
-    fontSize:14,
-    color:"#555",
-    fontWeight:"bold"
+  reraText: {
+    marginLeft: 5,
+    fontSize: 11,
+    fontWeight: '700',
   },
 
-  unitRow:{
-    marginTop:15
+
+  // ========================================
+  // TEXT
+  // ========================================
+
+  projectName: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#222',
   },
 
-  unitChip:{
-    backgroundColor:"#EEF5FF",
-    alignSelf:"flex-start",
-    paddingHorizontal:14,
-    paddingVertical:7,
-    borderRadius:20
+  builder: {
+    marginTop: 4,
+    color: '#666',
+    fontSize: 14,
   },
 
-  unitText:{
-    color:"#555",
-    fontWeight:"700"
+
+  // ========================================
+  // LOCATION
+  // ========================================
+
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
   },
 
-  infoRow:{
-    flexDirection:"row",
-    justifyContent:"space-between",
-    marginTop:15
+  location: {
+    marginLeft: 8,
+    color: '#555',
+    flex: 1,
   },
 
-  infoBox:{
-    width:"31%",
-    backgroundColor:"#F8F8F8",
-    borderRadius:12,
-    padding:12,
-    alignItems:"center"
+
+  // ========================================
+  // PRICE
+  // ========================================
+
+  priceRow: {
+    marginTop: 14,
   },
 
-  infoTitle:{
-    marginTop:6,
-    color:"#777",
-    fontSize:12
+  price: {
+    fontSize: 14,
+    color: '#555',
+    fontWeight: 'bold',
   },
 
-  infoValue:{
-    marginTop:4,
-    fontWeight:"350",
-    fontSize:12
+
+  // ========================================
+  // BUTTON
+  // ========================================
+
+  detailsBtn: {
+    marginTop: 18,
+    backgroundColor: '#102a47',
+    paddingVertical: 14,
+    borderRadius: 10,
   },
 
-  actionRow:{
-    flexDirection:"row",
-    justifyContent:"space-around",
-    marginTop:20
+  detailsText: {
+    color: '#FFF',
+    textAlign: 'center',
+    fontWeight: '700',
+    fontSize: 15,
   },
 
-  iconBtn:{
-    width:46,
-    height:46,
-    borderRadius:23,
-    backgroundColor:"#F4F6F8",
-    justifyContent:"center",
-    alignItems:"center"
-  },
+  videoTouchArea: {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  zIndex: 5,
+},
 
-  detailsBtn:{
-    marginTop:18,
-    backgroundColor:"#102a47",
-    paddingVertical:14,
-    borderRadius:10
-  },
-
-  detailsText:{
-    color:"#FFF",
-    textAlign:"center",
-    fontWeight:"700",
-    fontSize:15
-  }
+pauseButton: {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  width: 50,
+  height: 50,
+  borderRadius: 25,
+  backgroundColor: 'rgba(0,0,0,0.50)',
+  justifyContent: 'center',
+  alignItems: 'center',
+  transform: [
+    {
+      translateX: -25,
+    },
+    {
+      translateY: -25,
+    },
+  ],
+},
 
 });
+

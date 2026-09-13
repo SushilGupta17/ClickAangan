@@ -1,6 +1,7 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
+
 import {
-    StatusBar,
+  StatusBar,
   View,
   Text,
   StyleSheet,
@@ -9,101 +10,140 @@ import {
   Image,
 } from 'react-native';
 
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Menu from '../components/Menu'; // apne path ke hisab se
-import {useFocusEffect} from '@react-navigation/native';
-import {useCallback} from 'react';
+
+import Menu from '../components/Menu';
+
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
-const handleLogout = () => {
-  Alert.alert(
-    'Logout',
-    'Are you sure you want to logout?',
-    [
-      {
-        text: 'Cancel',
-        style: 'cancel',
-      },
-      {
-        text: 'Logout',
-        onPress: async () => {
-          await AsyncStorage.removeItem('userMobile');
-          navigation.replace('Login');
-        },
-      },
-    ],
-    {cancelable: true},
-  );
-};
-
-const Header = () => {
+const HomeHeader = () => {
   const navigation = useNavigation();
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userName, setUserName] = useState('');
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [userMobile, setUserMobile] = useState('');
+  const [userRole, setUserRole] = useState('');
   const [showMenu, setShowMenu] = useState(false);
 
+  // ==============================
+  // CHECK LOGIN
+  // ==============================
+  const checkLogin = async () => {
+    try {
+      const loginStatus = await AsyncStorage.getItem('userLogin');
+      const mobile = await AsyncStorage.getItem('userMobile');
+      const role = await AsyncStorage.getItem('userRole');
+
+      if (loginStatus === 'true') {
+        setIsLoggedIn(true);
+        setUserMobile(mobile || '');
+        setUserRole(role || '');
+      } else {
+        setIsLoggedIn(false);
+        setUserMobile('');
+        setUserRole('');
+      }
+    } catch (error) {
+      console.log('Login Check Error:', error);
+    }
+  };
+
+  // ==============================
+  // CHECK LOGIN WHEN SCREEN FOCUSES
+  // ==============================
   useFocusEffect(
-  useCallback(() => {
-   const checkLogin = async () => {
-      const loginStatus = await AsyncStorage.getItem('userLogin');
-     const mobile = await AsyncStorage.getItem('userMobile');
+    useCallback(() => {
+      checkLogin();
+    }, []),
+  );
 
-    if (loginStatus === 'true') {
-      setIsLoggedIn(true);
-      setUserName(mobile || '');
-    } else {
-        setIsLoggedIn(false);
-      }
-    };
-
-    checkLogin();
-  }, [])
-);
-
+  // ==============================
+  // INITIAL LOGIN CHECK
+  // ==============================
   useEffect(() => {
-    const checkLogin = async () => {
-      const loginStatus = await AsyncStorage.getItem('userLogin');
-     const mobile = await AsyncStorage.getItem('userMobile');
-
-    if (loginStatus === 'true') {
-      setIsLoggedIn(true);
-      setUserName(mobile || '');
-    } else {
-        setIsLoggedIn(false);
-      }
-    };
-
     checkLogin();
   }, []);
 
-  const handleLogout = async () => {
-    await AsyncStorage.removeItem('userLogin');
+  // ==============================
+  // LOGOUT
+  // ==============================
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout Confirmation',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // await AsyncStorage.multiRemove([
+              //   'userLogin',
+              //   'userMobile',
+              //   'userRole',
+              //   'userToken',
+              // ]);
 
-    setIsLoggedIn(false);
-    setShowDropdown(false);
+              // setIsLoggedIn(false);
+              // setUserMobile('');
+              // setUserRole('');
+              // setShowMenu(false);
 
-    Alert.alert('Success', 'Logout Successful');
+              navigation.replace('Login');
+            } catch (error) {
+
+              Alert.alert(
+                'Error',
+                'Unable to logout. Please try again.',
+              );
+            }
+          },
+        },
+      ],
+      {
+        cancelable: true,
+      },
+    );
   };
 
   return (
     <>
-     <StatusBar backgroundColor="#0A3D62" barStyle="light-content" />
-      {/* MENU POPUP */}
+      {/* ==============================
+          STATUS BAR
+      ============================== */}
+      <StatusBar
+        backgroundColor="#0A3D62"
+        barStyle="light-content"
+      />
+
+      {/* ==============================
+          MENU
+      ============================== */}
       {showMenu && (
         <View style={styles.menuWrapper}>
           <Menu />
         </View>
       )}
 
+      {/* ==============================
+          HEADER
+      ============================== */}
       <View style={styles.header}>
-        {/* MENU ICON */}
+
+        {/* MENU BUTTON */}
         <TouchableOpacity
           style={styles.menuButton}
           onPress={() => setShowMenu(!showMenu)}>
-          <Icon name="bars" size={24} color="#333" />
+          <Icon
+            name="bars"
+            size={24}
+            color="#333"
+          />
         </TouchableOpacity>
 
         {/* LOGO */}
@@ -115,61 +155,94 @@ const Header = () => {
             style={styles.logo}
             resizeMode="contain"
           />
-           <View style={styles.divider} />
+
+          <View style={styles.divider} />
         </View>
 
-        {/* USER / LOGIN */}
-        <View style={styles.userSection}>
-          {isLoggedIn ? (
-            <View>
-              <TouchableOpacity
-                style={styles.userRow}
-                onPress={handleLogout}>
-                <Icon name="user-circle" size={22} color="#333" />
-                <Text style={styles.userName}>{userName}</Text>
-              </TouchableOpacity>
+        {/* ==============================
+            USER SECTION
+        ============================== */}
+        {isLoggedIn ? (
+          <View style={styles.userSection}>
 
-              {showDropdown && (
-                <View style={styles.dropdown}>
-                  <TouchableOpacity
-                    style={styles.dropdownItem}
-                    onPress={() => {
-                      setShowDropdown(false);
-                      navigation.navigate('Profile');
-                    }}>
-                    <Text style={styles.dropdownText}>Profile</Text>
-                  </TouchableOpacity>
+            {/* =================================
+                FIRST LINE - MOBILE + ROLE
+            ================================= */}
+          <View style={styles.userRow}>
 
-                  <TouchableOpacity
-                    style={styles.dropdownItem}
-                    onPress={handleLogout}>
-                    <Text
-                      style={[
-                        styles.dropdownText,
-                        {color: 'red'},
-                      ]}>
-                      Logout
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          ) : (
+  {/* USER ICON */}
+  <Icon
+    name="user"
+    size={12}
+    color="#012353"
+  />
+
+  {/* MOBILE */}
+  <Text style={styles.userMobile}>
+    {userMobile}
+  </Text>
+
+  {/* ROLE */}
+  <Text style={styles.userRole}>
+    ({userRole || 'USER'})
+  </Text>
+
+</View>
+
+            {/* =================================
+                SECOND LINE - LOGOUT
+            ================================= */}
             <TouchableOpacity
-              style={styles.loginBtn}
-              onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.btnText}>Login</Text>
+              style={styles.logoutBtn}
+              onPress={handleLogout}
+              activeOpacity={0.7}>
+
+              <Icon
+                name="sign-out-alt"
+                size={11}
+                color="#fff"
+              />
+
+              <Text style={styles.logoutText}>
+                Logout
+              </Text>
+
             </TouchableOpacity>
-          )}
-        </View>
+
+          </View>
+        ) : (
+
+          /* ==============================
+             LOGIN BUTTON
+          ============================== */
+          <TouchableOpacity
+            style={styles.loginBtn}
+            onPress={() => navigation.navigate('Login')}>
+
+            <Text style={styles.btnText}>
+              Login
+            </Text>
+
+          </TouchableOpacity>
+        )}
+
       </View>
     </>
   );
 };
 
-export default Header;
+export default HomeHeader;
+
+
+// ========================================
+// STYLES
+// ========================================
 
 const styles = StyleSheet.create({
+
+  // ==============================
+  // HEADER
+  // ==============================
   header: {
     backgroundColor: '#fff',
     flexDirection: 'row',
@@ -179,59 +252,114 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
 
+  // ==============================
+  // MENU BUTTON
+  // ==============================
   menuButton: {
     paddingHorizontal: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
+  // ==============================
+  // LOGO SECTION
+  // ==============================
   logoSection: {
-  flex: 1,
-  flexDirection: 'row',
-  alignItems: 'center',
-},
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
 
-divider: {
-  width: 1,
-  height: 28,
-  backgroundColor: '#ddd',
-  marginHorizontal: 10,
-},
-
-screenTitle: {
-  fontSize: 15,
-  fontWeight: '700',
-  color: '#0A3D62',
-},
+  divider: {
+    width: 1,
+    height: 28,
+    backgroundColor: '#ddd',
+    marginHorizontal: 10,
+  },
 
   logo: {
     width: 180,
     height: 45,
   },
 
+  // ==============================
+  // USER SECTION
+  // ==============================
   userSection: {
     alignItems: 'flex-end',
     justifyContent: 'center',
-    paddingRight: 10,
+    paddingRight: 6,
   },
 
+  // ==============================
+  // FIRST LINE
+  // MOBILE + ROLE
+  // ==============================
   userRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    height: 18,
   },
 
-  userName: {
-    color: '#333',
-    fontSize: 13,
-    marginLeft: 6,
+  // ==============================
+  // MOBILE
+  // ==============================
+  userMobile: {
+    color: '#012353',
+    fontSize: 12,
+    marginLeft: 5,
+    fontWeight: '700',
+  },
+
+  // ==============================
+  // ROLE ICON
+  // ==============================
+  roleIcon: {
+    marginLeft: 8,
+  },
+
+  // ==============================
+  // ROLE
+  // ==============================
+  userRole: {
+    color: '#777',
+    fontSize: 9,
+    marginLeft: 4,
     fontWeight: '600',
+    textTransform: 'uppercase',
   },
 
+  // ==============================
+  // SECOND LINE
+  // LOGOUT BUTTON
+  // ==============================
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    backgroundColor: '#d9534f',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 5,
+    marginTop: 2,
+  },
+
+  logoutText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
+    marginLeft: 4,
+  },
+
+  // ==============================
+  // LOGIN BUTTON
+  // ==============================
   loginBtn: {
     backgroundColor: '#012353',
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: 6,
+    marginRight: 8,
   },
 
   btnText: {
@@ -240,29 +368,9 @@ screenTitle: {
     fontSize: 12,
   },
 
-  dropdown: {
-    position: 'absolute',
-    top: 35,
-    right: 0,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    elevation: 5,
-    width: 120,
-    zIndex: 9999,
-  },
-
-  dropdownItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-
-  dropdownText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-
+  // ==============================
+  // MENU WRAPPER
+  // ==============================
   menuWrapper: {
     position: 'absolute',
     top: 60,

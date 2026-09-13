@@ -30,26 +30,34 @@ const Header = () => {
   // CHECK LOGIN
   // =============================
   const checkLogin = async () => {
-    try {
-      const loginStatus = await AsyncStorage.getItem('userLogin');
-      const mobile = await AsyncStorage.getItem('userMobile');
-      const role = await AsyncStorage.getItem('userRole');
+  try {
+    const loginStatus = await AsyncStorage.getItem('userLogin');
+    const mobile = await AsyncStorage.getItem('userMobile');
+    const role = await AsyncStorage.getItem('userRole');
 
-     
+    console.log('HEADER LOGIN:', {
+      loginStatus,
+      mobile,
+      role,
+    });
 
-      if (loginStatus === 'true') {
-        setIsLoggedIn(true);
-        setUserMobile(mobile || '');
-        setUserRole(role || '');
-      } else {
-        setIsLoggedIn(false);
-        setUserMobile('');
-        setUserRole('');
-      }
-    } catch (error) {
-      console.log('Login Check Error:', error);
+    if (loginStatus === 'true') {
+      setIsLoggedIn(true);
+      setUserMobile(mobile || '');
+      setUserRole(role || '');
+    } else {
+      setIsLoggedIn(false);
+      setUserMobile('');
+      setUserRole('');
     }
-  };
+  } catch (error) {
+    console.log('Login Check Error:', error);
+
+    setIsLoggedIn(false);
+    setUserMobile('');
+    setUserRole('');
+  }
+};
 
   // =============================
   // SCREEN FOCUS
@@ -63,53 +71,78 @@ const Header = () => {
   // =============================
   // INITIAL LOAD
   // =============================
-  useEffect(() => {
-    checkLogin();
-  }, []);
+  // useEffect(() => {
+  //   checkLogin();
+  // }, []);
 
   // =============================
   // LOGOUT WITH CONFIRMATION
   // =============================
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout Confirmation',
-      'Are you sure you want to logout?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await AsyncStorage.multiRemove([
-                'userLogin',
-                'userMobile',
-                'userRole',
-                'userToken',
-              ]);
+  
 
-              setIsLoggedIn(false);
-              setUserMobile('');
-              setUserRole('');
-              setShowMenu(false);
+const handleLogout = () => {
+  Alert.alert(
+    'Logout Confirmation',
+    'Are you sure you want to logout?',
+    [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            // ==============================
+            // CLEAR LOGIN DATA
+            // ==============================
+            await AsyncStorage.multiRemove([
+              'userLogin',
+              'loginStatus',
+              'userMobile',
+              'userRole',
+              'userToken',
+              'userId',
+              'userName',
+              'userEmail',
+            ]);
 
-              navigation.replace('Login');
-            } catch (error) {
-              console.log('Logout Error:', error);
-              Alert.alert(
-                'Error',
-                'Unable to logout. Please try again.',
-              );
-            }
-          },
+            console.log('LOGOUT: Storage cleared');
+
+            // ==============================
+            // CLEAR HEADER STATE
+            // ==============================
+            setIsLoggedIn(false);
+            setUserMobile('');
+            setUserRole('');
+            setShowMenu(false);
+
+            // ==============================
+            // GO TO LOGIN
+            // ==============================
+            navigation.reset({
+              index: 0,
+              routes: [{name: 'Login'}],
+            });
+
+          } catch (error) {
+            console.log('LOGOUT ERROR:', error);
+
+            Alert.alert(
+              'Logout Error',
+              error?.message || String(error),
+            );
+          }
         },
-      ],
-      {cancelable: true},
-    );
-  };
+      },
+    ],
+    {
+      cancelable: true,
+    },
+  );
+};
+
 
   return (
     <>
@@ -155,47 +188,59 @@ const Header = () => {
         </View>
 
         {/* LOGGED IN USER */}
-        {isLoggedIn ? (
-          <View style={styles.userSection}>
+      
+      {isLoggedIn ? (
+  <View style={styles.userSection}>
 
-            <View style={styles.userRow}>
-              <Icon name="mobile-alt" size={12} color="#012353" />
-              <Text style={styles.userMobile}>
-                {userMobile}
-              </Text>
-            </View>
+    {/* FIRST LINE - USER + MOBILE + ROLE */}
+    <View style={styles.userRow}>
 
-            <View style={styles.userRow}>
-              <Icon name="user-tag" size={11} color="#777" />
-              <Text style={styles.userRole}>
-                {userRole || 'USER'}
-              </Text>
-            </View>
+      <Icon
+        name="user"
+        size={12}
+        color="#012353"
+      />
 
-            <TouchableOpacity
-              style={styles.logoutBtn}
-              onPress={handleLogout}>
-              <Icon
-                name="sign-out-alt"
-                size={11}
-                color="#fff"
-              />
-              <Text style={styles.logoutText}>
-                {' '}Logout
-              </Text>
-            </TouchableOpacity>
+      <Text style={styles.userMobile}>
+        {userMobile}
+      </Text>
 
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={styles.loginBtn}
-            onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.btnText}>
-              Login
-            </Text>
-          </TouchableOpacity>
-        )}
+      <Text style={styles.userRole}>
+        ({userRole || 'USER'})
+      </Text>
 
+    </View>
+
+    {/* SECOND LINE - LOGOUT */}
+    <TouchableOpacity
+      style={styles.logoutBtn}
+      onPress={handleLogout}
+      activeOpacity={0.7}>
+
+      <Icon
+        name="sign-out-alt"
+        size={11}
+        color="#fff"
+      />
+
+      <Text style={styles.logoutText}>
+        Logout
+      </Text>
+
+    </TouchableOpacity>
+
+  </View>
+) : (
+  <TouchableOpacity
+    style={styles.loginBtn}
+    onPress={() => navigation.navigate('Login')}>
+
+    <Text style={styles.btnText}>
+      Login
+    </Text>
+
+  </TouchableOpacity>
+)}
       </View>
     </>
   );
@@ -204,6 +249,7 @@ const Header = () => {
 export default Header;
 
 const styles = StyleSheet.create({
+
   header: {
     backgroundColor: '#fff',
     flexDirection: 'row',
@@ -221,7 +267,8 @@ const styles = StyleSheet.create({
 
   logoSection: {
     flex: 1,
-    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 
   logo: {
@@ -229,18 +276,28 @@ const styles = StyleSheet.create({
     height: 45,
   },
 
+  // ==============================
+  // USER SECTION
+  // ==============================
   userSection: {
     alignItems: 'flex-end',
     justifyContent: 'center',
     paddingRight: 8,
   },
 
+  // ==============================
+  // FIRST LINE
+  // USER + MOBILE + ROLE
+  // ==============================
   userRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 2,
+    height: 18,
   },
 
+  // ==============================
+  // MOBILE
+  // ==============================
   userMobile: {
     color: '#012353',
     fontSize: 12,
@@ -248,30 +305,41 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
+  // ==============================
+  // ROLE
+  // ==============================
   userRole: {
     color: '#777',
-    fontSize: 10,
-    marginLeft: 5,
+    fontSize: 9,
+    marginLeft: 4,
     fontWeight: '600',
     textTransform: 'uppercase',
   },
 
+  // ==============================
+  // SECOND LINE - LOGOUT
+  // ==============================
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'flex-end',
     backgroundColor: '#d9534f',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 5,
-    marginTop: 4,
+    marginTop: 2,
   },
 
   logoutText: {
     color: '#fff',
     fontSize: 10,
     fontWeight: '700',
+    marginLeft: 4,
   },
 
+  // ==============================
+  // LOGIN
+  // ==============================
   loginBtn: {
     backgroundColor: '#012353',
     paddingHorizontal: 12,
@@ -286,6 +354,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 
+  // ==============================
+  // MENU
+  // ==============================
   menuWrapper: {
     position: 'absolute',
     top: 60,

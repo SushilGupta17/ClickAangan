@@ -1,61 +1,416 @@
-import React, {useState} from 'react';
+
+import React, {useEffect, useMemo, useState} from 'react';
+
 import {
-  ScrollView,
-  SafeAreaView,
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
   Image,
+  Alert,
 } from 'react-native';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useEffect} from 'react';
+import Icon from 'react-native-vector-icons/FontAwesome5';
+
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import {formatPrice} from '../helpers/priceHelper';
+
+const API_URL = 'https://savariyaproperty.in';
 
 const WishlistScreen = ({navigation}) => {
-  const API_URL = 'https://savariyaproperty.in';
+  const [wishlist, setWishlist] = useState([]);
 
- const [wishlist, setWishlist] = useState([]);
- const loadWishlist = async () => {
-  try {
-    const data = await AsyncStorage.getItem('wishlist');
-    const parsed = data ? JSON.parse(data) : [];
-    setWishlist(parsed);
-  } catch (error) {
-    console.log(error);
-  }
-};
+  // ==========================================
+  // MEDIA URL
+  // ==========================================
 
-useEffect(() => {
-  const unsubscribe = navigation.addListener('focus', () => {
-    loadWishlist();
-  });
+  const getMediaUrl = path => {
+    if (!path) {
+      return '';
+    }
 
-  return unsubscribe;
-}, [navigation]);
+    const cleanPath = String(path)
+      .replace(/\\/g, '/')
+      .trim();
 
-const removeFromWishlist = async (id) => {
-  try {
-    const updatedWishlist = wishlist.filter(item => item.id !== id);
+    if (
+      cleanPath.startsWith('http://') ||
+      cleanPath.startsWith('https://')
+    ) {
+      return cleanPath;
+    }
 
-    await AsyncStorage.setItem(
-      'wishlist',
-      JSON.stringify(updatedWishlist),
+    return `${API_URL}/${cleanPath.replace(/^\/+/, '')}`;
+  };
+
+  // ==========================================
+  // LOAD WISHLIST
+  // ==========================================
+
+  const loadWishlist = async () => {
+    try {
+      const savedWishlist = await AsyncStorage.getItem('wishlist');
+
+      console.log('================================');
+      console.log('WISHLIST RAW:', savedWishlist);
+      console.log('================================');
+
+      if (!savedWishlist) {
+        setWishlist([]);
+        return;
+      }
+
+      const parsedWishlist = JSON.parse(savedWishlist);
+
+      if (Array.isArray(parsedWishlist)) {
+        setWishlist(parsedWishlist);
+      } else {
+        setWishlist([]);
+      }
+    } catch (error) {
+      console.log('WISHLIST LOAD ERROR:', error);
+      setWishlist([]);
+    }
+  };
+
+  // ==========================================
+  // SCREEN FOCUS
+  // ==========================================
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadWishlist();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
+  // ==========================================
+  // REMOVE
+  // ==========================================
+
+  const removeFromWishlist = async id => {
+    try {
+      const updatedWishlist = wishlist.filter(
+        item => String(item?.id) !== String(id),
+      );
+
+      await AsyncStorage.setItem(
+        'wishlist',
+        JSON.stringify(updatedWishlist),
+      );
+
+      setWishlist(updatedWishlist);
+
+      console.log('REMOVED FROM WISHLIST:', id);
+    } catch (error) {
+      console.log('REMOVE WISHLIST ERROR:', error);
+
+      Alert.alert(
+        'Error',
+        'Unable to remove property from wishlist.',
+      );
+    }
+  };
+
+  // ==========================================
+  // CONFIRM REMOVE
+  // ==========================================
+
+  const confirmRemove = item => {
+    const title =
+      item?.propertyTitle ||
+      item?.PropertyTitle ||
+      item?.title ||
+      item?.Title ||
+      item?.propertyName ||
+      item?.PropertyName ||
+      'this property';
+
+    Alert.alert(
+      'Remove from Wishlist',
+      `Remove "${title}" from your wishlist?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => removeFromWishlist(item?.id),
+        },
+      ],
     );
+  };
 
-    setWishlist(updatedWishlist);
-  } catch (error) {
-    console.log(error);
+  // ==========================================
+  // OPEN PROPERTY
+  // ==========================================
+
+  const openProperty = item => {
+    navigation.navigate('PropertyDetails', {
+      property: item,
+      id: item?.id,
+    });
+  };
+
+  // ==========================================
+  // PROPERTY IMAGES
+  // ProjectCard style handling
+  // ==========================================
+
+  const getPropertyImages = item => {
+    let images = [];
+
+    // ------------------------------------------
+    // 1. images
+    // ------------------------------------------
+
+    if (item?.images) {
+      if (typeof item.images === 'string') {
+        images = item.images
+          .split(',')
+          .map(x => x.trim())
+          .filter(Boolean);
+      }
+
+      if (Array.isArray(item.images)) {
+        images = item.images
+          .map(x => {
+            if (typeof x === 'string') {
+              return x;
+            }
+
+            return (
+              x?.imageUrl ||
+              x?.ImageUrl ||
+              x?.url ||
+              x?.Url ||
+              x?.path ||
+              x?.Path ||
+              ''
+            );
+          })
+          .filter(Boolean);
+      }
+    }
+
+    // ------------------------------------------
+    // 2. cover image
+    // ------------------------------------------
+
+    if (images.length === 0) {
+      const coverImage =
+        item?.coverImage ||
+        item?.CoverImage ||
+        item?.coverImagePath ||
+        item?.CoverImagePath ||
+        item?.propertyImage ||
+        item?.PropertyImage ||
+        item?.imageUrl ||
+        item?.ImageUrl ||
+        item?.image ||
+        item?.Image ||
+        '';
+
+      if (coverImage) {
+        images.push(coverImage);
+      }
+    }
+
+    // ------------------------------------------
+    // FINAL URL
+    // ------------------------------------------
+
+    const finalImages = images
+      .map(x => getMediaUrl(x))
+      .filter(Boolean);
+
+    console.log('================================');
+    console.log('PROPERTY:', item?.propertyTitle || item?.title);
+    console.log('IMAGE PATHS:', images);
+    console.log('FINAL IMAGE URLS:', finalImages);
+    console.log('================================');
+
+    return finalImages;
+  };
+
+  // ==========================================
+  // PROPERTY TITLE
+  // ==========================================
+
+  const getPropertyTitle = item => {
+    return (
+      item?.propertyTitle ||
+      item?.PropertyTitle ||
+      item?.title ||
+      item?.Title ||
+      item?.propertyName ||
+      item?.PropertyName ||
+      'Property'
+    );
+  };
+
+  // ==========================================
+  // LOCATION
+  // ==========================================
+
+  const getLocation = item => {
+    const locality =
+      item?.locality ||
+      item?.Locality ||
+      '';
+
+    const city =
+      item?.city ||
+      item?.City ||
+      '';
+
+    if (locality && city) {
+      return `${locality}, ${city}`;
+    }
+
+    return (
+      locality ||
+      city ||
+      item?.location ||
+      item?.Location ||
+      'Location not available'
+    );
+  };
+
+  // ==========================================
+  // PRICE
+  // ==========================================
+
+  const getPrice = item => {
+    const price =
+      item?.price ??
+      item?.Price ??
+      item?.minPrice ??
+      item?.MinPrice ??
+      0;
+
+    return formatPrice(price);
+  };
+
+  // ==========================================
+  // STATUS
+  // ==========================================
+
+  const getStatus = item => {
+    return (
+      item?.propertyStatus ||
+      item?.PropertyStatus ||
+      item?.status ||
+      item?.Status ||
+      item?.listingType ||
+      item?.ListingType ||
+      'Available'
+    );
+  };
+
+  // ==========================================
+  // OWNER / BUILDER
+  // ==========================================
+
+  const getOwner = item => {
+    return (
+      item?.builderName ||
+      item?.BuilderName ||
+      item?.ownerName ||
+      item?.OwnerName ||
+      item?.postedBy ||
+      item?.PostedBy ||
+      ''
+    );
+  };
+
+  // ==========================================
+  // EMPTY
+  // ==========================================
+
+  if (wishlist.length === 0) {
+    return (
+      <SafeAreaView style={styles.safeContainer}>
+        <Header />
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.container}>
+
+          <View style={styles.headingCard}>
+            <Text style={styles.heading}>
+              My Wishlist
+            </Text>
+
+            <Text style={styles.subHeading}>
+              Your favourite properties are saved here.
+            </Text>
+          </View>
+
+          <View style={styles.emptyCard}>
+            <View style={styles.emptyIconCircle}>
+              <Icon
+                name="heart"
+                size={38}
+                color="#E53935"
+              />
+            </View>
+
+            <Text style={styles.emptyTitle}>
+              No Favourite Properties
+            </Text>
+
+            <Text style={styles.emptyText}>
+              Save your favourite properties and they
+              {'\n'}
+              will appear here.
+            </Text>
+
+            <TouchableOpacity
+              style={styles.exploreButton}
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('Home')}>
+
+              <Icon
+                name="search"
+                size={14}
+                color="#FFF"
+              />
+
+              <Text style={styles.exploreButtonText}>
+                Explore Properties
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+
+        <Footer />
+      </SafeAreaView>
+    );
   }
-};
+
+  // ==========================================
+  // MAIN
+  // ==========================================
 
   return (
     <SafeAreaView style={styles.safeContainer}>
       <Header />
+
       <ScrollView
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.container}>
+
+        {/* ======================================
+            HEADER
+        ====================================== */}
 
         <View style={styles.headingCard}>
           <Text style={styles.heading}>
@@ -65,95 +420,240 @@ const removeFromWishlist = async (id) => {
           <Text style={styles.subHeading}>
             Your favourite properties are saved here.
           </Text>
+
+          <View style={styles.countRow}>
+            <Icon
+              name="heart"
+              size={13}
+              color="#E53935"
+            />
+
+            <Text style={styles.countText}>
+              {wishlist.length}{' '}
+              {wishlist.length === 1
+                ? 'Favourite Property'
+                : 'Favourite Properties'}
+            </Text>
+          </View>
         </View>
 
-        {wishlist.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyIcon}>❤️</Text>
+        {/* ======================================
+            WISHLIST CARDS
+        ====================================== */}
 
-            <Text style={styles.emptyTitle}>
-              No Favourite Properties
-            </Text>
+        {wishlist.map((item, index) => {
+          const images = getPropertyImages(item);
 
-            <Text style={styles.emptyText}>
-              Save your favourite properties and
-              they will appear here.
-            </Text>
+          const title = getPropertyTitle(item);
+          const location = getLocation(item);
+          const price = getPrice(item);
+          const status = getStatus(item);
+          const owner = getOwner(item);
 
-            <TouchableOpacity
-              style={styles.exploreButton}
-              onPress={() =>
-                navigation.navigate('Home')
-              }>
-              <Text style={styles.exploreButtonText}>
-                Explore Properties
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          wishlist.map(item => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.propertyCard}
-              onPress={() =>
-                navigation.navigate(
-                  'PropertyDetails',
-                )
-              }>
-                <Image
-                        source={{ uri: API_URL + item.imageUrl }}
-                        style={styles.propertyImage}
-                        resizeMode="cover"
-                      />
-                      
+          const imageUrl =
+            images.length > 0
+              ? images[0]
+              : '';
 
-              <View style={styles.propertyContent}>
-                <Text
-                  style={styles.propertyTitle}>
-                  {item.title}
-                </Text>
+          return (
+            <View
+              key={`${item?.id}-${index}`}
+              style={styles.card}>
 
-                <Text
-                  style={
-                    styles.propertyLocation
-                  }>
-                  📍 {item.location}
-                </Text>
+              {/* ==================================
+                  MEDIA
+              ================================== */}
 
-                <Text
-                  style={styles.propertyPrice}>
-                  {item.price}
-                </Text>
+              <TouchableOpacity
+                activeOpacity={0.95}
+                onPress={() => openProperty(item)}>
 
- <View style={styles.buttonRow}>
+                {imageUrl ? (
+                  <Image
+                    source={{uri: imageUrl}}
+                    style={styles.propertyImage}
+                    resizeMode="cover"
 
-  <TouchableOpacity
-    style={styles.detailsButton}
-    onPress={() =>
-      navigation.navigate('PropertyDetails', {
-        property: item,
-        id: item.id,
-      })
-    }>
-    <Text style={styles.detailsButtonText}>
-      View Details
-    </Text>
-  </TouchableOpacity>
+                    onLoad={() => {
+                      console.log(
+                        'WISHLIST IMAGE LOADED:',
+                        imageUrl,
+                      );
+                    }}
 
-  <TouchableOpacity
-    style={styles.removeButton}
-    onPress={() => removeFromWishlist(item.id)}>
-    <Text style={styles.removeButtonText}>
-      Remove
-    </Text>
-  </TouchableOpacity>
+                    onError={error => {
+                      console.log(
+                        '================================',
+                      );
 
-</View>
+                      console.log(
+                        'WISHLIST IMAGE ERROR',
+                      );
+
+                      console.log(
+                        'IMAGE URL:',
+                        imageUrl,
+                      );
+
+                      console.log(
+                        'ERROR:',
+                        error?.nativeEvent,
+                      );
+
+                      console.log(
+                        '================================',
+                      );
+                    }}
+                  />
+                ) : (
+                  <View style={styles.noMedia}>
+                    <Icon
+                      name="image"
+                      size={35}
+                      color="#999"
+                    />
+
+                    <Text style={styles.noMediaText}>
+                      No Image Available
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              {/* ==================================
+                  STATUS BADGES
+              ================================== */}
+
+              <View style={styles.statusRow}>
+
+                <View style={styles.statusBadge}>
+                  <Text style={styles.statusText}>
+                    {status}
+                  </Text>
+                </View>
+
+                <View style={styles.reraBadge}>
+                  <Icon
+                    name="check-circle"
+                    color="#28A745"
+                    size={12}
+                  />
+
+                  <Text style={styles.reraText}>
+                    Verified
+                  </Text>
+                </View>
 
               </View>
-            </TouchableOpacity>
-          ))
-        )}
+
+              {/* ==================================
+                  BODY
+              ================================== */}
+
+              <View style={styles.body}>
+
+                {/* PROPERTY NAME */}
+
+                <Text
+                  numberOfLines={1}
+                  style={styles.propertyName}>
+
+                  {title}
+
+                </Text>
+
+                {/* OWNER */}
+
+                {owner ? (
+                  <Text
+                    numberOfLines={1}
+                    style={styles.builder}>
+
+                    By {owner}
+
+                  </Text>
+                ) : null}
+
+                {/* LOCATION */}
+
+                <View style={styles.locationRow}>
+
+                  <Icon
+                    name="map-marker-alt"
+                    color="#FF5722"
+                    size={13}
+                  />
+
+                  <Text
+                    numberOfLines={1}
+                    style={styles.location}>
+
+                    {location}
+
+                  </Text>
+
+                </View>
+
+                {/* PRICE */}
+
+                <View style={styles.priceRow}>
+
+                  <Text style={styles.price}>
+                    ₹ {price}
+                  </Text>
+
+                </View>
+
+                {/* ==================================
+                    BUTTONS
+                ================================== */}
+
+                <View style={styles.buttonRow}>
+
+                  {/* VIEW DETAILS */}
+
+                  <TouchableOpacity
+                    style={styles.detailsBtn}
+                    activeOpacity={0.8}
+                    onPress={() => openProperty(item)}>
+
+                    <Icon
+                      name="eye"
+                      size={13}
+                      color="#FFF"
+                    />
+
+                    <Text style={styles.detailsText}>
+                      View Details
+                    </Text>
+
+                  </TouchableOpacity>
+
+                  {/* REMOVE */}
+
+                  <TouchableOpacity
+                    style={styles.removeBtn}
+                    activeOpacity={0.8}
+                    onPress={() => confirmRemove(item)}>
+
+                    <Icon
+                      name="heart-broken"
+                      size={13}
+                      color="#FFF"
+                    />
+
+                    <Text style={styles.removeText}>
+                      Remove
+                    </Text>
+
+                  </TouchableOpacity>
+
+                </View>
+
+              </View>
+            </View>
+          );
+        })}
       </ScrollView>
 
       <Footer />
@@ -163,64 +663,303 @@ const removeFromWishlist = async (id) => {
 
 export default WishlistScreen;
 
+
+// ==========================================
+// STYLES
+// Same ProjectCard Theme
+// ==========================================
+
 const styles = StyleSheet.create({
+
+  // ========================================
+  // SAFE CONTAINER
+  // ========================================
+
   safeContainer: {
     flex: 1,
     backgroundColor: '#F5F7FA',
   },
 
+  // ========================================
+  // CONTAINER
+  // ========================================
+
   container: {
-    padding: 20,
-    paddingBottom: 100,
+    padding: 12,
+    paddingBottom: 110,
   },
 
+  // ========================================
+  // HEADING CARD
+  // ========================================
+
   headingCard: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
-    elevation: 5,
+    backgroundColor: '#FFF',
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 8,
+    elevation: 4,
   },
 
   heading: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '700',
     color: '#222',
     textAlign: 'center',
   },
 
   subHeading: {
-    fontSize: 14,
+    marginTop: 6,
+    fontSize: 13,
     color: '#666',
     textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 22,
+    lineHeight: 20,
   },
 
-  emptyCard: {
-    backgroundColor: '#fff',
+  countRow: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  countText: {
+    marginLeft: 6,
+    fontSize: 12,
+    color: '#E53935',
+    fontWeight: '700',
+  },
+
+  // ========================================
+  // CARD
+  // ========================================
+
+  card: {
+    marginVertical: 8,
+    backgroundColor: '#FFF',
+    borderRadius: 18,
+    overflow: 'hidden',
+    elevation: 5,
+  },
+
+  // ========================================
+  // IMAGE
+  // ========================================
+
+  propertyImage: {
+    width: '100%',
+    height: 220,
+    backgroundColor: '#F2F2F2',
+  },
+
+  // ========================================
+  // NO MEDIA
+  // ========================================
+
+  noMedia: {
+    width: '100%',
+    height: 220,
+    backgroundColor: '#F2F2F2',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  noMediaText: {
+    marginTop: 8,
+    color: '#999',
+    fontSize: 13,
+  },
+
+  // ========================================
+  // STATUS
+  // ========================================
+
+  statusRow: {
+    position: 'absolute',
+    top: 15,
+    left: 15,
+    right: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    zIndex: 10,
+  },
+
+  statusBadge: {
+    backgroundColor: '#28A745',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 20,
+  },
+
+  statusText: {
+    color: '#FFF',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+
+  reraBadge: {
+    flexDirection: 'row',
+    backgroundColor: '#FFF',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignItems: 'center',
+  },
+
+  reraText: {
+    marginLeft: 5,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+
+  // ========================================
+  // BODY
+  // ========================================
+
+  body: {
+    padding: 15,
+  },
+
+  // ========================================
+  // PROPERTY NAME
+  // ========================================
+
+  propertyName: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#222',
+  },
+
+  // ========================================
+  // BUILDER
+  // ========================================
+
+  builder: {
+    marginTop: 4,
+    color: '#666',
+    fontSize: 14,
+  },
+
+  // ========================================
+  // LOCATION
+  // ========================================
+
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+
+  location: {
+    marginLeft: 8,
+    color: '#555',
+    flex: 1,
+    fontSize: 13,
+  },
+
+  // ========================================
+  // PRICE
+  // ========================================
+
+  priceRow: {
+    marginTop: 14,
+  },
+
+  price: {
+    fontSize: 14,
+    color: '#555',
+    fontWeight: 'bold',
+  },
+
+  // ========================================
+  // BUTTON ROW
+  // ========================================
+
+  buttonRow: {
+    flexDirection: 'row',
+    marginTop: 18,
+  },
+
+  // ========================================
+  // DETAILS
+  // ========================================
+
+  detailsBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#102A47',
+    paddingVertical: 14,
+    borderRadius: 10,
+    marginRight: 6,
+  },
+
+  detailsText: {
+    color: '#FFF',
+    textAlign: 'center',
+    fontWeight: '700',
+    fontSize: 13,
+    marginLeft: 7,
+  },
+
+  // ========================================
+  // REMOVE
+  // ========================================
+
+  removeBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#E53935',
+    paddingVertical: 14,
+    borderRadius: 10,
+    marginLeft: 6,
+  },
+
+  removeText: {
+    color: '#FFF',
+    textAlign: 'center',
+    fontWeight: '700',
+    fontSize: 13,
+    marginLeft: 7,
+  },
+
+  // ========================================
+  // EMPTY
+  // ========================================
+
+  emptyCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 18,
     padding: 40,
     alignItems: 'center',
     elevation: 4,
+    marginTop: 8,
   },
 
-  emptyIcon: {
-    fontSize: 50,
+  emptyIconCircle: {
+    width: 75,
+    height: 75,
+    borderRadius: 38,
+    backgroundColor: '#FFF0F0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   emptyTitle: {
-    fontSize: 22,
+    marginTop: 20,
+    fontSize: 21,
     fontWeight: '700',
     color: '#222',
-    marginTop: 20,
   },
 
   emptyText: {
+    marginTop: 10,
     fontSize: 14,
     color: '#666',
     textAlign: 'center',
-    marginTop: 10,
     lineHeight: 22,
   },
 
@@ -230,93 +969,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 25,
     paddingVertical: 14,
     borderRadius: 12,
-  },
-
-  exploreButtonText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-
-  propertyCard: {
-    backgroundColor: '#fff',
-    borderRadius: 18,
-    overflow: 'hidden',
-    marginBottom: 20,
-    elevation: 4,
-  },
-
-  propertyImage: {
-    width: '100%',
-    height: 180,
-  },
-
-  propertyContent: {
-    padding: 15,
-  },
-
-  propertyTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#222',
-  },
-
-  propertyLocation: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 8,
-  },
-
-  propertyPrice: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#0A8754',
-    marginTop: 10,
-  },
-
-  detailsButton: {
-    backgroundColor: '#0A8754',
-    borderRadius: 10,
-    paddingVertical: 12,
-    marginTop: 15,
+    flexDirection: 'row',
     alignItems: 'center',
   },
 
-  detailsButtonText: {
-    color: '#fff',
-    fontWeight: '700',
+  exploreButtonText: {
+    color: '#FFF',
     fontSize: 15,
+    fontWeight: '700',
+    marginLeft: 8,
   },
-  buttonRow: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  marginTop: 15,
-},
-
-detailsButton: {
-  flex: 1,
-  backgroundColor: '#0A8754',
-  paddingVertical: 12,
-  borderRadius: 10,
-  alignItems: 'center',
-  marginRight: 8,
-},
-
-removeButton: {
-  flex: 1,
-  backgroundColor: '#E53935',
-  paddingVertical: 12,
-  borderRadius: 10,
-  alignItems: 'center',
-},
-
-removeButtonText: {
-  color: '#fff',
-  fontWeight: '700',
-},
-
-detailsButtonText: {
-  color: '#fff',
-  fontWeight: '700',
-},
 });
+

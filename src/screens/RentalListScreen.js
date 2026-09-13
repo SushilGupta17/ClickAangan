@@ -1,15 +1,17 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 
 import {
-View,
-Text,
-StyleSheet,
-SectionList,
-TouchableOpacity,
-ActivityIndicator,
-Linking,
-Alert,
+  View,
+  Text,
+  StyleSheet,
+  SectionList,
+  TouchableOpacity,
+  ActivityIndicator,
+  Linking,
+  Alert,
 } from 'react-native';
+
+import {useFocusEffect} from '@react-navigation/native';
 
 import Share from 'react-native-share';
 import LoginPopup from '../screens/LoginPopup';
@@ -21,291 +23,470 @@ import PropertyTabs from '../components/PropertyTabs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {formatPrice} from '../helpers/priceHelper';
 import ProjectPopup from '../components/ProjectListing/ProjectPopup';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+import RentalCard from '../components/Rental/RentalCard';
 
-//const API_URL = 'http://192.168.1.3:7045';
-const API_URL = 'https://savariyaproperty.in';
+// =========================================================
+// RENTAL LIST SCREEN
+// =========================================================
 
-const RentalListScreen = ({
-navigation,
-}) => {
+const RentalListScreen = ({navigation}) => {
 
-const [selectedProperty, setSelectedProperty] = useState('Apartment');
+  // =======================================================
+  // STATES
+  // =======================================================
 
-const [properties, setrentProperties] = useState([]);
-const [loading, setLoading] = useState(true);
-const [wishlist, setWishlist] = useState([]);
-const [likedItems, setLikedItems] = useState([]);
-const [showPopup, setShowPopup] = useState(false);
-const [pendingAction, setPendingAction] = useState(null);
-const [showProjects, setShowProjects] = useState(false);
+  const [selectedProperty, setSelectedProperty] =
+    useState('Apartment');
 
-// ================= LOGIN CHECK =================
+  const [properties, setrentProperties] =
+    useState([]);
 
-const checkLogin = async (action) => {
-try {
-  const loginStatus =
-    await AsyncStorage.getItem('userLogin');
+  const [loading, setLoading] =
+    useState(true);
 
-  if (loginStatus) {
-    action();
-  } else {
-    setPendingAction(() => action);
-    setShowPopup(true);
-  }
+  const [wishlist, setWishlist] =
+    useState([]);
 
-} catch (e) {
-  console.log(e);
-}
- 
+  const [likedItems, setLikedItems] =
+    useState([]);
 
-};
+  const [showPopup, setShowPopup] =
+    useState(false);
 
-// ================= LOAD WISHLIST =================
+  const [pendingAction, setPendingAction] =
+    useState(null);
 
-const loadWishlist = async () => {
-try {
-  const data =
-    await AsyncStorage.getItem('wishlist');
+  const [showProjects, setShowProjects] =
+    useState(false);
 
-  if (data) {
 
-    const parsedWishlist =
-      JSON.parse(data);
+  // =======================================================
+  // LOGIN CHECK
+  // =======================================================
 
-    setWishlist(parsedWishlist);
+  const checkLogin = async action => {
 
-    setLikedItems(
-      parsedWishlist.map(x => x.id)
-    );
+    try {
 
-  }
+      const loginStatus =
+        await AsyncStorage.getItem('userLogin');
 
-} catch (error) {
+      if (loginStatus === 'true') {
 
-  console.log(
-    'Wishlist Error:',
-    error
-  );
+        action();
 
-}
- 
+      } else {
 
-};
+        setPendingAction(() => action);
 
-// ================= LOAD RENTAL PROPERTIES =================
+        setShowPopup(true);
 
-const loadProperties = async () => {
-  try {
-    setLoading(true);
-
-    const data = await getRentalProperties();
-
-    console.log(
-      'FULL RENTAL API RESPONSE:',
-      JSON.stringify(data, null, 2)
-    );
-
-    let propertyData = [];
-
-    if (Array.isArray(data)) {
-      console.log(data);
-      propertyData = data;
-    } else if (Array.isArray(data?.data)) {
-      propertyData = data.data;
-    } else if (Array.isArray(data?.result)) {
-      propertyData = data.result;
-    } else if (Array.isArray(data?.properties)) {
-      propertyData = data.properties;
-    }
-
-    console.log(
-      'FINAL RENTAL DATA:',
-      propertyData
-    );
-
-    // API already rental data दे रही है
-    setrentProperties(propertyData);
-
-  } catch (error) {
-
-    console.log(
-      'Rental API Error:',
-      error
-    );
-
-    setrentProperties([]);
-
-  } finally {
-    setLoading(false);
-  }
-};
-
-// ================= USE EFFECT =================
-
-useEffect(() => {
- 
-loadProperties();
-loadWishlist();
- 
-
-}, []);
-
-useEffect(() => {
-
- 
-console.log(
-  'Selected Rental Type:',
-  selectedProperty
-);
- 
-
-}, [selectedProperty]);
-
-// ================= PROPERTY TYPE FILTER =================
-
-const filteredData =
-Array.isArray(properties)
-
- 
-  ? properties.filter(item => {
-
-      if (!selectedProperty) {
-        return true;
       }
 
-      const propertyType =
-        item?.propertyType
-          ?.trim()
-          ?.toLowerCase();
+    } catch (e) {
 
-      const selected =
-        selectedProperty
-          ?.trim()
-          ?.toLowerCase();
+      console.log('Login Check Error:', e);
 
-      return propertyType === selected;
+    }
 
-    })
-
-  : [];
- 
-  console.log('==========================');
-console.log('RENT SCREEN PROPERTIES:', properties.length);
-console.log('SELECTED PROPERTY:', selectedProperty);
-console.log('FILTERED DATA:', filteredData.length);
-console.log('==========================');
+  };
 
 
-// ================= WISHLIST =================
+  // =======================================================
+  // LOAD WISHLIST
+  // =======================================================
 
-const addToWishlist = async (item) => {
+  const loadWishlist = async () => {
 
- 
-try {
+    try {
 
-  const existingWishlist =
-    JSON.parse(
-      await AsyncStorage.getItem(
-        'wishlist'
-      )
-    ) || [];
+      const data =
+        await AsyncStorage.getItem('wishlist');
+
+      if (data) {
+
+        const parsedWishlist =
+          JSON.parse(data);
+
+        setWishlist(parsedWishlist);
+
+        setLikedItems(
+          parsedWishlist.map(x => x.id)
+        );
+
+      } else {
+
+        setWishlist([]);
+
+        setLikedItems([]);
+
+      }
+
+    } catch (error) {
+
+      console.log(
+        'Wishlist Error:',
+        error
+      );
+
+    }
+
+  };
 
 
-  const alreadyExists =
-    existingWishlist.some(
-      x => x.id === item.id
-    );
+  // =======================================================
+  // LOAD RENTAL PROPERTIES
+  // =======================================================
+
+  const loadProperties = useCallback(async () => {
+
+    try {
+
+      setLoading(true);
+
+      console.log('');
+      console.log('=================================');
+      console.log('LOADING RENTAL PROPERTIES');
+      console.log('=================================');
+
+      const data =
+        await getRentalProperties();
+
+      console.log(
+        'FULL RENTAL API RESPONSE:',
+        JSON.stringify(data, null, 2)
+      );
 
 
-  if (alreadyExists) {
+      // -----------------------------------------------------
+      // NORMALIZE API RESPONSE
+      // -----------------------------------------------------
 
-    Alert.alert(
-      'Wishlist',
-      'Property already exists in wishlist'
-    );
-
-    return;
-
-  }
+      let propertyData = [];
 
 
-  const updatedWishlist = [
-    ...existingWishlist,
-    item,
-  ];
+      if (Array.isArray(data)) {
+
+        propertyData = data;
+
+      }
+
+      else if (Array.isArray(data?.data)) {
+
+        propertyData = data.data;
+
+      }
+
+      else if (Array.isArray(data?.result)) {
+
+        propertyData = data.result;
+
+      }
+
+      else if (Array.isArray(data?.properties)) {
+
+        propertyData = data.properties;
+
+      }
 
 
-  await AsyncStorage.setItem(
-    'wishlist',
-    JSON.stringify(updatedWishlist)
+      console.log(
+        'FINAL RENTAL DATA COUNT:',
+        propertyData.length
+      );
+
+
+      // -----------------------------------------------------
+      // SHOW SOME PROPERTY TYPES FOR DEBUGGING
+      // -----------------------------------------------------
+
+      console.log(
+        'RENTAL PROPERTY TYPES:',
+        propertyData.map(item => item?.propertyType)
+      );
+
+
+      // -----------------------------------------------------
+      // SAVE DATA
+      // -----------------------------------------------------
+
+      setrentProperties(propertyData);
+
+    }
+
+    catch (error) {
+
+      console.log(
+        'Rental API Error:',
+        error
+      );
+
+      setrentProperties([]);
+
+    }
+
+    finally {
+
+      setLoading(false);
+
+    }
+
+  }, []);
+
+
+  // =======================================================
+  // IMPORTANT:
+  // LOAD DATA EVERY TIME RENT SCREEN GETS FOCUS
+  // =======================================================
+
+  useFocusEffect(
+    useCallback(() => {
+
+      console.log('');
+      console.log('=================================');
+      console.log('RENT SCREEN FOCUSED');
+      console.log('=================================');
+
+      loadProperties();
+
+      loadWishlist();
+
+
+      return () => {
+
+        console.log(
+          'RENT SCREEN BLURRED'
+        );
+
+      };
+
+    }, [loadProperties])
   );
 
 
-  setWishlist(
-    updatedWishlist
-  );
+  // =======================================================
+  // SELECTED RENTAL TYPE
+  // =======================================================
 
+  useEffect(() => {
 
-  setLikedItems(prev => [
-    ...prev,
-    item.id,
+    console.log('');
+    console.log('=================================');
+    console.log(
+      'SELECTED RENTAL TYPE:',
+      selectedProperty
+    );
+    console.log(
+      'TOTAL RENTAL DATA:',
+      properties.length
+    );
+    console.log('=================================');
+
+  }, [
+    selectedProperty,
+    properties,
   ]);
 
 
-  Alert.alert(
-    'Success',
-    'Added to Wishlist'
+  // =======================================================
+  // PROPERTY TYPE FILTER
+  // =======================================================
+
+  const filteredData =
+    Array.isArray(properties)
+
+      ? properties.filter(item => {
+
+          // -----------------------------------------------
+          // NO FILTER
+          // -----------------------------------------------
+
+          if (!selectedProperty) {
+
+            return true;
+
+          }
+
+
+          // -----------------------------------------------
+          // API PROPERTY TYPE
+          // -----------------------------------------------
+
+          const propertyType =
+            item?.propertyType
+              ?.toString()
+              ?.trim()
+              ?.toLowerCase();
+
+
+          // -----------------------------------------------
+          // SELECTED TAB
+          // -----------------------------------------------
+
+          const selected =
+            selectedProperty
+              ?.toString()
+              ?.trim()
+              ?.toLowerCase();
+
+
+          console.log(
+            'FILTER:',
+            propertyType,
+            '===',
+            selected
+          );
+
+
+          return propertyType === selected;
+
+        })
+
+      : [];
+
+
+  // =======================================================
+  // DEBUG
+  // =======================================================
+
+  console.log(
+    '=========================='
+  );
+
+  console.log(
+    'RENT SCREEN PROPERTIES:',
+    properties.length
+  );
+
+  console.log(
+    'SELECTED PROPERTY:',
+    selectedProperty
+  );
+
+  console.log(
+    'FILTERED DATA:',
+    filteredData.length
+  );
+
+  console.log(
+    '=========================='
   );
 
 
-} catch (error) {
+  // =======================================================
+  // WISHLIST
+  // =======================================================
 
-  console.log(error);
+  const addToWishlist = async item => {
 
-}
- 
+    try {
 
-};
+      const existingWishlist =
+        JSON.parse(
+          await AsyncStorage.getItem(
+            'wishlist'
+          )
+        ) || [];
 
-// ================= CALL OWNER =================
 
-const callOwner = item => {
+      const alreadyExists =
+        existingWishlist.some(
+          x => x.id === item.id
+        );
 
- 
-if (!item?.mobile) {
 
-  Alert.alert(
-    'Error',
-    'Mobile number not available'
-  );
+      if (alreadyExists) {
 
-  return;
+        Alert.alert(
+          'Wishlist',
+          'Property already exists in wishlist'
+        );
 
-}
+        return;
 
-Linking.openURL(
-  `tel:${item.mobile}`
-);
- 
+      }
 
-};
 
-// ================= SHARE PROPERTY =================
+      const updatedWishlist = [
+        ...existingWishlist,
+        item,
+      ];
 
-const shareProperty = async item => {
 
- 
-try {
+      await AsyncStorage.setItem(
+        'wishlist',
+        JSON.stringify(updatedWishlist)
+      );
 
-  await Share.open({
 
-    title: item.title,
+      setWishlist(
+        updatedWishlist
+      );
 
-    message: `
- 
 
+      setLikedItems(prev => [
+        ...prev,
+        item.id,
+      ]);
+
+
+      Alert.alert(
+        'Success',
+        'Added to Wishlist'
+      );
+
+    }
+
+    catch (error) {
+
+      console.log(
+        'Wishlist Add Error:',
+        error
+      );
+
+    }
+
+  };
+
+
+  // =======================================================
+  // CALL OWNER
+  // =======================================================
+
+  const callOwner = item => {
+
+    if (!item?.mobile) {
+
+      Alert.alert(
+        'Error',
+        'Mobile number not available'
+      );
+
+      return;
+
+    }
+
+
+    Linking.openURL(
+      `tel:${item.mobile}`
+    );
+
+  };
+
+
+  // =======================================================
+  // SHARE PROPERTY
+  // =======================================================
+
+  const shareProperty = async item => {
+
+    try {
+
+      await Share.open({
+
+        title: item.title,
+
+        message: `
 🏠 ${item.title}
 
 💰 ₹ ${formatPrice(item.price)}
@@ -315,46 +496,52 @@ try {
 🏡 Property for Rent
 `,
 
- 
-    url:
-      'https://picsum.photos/id/238/800/400',
+        url:
+          'https://picsum.photos/id/238/800/400',
 
-  });
+      });
 
-} catch (error) {
+    }
 
-  console.log(error);
+    catch (error) {
 
-}
- 
+      console.log(
+        'Share Error:',
+        error
+      );
 
-};
+    }
 
-// ================= WHATSAPP =================
-
-const openWhatsApp = item => {
-if (!item?.mobile) {
-
-  Alert.alert(
-    'Error',
-    'Mobile number not available'
-  );
-
-  return;
-
-}
+  };
 
 
-const appLink =
-  `propertyapp://property/${item.id}`;
+  // =======================================================
+  // WHATSAPP
+  // =======================================================
+
+  const openWhatsApp = item => {
+
+    if (!item?.mobile) {
+
+      Alert.alert(
+        'Error',
+        'Mobile number not available'
+      );
+
+      return;
+
+    }
 
 
-const webLink =
-  `https://savariyaproperty.in/properties/${item.id}`;
+    const appLink =
+      `propertyapp://property/${item.id}`;
 
 
-const message = `
+    const webLink =
+      `https://savariyaproperty.in/properties/${item.id}`;
 
+
+    const message = `
 
 🏠 *${item.title}*
 
@@ -374,684 +561,381 @@ ${webLink}
 `;
 
 
-const phoneNumber =
-  '91' + item.mobile;
+    const phoneNumber =
+      '91' + item.mobile;
 
 
-const url =
-  `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    const url =
+      `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+        message
+      )}`;
 
 
-Linking.openURL(url)
-  .catch(err =>
-    console.log(
-      'WhatsApp error:',
-      err
-    )
+    Linking.openURL(url)
+      .catch(err =>
+        console.log(
+          'WhatsApp error:',
+          err
+        )
+      );
+
+  };
+
+
+  // =======================================================
+  // PROPERTY CARD
+  // =======================================================
+
+  const renderItem = ({item}) => (
+
+    <RentalCard
+      item={item}
+      navigation={navigation}
+      checkLogin={checkLogin}
+    />
+
   );
 
-};
 
-// ================= PROPERTY CARD =================
+  // =======================================================
+  // LOADING
+  // =======================================================
 
-const renderItem = ({item}) => (
+  if (loading) {
 
- 
-<TouchableOpacity
-  style={styles.card}
-  activeOpacity={0.9}
-  onPress={() =>
-    navigation.navigate(
-      'PropertyDetails',
-      {
-        property: item,
-        id: item.id,
-      }
-    )
-  }
->
+    return (
 
-  <PropImageRotator
-    images={
-      item.images
-        ? item.images
-            .split(',')
-            .map(
-              x =>
-                `${API_URL}/${x
-                  .trim()
-                  .replace(/\\/g, '/')}`
-            )
-        : []
-    }
-  />
+      <View style={styles.loader}>
 
-
-  {/* PROPERTY TYPE BADGE */}
-
-  <View style={styles.badgeContainer}>
-
-    <Text style={styles.badge}>
-
-      {item.propertyType}
-
-    </Text>
-
-  </View>
-
-  <View style={styles.info}>
-
-{/* =========================
-PRICE + ACTION ICONS
-========================== */}
-
-  <View style={styles.priceRow}>
-
-
-<Text style={styles.price}>
-  ₹ {formatPrice(item.price)}
-</Text>
-
-  </View>
-
-{/* =========================
-TITLE
-========================== */}
-
-<Text
- style={styles.title}
- numberOfLines={1}>
-{item.title} </Text>
-
-{/* =========================
-LOCATION
-========================== */}
-
-  <View style={styles.locationRow}>
-
-
-<Icon
-  name="map-marker-alt"
-  size={13}
-  color="#C62828"
-/>
-
-<Text
-  style={styles.location}
-  numberOfLines={1}>
-  {item.location}
-</Text>
-
-
-  </View>
-
-{/* =========================
-DESCRIPTION
-========================== */}
-
-<Text
- style={styles.description}
- numberOfLines={2}>
-{item.description} </Text>
-
-{/* =========================
-BUTTONS
-========================== */}
-
-<View style={styles.buttonRow}>
-  <TouchableOpacity
-    style={styles.contactBtn}
-    onPress={() =>
-      checkLogin(() =>
-        navigation.navigate('ContactOwner', {
-          property: item,
-        }),
-      )
-    }>
-    <Icon
-      name="phone"
-      size={12}
-      color="#C62828"
-    />
-
-    <Text style={styles.contactBtnText}>
-      Contact
-    </Text>
-  </TouchableOpacity>
-
-  <TouchableOpacity
-    style={styles.detailsBtn}
-    onPress={() =>
-      checkLogin(() =>
-        navigation.navigate('PropertyDetails', {
-          property: item,
-          id: item.id,
-        }),
-      )
-    }>
-    <Text style={styles.detailsBtnText}>
-      View Details
-    </Text>
-
-    <Icon
-      name="arrow-right"
-      size={11}
-      color="#fff"
-    />
-  </TouchableOpacity>
-
-  <TouchableOpacity
-    style={styles.enquiryBtn}
-    onPress={() =>
-      checkLogin(() =>
-        navigation.navigate('EnquiryScreen', {
-          property: item,
-        }),
-      )
-    }>
-    <Icon
-      name="comment-dots"
-      size={12}
-      color="#fff"
-    />
-
-    <Text style={styles.enquiryBtnText}>
-      Enquiry
-    </Text>
-  </TouchableOpacity>
-</View>
-
-</View>
- 
-
-</TouchableOpacity>
-
-
-);
-
-// ================= LOADING =================
-
-if (loading) {
-
- 
-return (
-
-  <View style={styles.loader}>
-
-    <ActivityIndicator
-      size="large"
-      color="#1959a2"
-    />
-
-  </View>
-
-);
-
-
-}
-
-// ================= RETURN =================
-
-return (
-
-
-<View style={styles.container}>
-
-  <SectionList
-
-    sections={[
-      {
-        title: '',
-        data: filteredData,
-      },
-    ]}
-
-    keyExtractor={item =>
-      item.id.toString()
-    }
-
-    renderItem={renderItem}
-
-
-    
-    renderSectionHeader={() => (
-
-      <PropertyTabs
-        navigation={navigation}
-        selectedProperty={selectedProperty}
-        onTabChange={setSelectedProperty}
-        setShowProjects={setShowProjects}
-      />
-
-    )}
-
-
-
-
-    ListEmptyComponent={() => (
-
-      <View
-        style={
-          styles.noPropertyContainer
-        }
-      >
-
-        <Text
-          style={
-            styles.noPropertyIcon
-          }
-        >
-          🏠
-        </Text>
-
-
-        <Text
-          style={
-            styles.noPropertyTitle
-          }
-        >
-
-          No Rental Property Available
-
-        </Text>
-
-
-        <Text
-          style={
-            styles.noPropertyText
-          }
-        >
-
-          No rental property found for{' '}
-          {selectedProperty}.
-
-        </Text>
-
+        <ActivityIndicator
+          size="large"
+          color="#1959a2"
+        />
 
       </View>
 
+    );
+
+  }
+
+
+  // =======================================================
+  // RETURN
+  // =======================================================
+
+return (
+  <View style={styles.container}>
+
+    {/* =================================================
+        PROPERTY TABS
+    ================================================= */}
+    <PropertyTabs
+      navigation={navigation}
+      selectedProperty={selectedProperty}
+      onTabChange={setSelectedProperty}
+      setShowProjects={setShowProjects}
+    />
+
+    {/* =================================================
+        PROPERTY DATA
+    ================================================= */}
+    {filteredData.length > 0 ? (
+      <SectionList
+        sections={[
+          {
+            title: '',
+            data: filteredData,
+          },
+        ]}
+        keyExtractor={(item, index) =>
+          `${item?.id ?? index}`
+        }
+        renderItem={renderItem}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingBottom: 140,
+        }}
+      />
+    ) : (
+      /* =================================================
+         NO DATA
+      ================================================= */
+      <View style={styles.noPropertyContainer}>
+
+        <Text style={styles.noPropertyIcon}>
+          🏠
+        </Text>
+
+        <Text style={styles.noPropertyTitle}>
+          No {selectedProperty} Data Found
+        </Text>
+
+        <Text style={styles.noPropertyText}>
+          No rental property found for {selectedProperty}.
+        </Text>
+
+      </View>
     )}
 
+    {/* =================================================
+        PROJECT POPUP
+    ================================================= */}
+    <ProjectPopup
+      visible={showProjects}
+      navigation={navigation}
+      onClose={() => setShowProjects(false)}
+    />
 
-    stickySectionHeadersEnabled={true}
+    {/* =================================================
+        LOGIN POPUP
+    ================================================= */}
+    <LoginPopup
+      visible={showPopup}
+      onClose={() => setShowPopup(false)}
+      onGuest={() => setShowPopup(false)}
+      onLogin={() => {
+        setShowPopup(false);
+        navigation.navigate('Login');
+      }}
+      onRegister={() => {
+        setShowPopup(false);
+        navigation.navigate('Register');
+      }}
+    />
 
-    showsVerticalScrollIndicator={false}
-
-    contentContainerStyle={{
-      paddingBottom: 140,
-      flexGrow: 1,
-    }}
-
-  />
-
-
-  {/* PROJECT POPUP */}
-
-  <ProjectPopup
-    visible={showProjects}
-    navigation={navigation}
-    onClose={() =>
-      setShowProjects(false)
-    }
-  />
-
-
-  {/* LOGIN POPUP */}
-
-  <LoginPopup
-
-    visible={showPopup}
-
-    onClose={() =>
-      setShowPopup(false)
-    }
-
-    onGuest={() =>
-      setShowPopup(false)
-    }
-
-    onLogin={() => {
-
-      setShowPopup(false);
-
-      navigation.navigate(
-        'Login'
-      );
-
-    }}
-
-    onRegister={() => {
-
-      setShowPopup(false);
-
-      navigation.navigate(
-        'Register'
-      );
-
-    }}
-
-  />
-
-
-</View>
-
-
+  </View>
 );
 
 };
 
+
+// =========================================================
+// EXPORT
+// =========================================================
+
 export default RentalListScreen;
 
-// ================= STYLES =================
+
+// =========================================================
+// STYLES
+// =========================================================
 
 const styles = StyleSheet.create({
 
-container: {
-flex: 1,
-backgroundColor: '#F4F6F8',
-},
+  container: {
+    flex: 1,
+    backgroundColor: '#F4F6F8',
+  },
 
-loader: {
-flex: 1,
-justifyContent: 'center',
-alignItems: 'center',
-},
 
-card: {
-backgroundColor: '#fff',
-marginHorizontal: 12,
-marginTop: 12,
-borderRadius: 16,
-overflow: 'hidden',
-elevation: 5,
-},
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 
-image: {
-width: '100%',
-height: 220,
-},
 
-badgeContainer: {
-position: 'absolute',
-top: 12,
-left: 12,
-},
+  card: {
+    backgroundColor: '#fff',
+    marginHorizontal: 12,
+    marginTop: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 5,
+  },
 
-badge: {
-backgroundColor: '#28A745',
-color: '#fff',
-paddingHorizontal: 12,
-paddingVertical: 5,
-borderRadius: 20,
-fontWeight: '700',
-fontSize: 12,
-},
 
-info: {
-padding: 15,
-},
+  image: {
+    width: '100%',
+    height: 220,
+  },
 
-price: {
-fontSize: 20,
-fontWeight: 'bold',
-color: '#0078FF',
-},
 
-title: {
-fontSize: 16,
-fontWeight: '500',
-marginTop: 5,
-color: '#222',
-},
+  badgeContainer: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+  },
 
-location: {
-marginTop: 6,
-color: '#666',
-fontSize: 14,
-},
 
-featureRow: {
-flexDirection: 'row',
-justifyContent: 'space-between',
-marginTop: 15,
-},
+  badge: {
+    backgroundColor: '#28A745',
+    color: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+    fontWeight: '700',
+    fontSize: 12,
+  },
 
-featureBox: {
-width: '31%',
-backgroundColor: '#F7F7F7',
-borderRadius: 10,
-paddingVertical: 10,
-alignItems: 'center',
-},
 
-featureValue: {
-fontSize: 18,
-fontWeight: 'bold',
-color: '#222',
-},
+  info: {
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 12,
+  },
 
-featureLabel: {
-fontSize: 12,
-color: '#777',
-marginTop: 2,
-},
 
-description: {
-marginTop: 12,
-color: '#666',
-lineHeight: 20,
-fontSize: 14,
-},
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 7,
+  },
 
-buttonRow: {
-flexDirection: 'row',
-marginTop: 15,
-},
 
-contactBtn: {
-flex: 1,
-backgroundColor: '#28A745',
-paddingVertical: 12,
-borderRadius: 8,
-marginRight: 5,
-},
+  price: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#1959A2',
+  },
 
-detailsBtn: {
-flex: 1,
-backgroundColor: '#0078FF',
-paddingVertical: 12,
-borderRadius: 8,
-marginLeft: 5,
-},
 
-enquiryBtn: {
-flex: 1,
-backgroundColor: 'red',
-paddingVertical: 12,
-borderRadius: 8,
-marginLeft: 5,
-},
+  iconContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
 
-contactBtnText: {
-color: '#fff',
-textAlign: 'center',
-fontWeight: 'bold',
-fontSize: 11,
-},
 
-detailsBtnText: {
-color: '#fff',
-textAlign: 'center',
-fontWeight: 'bold',
-fontSize: 11,
-},
+  actionIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#F1F6FC',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 
-enquiryBtnText: {
-color: '#fff',
-textAlign: 'center',
-fontWeight: 'bold',
-fontSize: 11,
-},
 
-priceRow: {
-flexDirection: 'row',
-alignItems: 'center',
-},
+  title: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#1E293B',
+    marginTop: 2,
+    marginBottom: 5,
+  },
 
-iconContainer: {
-flexDirection: 'row',
-alignItems: 'center',
-marginLeft: 'auto',
-},
 
-noPropertyContainer: {
-flex: 1,
-justifyContent: 'center',
-alignItems: 'center',
-paddingVertical: 80,
-paddingHorizontal: 20,
-},
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
 
-noPropertyIcon: {
-fontSize: 45,
-marginBottom: 10,
-},
 
-noPropertyTitle: {
-fontSize: 20,
-fontWeight: 'bold',
-color: '#333',
-marginBottom: 6,
-},
+  location: {
+    flex: 1,
+    fontSize: 12,
+    color: '#1959A2',
+    marginLeft: 5,
+    fontWeight: '600',
+  },
 
-noPropertyText: {
-fontSize: 14,
-color: '#777',
-textAlign: 'center',
-},
 
-info: {
-  paddingHorizontal: 12,
-  paddingTop: 10,
-  paddingBottom: 12,
-},
+  description: {
+    fontSize: 12,
+    color: '#64748B',
+    lineHeight: 18,
+    marginBottom: 11,
+  },
 
-priceRow: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  marginBottom: 7,
-},
 
-price: {
-  fontSize: 17,
-  fontWeight: '800',
-  color: '#1959A2',
-},
+  buttonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
 
-iconContainer: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  gap: 7,
-},
 
-actionIcon: {
-  width: 30,
-  height: 30,
-  borderRadius: 15,
-  backgroundColor: '#F1F6FC',
-  justifyContent: 'center',
-  alignItems: 'center',
-},
+  contactBtn: {
+    flex: 1,
+    height: 38,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#1959A2',
+    backgroundColor: '#F4F8FD',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 5,
+  },
 
-title: {
-  fontSize: 16,
-  fontWeight: '800',
-  color: '#1E293B',
-  marginTop: 2,
-  marginBottom: 5,
-},
 
-locationRow: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginBottom: 6,
-},
+  contactBtnText: {
+    color: '#1959A2',
+    fontSize: 11,
+    fontWeight: '700',
+  },
 
-location: {
-  flex: 1,
-  fontSize: 12,
-  color: '#1959A2',
-  marginLeft: 5,
-  fontWeight: '600',
-},
 
-description: {
-  fontSize: 12,
-  color: '#64748B',
-  lineHeight: 18,
-  marginBottom: 11,
-},
+  detailsBtn: {
+    flex: 1.15,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: '#1959A2',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 5,
+    elevation: 2,
+  },
 
-buttonRow: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  gap: 7,
-},
 
-contactBtn: {
-  flex: 1,
-  height: 38,
-  borderRadius: 8,
-  borderWidth: 1,
-  borderColor: '#1959A2',
-  backgroundColor: '#F4F8FD',
-  flexDirection: 'row',
-  justifyContent: 'center',
-  alignItems: 'center',
-  gap: 5,
-},
+  detailsBtnText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '700',
+  },
 
-contactBtnText: {
-  color: '#1959A2',
-  fontSize: 11,
-  fontWeight: '700',
-},
 
-detailsBtn: {
-  flex: 1.15,
-  height: 38,
-  borderRadius: 8,
-  backgroundColor: '#1959A2',
-  flexDirection: 'row',
-  justifyContent: 'center',
-  alignItems: 'center',
-  gap: 5,
-  elevation: 2,
-},
+  enquiryBtn: {
+    flex: 0.9,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: '#0A8754',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 5,
+    elevation: 2,
+  },
 
-detailsBtnText: {
-  color: '#fff',
-  fontSize: 11,
-  fontWeight: '700',
-},
 
-enquiryBtn: {
-  flex: 0.9,
-  height: 38,
-  borderRadius: 8,
-  backgroundColor: '#0A8754',
-  flexDirection: 'row',
-  justifyContent: 'center',
-  alignItems: 'center',
-  gap: 5,
-  elevation: 2,
-},
+  enquiryBtnText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '700',
+  },
 
-enquiryBtnText: {
-  color: '#fff',
-  fontSize: 11,
-  fontWeight: '700',
-},
+
+  noPropertyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 80,
+    paddingHorizontal: 20,
+  },
+
+
+  noPropertyIcon: {
+    fontSize: 45,
+    marginBottom: 10,
+  },
+
+
+  noPropertyTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 6,
+  },
+
+
+  noPropertyText: {
+    fontSize: 14,
+    color: '#777',
+    textAlign: 'center',
+  },
 
 });

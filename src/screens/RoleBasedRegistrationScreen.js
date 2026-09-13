@@ -1,60 +1,336 @@
-// RoleBasedRegistrationScreen.js
+import React, {useEffect, useRef, useState} from 'react';
 
-import React, {useState} from 'react';
 import {
   View,
-  SafeAreaView,
-  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
   StatusBar,
   Alert,
+  Animated,
+  Pressable,
+  Keyboard,
 } from 'react-native';
-import axios from 'axios';
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-function RoleBasedRegistrationScreen({navigation, route}) {
+/* =========================================================
+   INPUT COMPONENT
 
-  const {role} = route.params || {};
+   IMPORTANT:
+   Keep this OUTSIDE RoleBasedRegistrationScreen.
+   This prevents TextInput from remounting while typing.
+========================================================= */
 
-  
+const InputBox = ({
+  icon,
+  placeholder,
+  value,
+  onChangeText,
+  keyboardType = 'default',
+  secureTextEntry = false,
+  rightIcon,
+  onRightPress,
+  maxLength,
+  autoCapitalize = 'none',
+}) => {
+  return (
+    <View style={styles.inputContainer}>
+      <Icon name={icon} size={19} color="#012353" />
+
+      <TextInput
+        style={styles.input}
+        placeholder={placeholder}
+        placeholderTextColor="#999"
+        value={value}
+        onChangeText={onChangeText}
+        keyboardType={keyboardType}
+        secureTextEntry={secureTextEntry}
+        autoCapitalize={autoCapitalize}
+        autoCorrect={false}
+        maxLength={maxLength}
+        underlineColorAndroid="transparent"
+        returnKeyType="next"
+      />
+
+      {rightIcon ? (
+        <TouchableOpacity
+          onPress={onRightPress}
+          activeOpacity={0.7}>
+          <Icon name={rightIcon} size={20} color="#777" />
+        </TouchableOpacity>
+      ) : null}
+    </View>
+  );
+};
+
+
+
+/* =========================================================
+   ROLE BASED REGISTRATION SCREEN
+========================================================= */
+
+const RoleBasedRegistrationScreen = ({navigation, route}) => {
+  const role = route?.params?.role || 'CUSTOMER';
+
+  /* =======================================================
+     STEP
+  ======================================================= */
+
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  /* =======================================================
+     BASIC DETAILS
+  ======================================================= */
+
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
   const [email, setEmail] = useState('');
-
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState(false);
+
+  /* =======================================================
+     STEP 2 - COMMON
+  ======================================================= */
+
+  const [city, setCity] = useState('');
+  const [experience, setExperience] = useState('');
+
+  /* =======================================================
+     BUILDER / INVESTOR
+  ======================================================= */
+
+  const [companyName, setCompanyName] = useState('');
+  const [businessType, setBusinessType] = useState('');
+
+  /* =======================================================
+     PROPERTY EXECUTIVE
+  ======================================================= */
+
+  const [workingArea, setWorkingArea] = useState('');
+
+  /* =======================================================
+     OWNER
+  ======================================================= */
+
+  const [propertyType, setPropertyType] = useState('');
+  const [propertyLocation, setPropertyLocation] = useState('');
+  const [purpose, setPurpose] = useState('');
+
+  /* =======================================================
+     CUSTOMER
+  ======================================================= */
+
+  const [lookingFor, setLookingFor] = useState('');
+  const [preferredLocation, setPreferredLocation] = useState('');
+  const [budget, setBudget] = useState('');
+
+  /* =======================================================
+     ANIMATIONS
+  ======================================================= */
+
+  const fadeAnim = useRef(
+    new Animated.Value(0),
+  ).current;
+
+  const scaleAnim = useRef(
+    new Animated.Value(0.94),
+  ).current;
+
+  const keyboardOffset = useRef(
+    new Animated.Value(0),
+  ).current;
+
+  const successAnim = useRef(
+    new Animated.Value(120),
+  ).current;
+
+  const goToHome = async () => {
+  try {
+    console.log('1. goToHome START');
+
+    // Safe values
+    const safeName = String(name || '');
+    const safeMobile = String(mobile || '');
+    const safeEmail = String(email || '');
+    const safeRole = String(role || 'CUSTOMER');
+
+    console.log('2. VALUES OK');
+
+    const cleanMobile = safeMobile.replace(/[^0-9]/g, '');
+
+    console.log('3. MOBILE CLEAN:', cleanMobile);
+
+    // SAVE DATA
+    await AsyncStorage.setItem('userLogin', 'true');
+    console.log('4. userLogin saved');
+
+    await AsyncStorage.setItem('loginStatus', 'true');
+    console.log('5. loginStatus saved');
+
+    await AsyncStorage.setItem('userName', safeName);
+    console.log('6. userName saved');
+
+    await AsyncStorage.setItem('userMobile', cleanMobile);
+    console.log('7. userMobile saved');
+
+    await AsyncStorage.setItem('userEmail', safeEmail);
+    console.log('8. userEmail saved');
+
+    await AsyncStorage.setItem('userRole', safeRole);
+    console.log('9. userRole saved');
+
+    // VERIFY
+    const savedLogin = await AsyncStorage.getItem('userLogin');
+    const savedName = await AsyncStorage.getItem('userName');
+    const savedMobile = await AsyncStorage.getItem('userMobile');
+    const savedRole = await AsyncStorage.getItem('userRole');
+
+    console.log('10. STORAGE VERIFY:', {
+      savedLogin,
+      savedName,
+      savedMobile,
+      savedRole,
+    });
+
+    // CLOSE POPUP
+    setShowSuccess(false);
+
+    console.log('11. GOING HOME');
+
+    navigation.reset({
+      index: 0,
+      routes: [{name: 'Home'}],
+    });
+
+  } catch (error) {
+    console.log('❌ GO HOME ERROR:', error);
+
+    Alert.alert(
+      'Storage Error',
+      String(error?.message || error),
+    );
+  }
+};
+
+  /* =======================================================
+     POPUP OPEN ANIMATION
+  ======================================================= */
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 70,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [fadeAnim, scaleAnim]);
+
+  /* =======================================================
+     KEYBOARD - MOVE POPUP UP
+  ======================================================= */
+
+  useEffect(() => {
+    const keyboardDidShow = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        Animated.spring(keyboardOffset, {
+          toValue: -120,
+          friction: 8,
+          tension: 70,
+          useNativeDriver: true,
+        }).start();
+      },
+    );
+
+    const keyboardDidHide = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        Animated.spring(keyboardOffset, {
+          toValue: 0,
+          friction: 8,
+          tension: 70,
+          useNativeDriver: true,
+        }).start();
+      },
+    );
+
+    return () => {
+      keyboardDidShow.remove();
+      keyboardDidHide.remove();
+    };
+  }, [keyboardOffset]);
+
+  /* =======================================================
+     SUCCESS -> AUTO LOGIN -> HOME
+  ======================================================= */
+
+  useEffect(() => {
+    if (!showSuccess) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+    goToHome();
+  }, 2000);
+
+
+    return () => clearTimeout(timer);
+  }, [
+    showSuccess,
+    mobile,
+    name,
+    email,
+    role,
+    navigation,
+  ]);
+
+  /* =======================================================
+     ROLE DETAILS
+  ======================================================= */
 
   const roleDetails = {
-    BUILDER_INVESTOR: {
+    BUILDER: {
       title: 'Builder / Investor',
-      subtitle: 'Create your account to manage projects & investments',
+      description:
+        'Create your account to manage projects & investments',
       icon: 'office-building-outline',
     },
 
-    PROPERTY_EXECUTIVE: {
+    EXECUTIVE: {
       title: 'Property Executive',
-      subtitle: 'Create your account to manage properties & clients',
+      description:
+        'Create your account to manage properties & clients',
       icon: 'account-tie-outline',
     },
 
     OWNER: {
       title: 'Property Owner',
-      subtitle: 'Create your account to sell or rent your property',
+      description:
+        'Create your account to sell or rent your property',
       icon: 'home-account',
     },
 
     CUSTOMER: {
       title: 'Property Seeker',
-      subtitle: 'Create your account to buy or rent a property',
+      description:
+        'Create your account to buy or rent a property',
       icon: 'home-search-outline',
     },
   };
@@ -62,616 +338,1290 @@ function RoleBasedRegistrationScreen({navigation, route}) {
   const currentRole =
     roleDetails[role] || roleDetails.CUSTOMER;
 
-  const handleContinue = async () => {
-  if (!name.trim()) {
-    Alert.alert('Required', 'Please enter your name');
-    return;
-  }
+  /* =======================================================
+     CLOSE
+  ======================================================= */
 
-  if (!mobile.trim()) {
-    Alert.alert('Required', 'Please enter mobile number');
-    return;
-  }
+  const closePopup = () => {
+    if (loading) {
+      return;
+    }
 
-  if (mobile.length !== 10) {
-    Alert.alert(
-      'Invalid Mobile',
-      'Please enter a valid 10 digit mobile number',
+    navigation.goBack();
+  };
+
+  /* =======================================================
+     STEP 1 VALIDATION
+  ======================================================= */
+
+  const validateStepOne = () => {
+    if (!name.trim()) {
+      Alert.alert(
+        'Required',
+        'Please enter your full name.',
+      );
+      return false;
+    }
+
+    const cleanMobile = mobile.replace(/[^0-9]/g, '');
+
+    if (!cleanMobile) {
+      Alert.alert(
+        'Required',
+        'Please enter your mobile number.',
+      );
+      return false;
+    }
+
+    if (cleanMobile.length !== 10) {
+      Alert.alert(
+        'Invalid Mobile',
+        'Please enter a valid 10 digit mobile number.',
+      );
+      return false;
+    }
+
+    if (!email.trim()) {
+      Alert.alert(
+        'Required',
+        'Please enter your email address.',
+      );
+      return false;
+    }
+
+    const emailRegex =
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email.trim())) {
+      Alert.alert(
+        'Invalid Email',
+        'Please enter a valid email address.',
+      );
+      return false;
+    }
+
+    if (!password) {
+      Alert.alert(
+        'Required',
+        'Please enter your password.',
+      );
+      return false;
+    }
+
+    if (password.length < 6) {
+      Alert.alert(
+        'Password',
+        'Password must be at least 6 characters.',
+      );
+      return false;
+    }
+
+    if (!confirmPassword) {
+      Alert.alert(
+        'Required',
+        'Please confirm your password.',
+      );
+      return false;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert(
+        'Password Mismatch',
+        'Password and confirm password do not match.',
+      );
+      return false;
+    }
+
+    return true;
+  };
+
+  /* =======================================================
+     STEP 2 VALIDATION
+  ======================================================= */
+
+  const validateStepTwo = () => {
+    if (!city.trim()) {
+      Alert.alert(
+        'Required',
+        'Please enter your city.',
+      );
+      return false;
+    }
+
+    /* -----------------------------------------------
+       BUILDER / INVESTOR
+    ------------------------------------------------ */
+
+    if (role === 'BUILDER') {
+      if (!companyName.trim()) {
+        Alert.alert(
+          'Required',
+          'Please enter company / firm name.',
+        );
+        return false;
+      }
+
+      if (!businessType.trim()) {
+        Alert.alert(
+          'Required',
+          'Please enter business type.',
+        );
+        return false;
+      }
+
+      return true;
+    }
+
+    /* -----------------------------------------------
+       PROPERTY EXECUTIVE
+    ------------------------------------------------ */
+
+    if (role === 'EXECUTIVE') {
+      if (!companyName.trim()) {
+        Alert.alert(
+          'Required',
+          'Please enter agency / company name.',
+        );
+        return false;
+      }
+
+      if (!workingArea.trim()) {
+        Alert.alert(
+          'Required',
+          'Please enter your working area.',
+        );
+        return false;
+      }
+
+      return true;
+    }
+
+    /* -----------------------------------------------
+       PROPERTY OWNER
+    ------------------------------------------------ */
+
+    if (role === 'OWNER') {
+      if (!propertyType.trim()) {
+        Alert.alert(
+          'Required',
+          'Please enter property type.',
+        );
+        return false;
+      }
+
+      if (!propertyLocation.trim()) {
+        Alert.alert(
+          'Required',
+          'Please enter property location.',
+        );
+        return false;
+      }
+
+      if (!purpose.trim()) {
+        Alert.alert(
+          'Required',
+          'Please enter Sell or Rent.',
+        );
+        return false;
+      }
+
+      return true;
+    }
+
+    /* -----------------------------------------------
+       PROPERTY SEEKER
+    ------------------------------------------------ */
+
+    if (role === 'CUSTOMER') {
+      if (!lookingFor.trim()) {
+        Alert.alert(
+          'Required',
+          'Please enter Buy or Rent.',
+        );
+        return false;
+      }
+
+      if (!propertyType.trim()) {
+        Alert.alert(
+          'Required',
+          'Please enter property type.',
+        );
+        return false;
+      }
+
+      if (!preferredLocation.trim()) {
+        Alert.alert(
+          'Required',
+          'Please enter preferred location.',
+        );
+        return false;
+      }
+
+      return true;
+    }
+
+    return true;
+  };
+
+  /* =======================================================
+     NEXT
+  ======================================================= */
+
+  const handleNext = () => {
+    if (!validateStepOne()) {
+      return;
+    }
+
+    setStep(2);
+  };
+
+  /* =======================================================
+     BACK
+  ======================================================= */
+
+  const handleBack = () => {
+    if (loading) {
+      return;
+    }
+
+    setStep(1);
+  };
+
+  /* =======================================================
+     REGISTER
+  ======================================================= */
+
+  const handleRegister = async () => {
+    if (!validateStepTwo()) {
+      return;
+    }
+
+    try {
+      setLoading(false);
+
+      setShowSuccess(true);
+
+      successAnim.setValue(120);
+
+      Animated.spring(successAnim, {
+        toValue: 0,
+        friction: 8,
+        tension: 70,
+        useNativeDriver: true,
+      }).start();
+    } catch (error) {
+      console.log(
+        'REGISTRATION ERROR:',
+        error,
+      );
+
+      setLoading(false);
+    }
+  };
+
+  /* =======================================================
+     STEP 2 UI
+  ======================================================= */
+
+  const renderStepTwo = () => {
+    /* =====================================================
+       BUILDER / INVESTOR
+    ===================================================== */
+
+    if (role === 'BUILDER') {
+      return (
+        <>
+          <InputBox
+            icon="office-building-outline"
+            placeholder="Company / Firm Name"
+            value={companyName}
+            onChangeText={setCompanyName}
+            autoCapitalize="words"
+          />
+
+          <InputBox
+            icon="briefcase-outline"
+            placeholder="Business Type"
+            value={businessType}
+            onChangeText={setBusinessType}
+            autoCapitalize="words"
+          />
+
+          <InputBox
+            icon="map-marker-outline"
+            placeholder="City"
+            value={city}
+            onChangeText={setCity}
+            autoCapitalize="words"
+          />
+
+          <InputBox
+            icon="clock-outline"
+            placeholder="Experience (Years)"
+            value={experience}
+            onChangeText={text =>
+              setExperience(
+                text.replace(/[^0-9]/g, ''),
+              )
+            }
+            keyboardType="numeric"
+            maxLength={2}
+          />
+        </>
+      );
+    }
+
+    /* =====================================================
+       PROPERTY EXECUTIVE
+    ===================================================== */
+
+    if (role === 'EXECUTIVE') {
+      return (
+        <>
+          <InputBox
+            icon="office-building-outline"
+            placeholder="Agency / Company Name"
+            value={companyName}
+            onChangeText={setCompanyName}
+            autoCapitalize="words"
+          />
+
+          <InputBox
+            icon="map-marker-outline"
+            placeholder="City"
+            value={city}
+            onChangeText={setCity}
+            autoCapitalize="words"
+          />
+
+          <InputBox
+            icon="clock-outline"
+            placeholder="Experience (Years)"
+            value={experience}
+            onChangeText={text =>
+              setExperience(
+                text.replace(/[^0-9]/g, ''),
+              )
+            }
+            keyboardType="numeric"
+            maxLength={2}
+          />
+
+          <InputBox
+            icon="map-marker-radius-outline"
+            placeholder="Working Area / Localities"
+            value={workingArea}
+            onChangeText={setWorkingArea}
+            autoCapitalize="words"
+          />
+        </>
+      );
+    }
+
+    /* =====================================================
+       PROPERTY OWNER
+    ===================================================== */
+
+    if (role === 'OWNER') {
+      return (
+        <>
+          <InputBox
+            icon="map-marker-outline"
+            placeholder="City"
+            value={city}
+            onChangeText={setCity}
+            autoCapitalize="words"
+          />
+
+          <InputBox
+            icon="home-outline"
+            placeholder="Property Type"
+            value={propertyType}
+            onChangeText={setPropertyType}
+            autoCapitalize="words"
+          />
+
+          <InputBox
+            icon="map-marker-radius-outline"
+            placeholder="Property Location"
+            value={propertyLocation}
+            onChangeText={setPropertyLocation}
+            autoCapitalize="words"
+          />
+
+          <InputBox
+            icon="swap-horizontal"
+            placeholder="Purpose - Sell / Rent"
+            value={purpose}
+            onChangeText={setPurpose}
+            autoCapitalize="words"
+          />
+        </>
+      );
+    }
+
+    /* =====================================================
+       PROPERTY SEEKER
+    ===================================================== */
+
+    return (
+      <>
+        <InputBox
+          icon="map-marker-outline"
+          placeholder="City"
+          value={city}
+          onChangeText={setCity}
+          autoCapitalize="words"
+        />
+
+        <InputBox
+          icon="swap-horizontal"
+          placeholder="Looking For - Buy / Rent"
+          value={lookingFor}
+          onChangeText={setLookingFor}
+          autoCapitalize="words"
+        />
+
+        <InputBox
+          icon="home-outline"
+          placeholder="Property Type"
+          value={propertyType}
+          onChangeText={setPropertyType}
+          autoCapitalize="words"
+        />
+
+        <InputBox
+          icon="map-marker-radius-outline"
+          placeholder="Preferred Location"
+          value={preferredLocation}
+          onChangeText={setPreferredLocation}
+          autoCapitalize="words"
+        />
+
+        <InputBox
+          icon="currency-inr"
+          placeholder="Budget"
+          value={budget}
+          onChangeText={text =>
+            setBudget(
+              text.replace(/[^0-9]/g, ''),
+            )
+          }
+          keyboardType="numeric"
+        />
+      </>
     );
-    return;
-  }
+  };
 
-  if (email.trim() && !email.includes('@')) {
-    Alert.alert(
-      'Invalid Email',
-      'Please enter a valid email address',
-    );
-    return;
-  }
-
-  try {
-  const response = await axios.post(
-    'https://savariyaproperty.in/api/Register',
-    {
-      name: name,
-      mobile: mobile,
-      email: email,
-      password: password,
-      roleType: role,
-    },
-  );
-
-  console.log('Register API Response:', response.data);
-
-  if (response.data?.success === true) {
-    Alert.alert(
-      'Success',
-      response.data?.message || 'Registration Successful',
-      [
-        {
-          text: 'OK',
-          onPress: () => {
-            navigation.navigate('Login');
-          },
-        },
-      ],
-    );
-  } else {
-    Alert.alert(
-      'Registration Failed',
-      response.data?.message || 'Something went wrong',
-    );
-  }
-
-} catch (error) {
-  console.log(
-    'Registration API Error:',
-    error?.response?.data || error.message,
-  );
-
-  Alert.alert(
-    'Error',
-    error?.response?.data?.message ||
-      'Unable to register. Please try again.',
-  );
-}
-
-};
-
+  /* =======================================================
+     MAIN
+  ======================================================= */
 
   return (
-    <SafeAreaView style={styles.safeContainer}>
+    <View style={styles.overlay}>
 
       <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#F5F7FA"
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
       />
 
-      <Header />
+      {/* ===================================================
+          OUTSIDE POPUP
+      =================================================== */}
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}>
+      <Pressable
+        style={StyleSheet.absoluteFill}
+        onPress={closePopup}
+      />
 
-        {/* Role Header */}
+      {/* ===================================================
+          POPUP
+      =================================================== */}
 
-        <View style={styles.roleHeader}>
+    {/* ===================================================
+    POPUP
+=================================================== */}
 
-          <View style={styles.roleIcon}>
-            <Icon
-              name={currentRole.icon}
-              size={34}
-              color="#FFFFFF"
-            />
-          </View>
+{!showSuccess && (
+  <Animated.View
+    style={[
+      styles.popup,
+      {
+        opacity: fadeAnim,
+        transform: [
+          {
+            scale: scaleAnim,
+          },
+          {
+            translateY: keyboardOffset,
+          },
+        ],
+      },
+    ]}>
 
-          <View style={styles.roleHeaderContent}>
+    {/* CLOSE BUTTON */}
+    <TouchableOpacity
+      style={styles.closeButton}
+      onPress={closePopup}
+      activeOpacity={0.7}>
+      <Icon
+        name="close"
+        size={20}
+        color="#555"
+      />
+    </TouchableOpacity>
 
-            <Text style={styles.registerLabel}>
-              CREATE ACCOUNT
-            </Text>
+    {/* ROLE HEADER */}
+    <View style={styles.roleHeader}>
+      <View style={styles.roleIcon}>
+        <Icon
+          name={currentRole.icon}
+          size={27}
+          color="#F58220"
+        />
+      </View>
 
-            <Text style={styles.roleTitle}>
-              {currentRole.title}
-            </Text>
-
-          </View>
-
-        </View>
-
-        {/* Description */}
-
-        <Text style={styles.description}>
-          {currentRole.subtitle}
+      <View style={styles.roleTextContainer}>
+        <Text style={styles.roleTitle}>
+          {currentRole.title}
         </Text>
 
-        {/* Progress */}
-
-        <View style={styles.progressContainer}>
-
-          <View style={styles.progressActive} />
-
-          <View style={styles.progressInactive} />
-
-        </View>
-
-        <Text style={styles.stepText}>
-          Step 1 of 2
+        <Text style={styles.roleDescription}>
+          {currentRole.description}
         </Text>
+      </View>
+    </View>
 
-        {/* Form Card */}
+    {/* STEP INDICATOR */}
+    <View style={styles.stepContainer}>
 
-        <View style={styles.card}>
+      <View
+        style={[
+          styles.stepCircle,
+          step === 1 && styles.stepActive,
+        ]}>
+        <Text
+          style={[
+            styles.stepNumber,
+            step !== 1 && styles.stepInactiveNumber,
+          ]}>
+          1
+        </Text>
+      </View>
 
-          <Text style={styles.cardTitle}>
-            Tell us about yourself
+      <View
+        style={[
+          styles.stepLine,
+          step === 2 && styles.stepLineActive,
+        ]}
+      />
+
+      <View
+        style={[
+          styles.stepCircle,
+          step === 2 && styles.stepActive,
+        ]}>
+        <Text
+          style={[
+            styles.stepNumber,
+            step !== 2 && styles.stepInactiveNumber,
+          ]}>
+          2
+        </Text>
+      </View>
+
+    </View>
+
+    {/* STEP TITLE */}
+    <View style={styles.stepTitleRow}>
+      <Text style={styles.stepTitle}>
+        {step === 1
+          ? 'Basic Details'
+          : 'Additional Details'}
+      </Text>
+
+      <Text style={styles.stepCount}>
+        Step {step} of 2
+      </Text>
+    </View>
+
+    {/* =================================================
+        STEP 1
+    ================================================= */}
+
+    {step === 1 && (
+      <>
+        <InputBox
+          icon="account-outline"
+          placeholder="Full Name"
+          value={name}
+          onChangeText={setName}
+          autoCapitalize="words"
+        />
+
+        <InputBox
+          icon="phone-outline"
+          placeholder="Mobile Number"
+          value={mobile}
+          onChangeText={text =>
+            setMobile(text.replace(/[^0-9]/g, ''))
+          }
+          keyboardType="phone-pad"
+          maxLength={10}
+        />
+
+        <InputBox
+          icon="email-outline"
+          placeholder="Email Address"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+        />
+
+        <InputBox
+          icon="lock-outline"
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!showPassword}
+          rightIcon={
+            showPassword
+              ? 'eye-off-outline'
+              : 'eye-outline'
+          }
+          onRightPress={() =>
+            setShowPassword(!showPassword)
+          }
+        />
+
+        <InputBox
+          icon="lock-check-outline"
+          placeholder="Confirm Password"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry={!showConfirmPassword}
+          rightIcon={
+            showConfirmPassword
+              ? 'eye-off-outline'
+              : 'eye-outline'
+          }
+          onRightPress={() =>
+            setShowConfirmPassword(
+              !showConfirmPassword,
+            )
+          }
+        />
+
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={handleNext}
+          activeOpacity={0.8}>
+
+          <Text style={styles.primaryButtonText}>
+            Next
           </Text>
 
-          <Text style={styles.cardSubtitle}>
-            Enter your basic details to get started.
-          </Text>
+          <Icon
+            name="arrow-right"
+            size={18}
+            color="#FFFFFF"
+          />
+        </TouchableOpacity>
+      </>
+    )}
 
-          {/* Name */}
+    {/* =================================================
+        STEP 2
+    ================================================= */}
 
-          <Text style={styles.label}>
-            Full Name
-          </Text>
+    {step === 2 && (
+      <>
+        {renderStepTwo()}
 
-          <View style={styles.inputContainer}>
+        <View style={styles.buttonRow}>
 
-            <Icon
-              name="account-outline"
-              size={21}
-              color="#6B7280"
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your full name"
-              placeholderTextColor="#9CA3AF"
-              value={name}
-              onChangeText={setName}
-              autoCapitalize="words"
-            />
-
-          </View>
-
-          {/* Mobile */}
-
-          <Text style={styles.label}>
-            Mobile Number
-          </Text>
-
-          <View style={styles.inputContainer}>
-
-            <Icon
-              name="phone-outline"
-              size={21}
-              color="#6B7280"
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Enter 10 digit mobile number"
-              placeholderTextColor="#9CA3AF"
-              value={mobile}
-              onChangeText={text =>
-                setMobile(text.replace(/[^0-9]/g, ''))
-              }
-              keyboardType="phone-pad"
-              maxLength={10}
-            />
-
-          </View>
-
-          {/* Email */}
-
-          <Text style={styles.label}>
-            Email Address
-            <Text style={styles.optional}>
-              {' '} (Optional)
-            </Text>
-          </Text>
-
-          <View style={styles.inputContainer}>
-
-            <Icon
-              name="email-outline"
-              size={21}
-              color="#6B7280"
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your email address"
-              placeholderTextColor="#9CA3AF"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-
-          </View>
-
-        <Text style={styles.label}> Password </Text>
-
- <View style={styles.passwordContainer}>
-  <TextInput
-    style={styles.passwordInput}
-    placeholder="Enter Password"
-    placeholderTextColor="#999"
-    secureTextEntry={!showPassword}
-    value={password}
-    onChangeText={setPassword}
-  />
-
-  <TouchableOpacity
-    onPress={() => setShowPassword(!showPassword)}>
-    <Icon
-      name={showPassword ? 'eye-off' : 'eye'}
-      size={22}
-      color="#666"
-    />
-  </TouchableOpacity>
-</View>
-
-
-<View style={styles.passwordContainer}>
-  <TextInput
-    style={styles.passwordInput}
-    placeholder="Confirm Password"
-    placeholderTextColor="#999"
-    secureTextEntry={!showConfirmPassword}
-    value={confirmPassword}
-    onChangeText={setConfirmPassword}
-  />
-
-  <TouchableOpacity
-    onPress={() =>
-      setShowConfirmPassword(!showConfirmPassword)
-    }>
-    <Icon
-      name={
-        showConfirmPassword
-          ? 'eye-off'
-          : 'eye'
-      }
-      size={22}
-      color="#666"
-    />
-  </TouchableOpacity>
-</View>
-
-          {/* Continue */}
           <TouchableOpacity
-            activeOpacity={0.85}
-            style={styles.continueButton}
-            onPress={handleContinue}>
-
-            <Text style={styles.continueText}>
-              Continue
-            </Text>
+            style={styles.backButton}
+            onPress={handleBack}
+            activeOpacity={0.8}>
 
             <Icon
-              name="arrow-right"
-              size={22}
-              color="#FFFFFF"
+              name="arrow-left"
+              size={17}
+              color="#012353"
             />
+
+            <Text style={styles.backButtonText}>
+              Back
+            </Text>
 
           </TouchableOpacity>
 
-          {/* Already Account */}
+          <TouchableOpacity
+            style={[
+              styles.primaryButton,
+              styles.registerButton,
+              loading && styles.disabledButton,
+            ]}
+            onPress={handleRegister}
+            disabled={loading}
+            activeOpacity={0.8}>
 
-          <View style={styles.loginContainer}>
-
-            <Text style={styles.loginLabel}>
-              Already have an account?
-            </Text>
-
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.loginLink}>
-                Login
+            {loading ? (
+              <Text style={styles.primaryButtonText}>
+                Please wait...
               </Text>
-            </TouchableOpacity>
-          </View>
-   
+            ) : (
+              <>
+                <Text style={styles.primaryButtonText}>
+                  Register
+                </Text>
 
-        {/* Security Note */}
+                <Icon
+                  name="check-circle-outline"
+                  size={18}
+                  color="#FFFFFF"
+                />
+              </>
+            )}
 
-        <View style={styles.securityBox}>
-
-          <Icon
-            name="shield-check-outline"
-            size={20}
-            color="#1F6FEB"
-          />
-
-          <Text style={styles.securityText}>
-            Your information is safe and secure with
-            Savariya Property.
-          </Text>
+          </TouchableOpacity>
 
         </View>
-</View>
+      </>
+    )}
 
-      </ScrollView>
+    {/* SECURITY */}
+    <View style={styles.securityBox}>
+      <Icon
+        name="shield-check-outline"
+        size={16}
+        color="#2E7D32"
+      />
 
-      <Footer />
+      <Text style={styles.securityText}>
+        Your information is safe and secure
+      </Text>
+    </View>
 
-    </SafeAreaView>
-  );
-}
+  </Animated.View>
+)}
+
+{/* ===================================================
+    SUCCESS MESSAGE
+=================================================== */}
+
+{showSuccess && (
+  <Animated.View
+    style={[
+      styles.successMessage,
+      {
+        transform: [
+          {
+            translateY: successAnim,
+          },
+        ],
+      },
+    ]}>
+
+    <View style={styles.successIcon}>
+      <Icon
+        name="check"
+        size={32}
+        color="#FFFFFF"
+      />
+    </View>
+
+    <Text style={styles.successTitle}>
+      Thank You!
+    </Text>
+
+    <Text style={styles.successSubtitle}>
+      Welcome to Savariya Property
+    </Text>
+
+    <Text style={styles.joinText}>
+      Join Us & Grow With Us
+    </Text>
+
+    <Text style={styles.successDescription}>
+      Your registration has been completed
+      successfully.
+    </Text>
+
+  </Animated.View>
+)}
+
+
+      {/* ===================================================
+          SUCCESS MESSAGE
+      =================================================== */}
+
+      {showSuccess && (
+        <Animated.View
+          style={[
+            styles.successMessage,
+            {
+              transform: [
+                {
+                  translateY: successAnim,
+                },
+              ],
+            },
+          ]}>
+
+          <View style={styles.successIcon}>
+            <Icon
+              name="check"
+              size={32}
+              color="#FFFFFF"
+            />
+          </View>
+
+          <Text style={styles.successTitle}>
+            Thank You!
+          </Text>
+
+          <Text style={styles.successSubtitle}>
+            Welcome to Savariya Property
+          </Text>
+
+          <Text style={styles.joinText}>
+            Join Us & Grow With Us
+          </Text>
+
+          <Text style={styles.successDescription}>
+            Your registration has been completed
+            successfully.
+          </Text>
+
+<TouchableOpacity
+  style={styles.homeButton}
+  onPress={goToHome}
+  activeOpacity={0.85}>
+  
+  <Text style={styles.homeButtonText}>
+    Go to Home
+  </Text>
+
+  <Icon
+    name="arrow-right"
+    size={18}
+    color="#FFFFFF"
+  />
+</TouchableOpacity>
+        </Animated.View>
+      )}
+    </View>
+  )};
+
+export default RoleBasedRegistrationScreen;
+
+/* =========================================================
+   STYLES
+========================================================= */
 
 const styles = StyleSheet.create({
 
-  safeContainer: {
+  /* =======================================================
+     OVERLAY
+  ======================================================= */
+
+  overlay: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: 'rgba(0,0,0,0.60)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 16,
   },
 
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 35,
+  /* =======================================================
+     POPUP
+  ======================================================= */
+
+  popup: {
+    width: '100%',
+    maxWidth: 430,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 13,
+
+    elevation: 20,
+
+    shadowColor: '#000',
+
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+
+    shadowOpacity: 0.28,
+    shadowRadius: 15,
   },
 
-  /* Role Header */
+  /* =======================================================
+     CLOSE
+  ======================================================= */
+
+  closeButton: {
+    position: 'absolute',
+    right: 11,
+    top: 11,
+
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+
+    backgroundColor: '#F2F2F2',
+
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    zIndex: 50,
+  },
+
+  /* =======================================================
+     ROLE HEADER
+  ======================================================= */
 
   roleHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    paddingRight: 38,
+    marginBottom: 10,
   },
 
   roleIcon: {
-    width: 58,
-    height: 58,
-    borderRadius: 16,
-    backgroundColor: '#1F6FEB',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+
+    backgroundColor: '#FFF3E8',
+
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 13,
 
-    elevation: 4,
-    shadowColor: '#1F6FEB',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.22,
-    shadowRadius: 6,
+    marginRight: 10,
   },
 
-  roleHeaderContent: {
+  roleTextContainer: {
     flex: 1,
-  },
-
-  registerLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#1F6FEB',
-    letterSpacing: 1,
-    marginBottom: 3,
   },
 
   roleTitle: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '800',
-    color: '#111827',
+    color: '#012353',
+    marginBottom: 2,
   },
 
-  description: {
-    fontSize: 13.5,
-    color: '#6B7280',
-    lineHeight: 20,
-    marginBottom: 15,
+  roleDescription: {
+    fontSize: 11.5,
+    color: '#777',
+    lineHeight: 15,
   },
 
-  /* Progress */
+  /* =======================================================
+     STEP
+  ======================================================= */
 
-  progressContainer: {
+  stepContainer: {
     flexDirection: 'row',
-    width: '100%',
-    height: 5,
-    marginBottom: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    marginTop: 1,
+    marginBottom: 5,
   },
 
-  progressActive: {
-    flex: 1,
-    backgroundColor: '#1F6FEB',
-    borderRadius: 5,
-    marginRight: 4,
+  stepCircle: {
+    width: 25,
+    height: 25,
+    borderRadius: 13,
+
+    backgroundColor: '#E5E5E5',
+
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
-  progressInactive: {
-    flex: 1,
-    backgroundColor: '#DCE4EF',
-    borderRadius: 5,
-    marginLeft: 4,
+  stepActive: {
+    backgroundColor: '#012353',
   },
 
-  stepText: {
-    fontSize: 11,
-    color: '#9CA3AF',
-    marginBottom: 18,
-  },
-
-  /* Card */
-
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 20,
-
-    elevation: 4,
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-  },
-
-  cardTitle: {
-    fontSize: 19,
+  stepNumber: {
+    color: '#FFFFFF',
+    fontSize: 11.5,
     fontWeight: '800',
-    color: '#111827',
   },
 
-  cardSubtitle: {
-    fontSize: 13,
-    color: '#6B7280',
-    marginTop: 5,
-    marginBottom: 22,
+  stepInactiveNumber: {
+    color: '#777',
   },
 
-  /* Form */
+  stepLine: {
+    width: 70,
+    height: 2,
+    backgroundColor: '#DDDDDD',
+  },
 
-  label: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#374151',
+  stepLineActive: {
+    backgroundColor: '#F58220',
+  },
+
+  stepTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+
     marginBottom: 8,
   },
 
-  optional: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: '#9CA3AF',
+  stepTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#012353',
   },
 
+  stepCount: {
+    fontSize: 10.5,
+    color: '#888',
+  },
+
+  /* =======================================================
+     INPUT
+  ======================================================= */
+
   inputContainer: {
-    height: 54,
+    height: 42,
+
+    borderWidth: 1,
+    borderColor: '#DFDFDF',
+    borderRadius: 9,
+
+    backgroundColor: '#FAFAFA',
 
     flexDirection: 'row',
     alignItems: 'center',
 
-    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 11,
 
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-
-    borderRadius: 12,
-
-    paddingHorizontal: 14,
-
-    marginBottom: 17,
+    marginBottom: 7,
   },
 
   input: {
     flex: 1,
+    height: 41,
 
-    height: '100%',
+    marginLeft: 8,
 
-    fontSize: 15,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
 
-    color: '#111827',
-
-    marginLeft: 10,
+    fontSize: 13.5,
+    color: '#222',
   },
 
-  /* Continue */
+  /* =======================================================
+     PRIMARY BUTTON
+  ======================================================= */
 
-  continueButton: {
-    height: 54,
+  primaryButton: {
+    height: 43,
 
-    borderRadius: 13,
+    backgroundColor: '#012353',
 
-    backgroundColor: '#1F6FEB',
-
-    marginTop: 7,
+    borderRadius: 9,
 
     flexDirection: 'row',
-
     alignItems: 'center',
     justifyContent: 'center',
 
-    elevation: 4,
+    marginTop: 3,
 
-    shadowColor: '#1F6FEB',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.22,
-    shadowRadius: 7,
+    gap: 7,
   },
 
-  continueText: {
+  primaryButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-    marginRight: 8,
+    fontSize: 13.5,
+    fontWeight: '800',
   },
 
-  /* Login */
+  /* =======================================================
+     STEP 2 BUTTONS
+  ======================================================= */
 
-  loginContainer: {
+  buttonRow: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
 
-    marginTop: 20,
+    marginTop: 3,
+
+    gap: 8,
   },
 
-  loginLabel: {
+  backButton: {
+    height: 43,
+    minWidth: 82,
+
+    borderWidth: 1,
+    borderColor: '#012353',
+    borderRadius: 9,
+
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    gap: 4,
+  },
+
+  backButtonText: {
+    color: '#012353',
     fontSize: 13,
-    color: '#6B7280',
+    fontWeight: '800',
   },
 
-  loginLink: {
-    fontSize: 13,
-    color: '#1F6FEB',
-    fontWeight: '700',
-    marginLeft: 5,
+  registerButton: {
+    flex: 1,
+    marginTop: 0,
   },
 
-  /* Security */
+  disabledButton: {
+    opacity: 0.55,
+  },
+
+  /* =======================================================
+     SECURITY
+  ======================================================= */
 
   securityBox: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
 
-    marginTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#EEEEEE',
 
-    paddingHorizontal: 10,
+    marginTop: 7,
+
+    paddingTop: 6,
   },
 
   securityText: {
-    flex: 1,
-
-    fontSize: 11.5,
-
-    color: '#6B7280',
-
-    marginLeft: 7,
-
-    lineHeight: 17,
+    fontSize: 10.5,
+    color: '#777',
+    marginLeft: 5,
   },
 
-  passwordContainer: {
-  flexDirection: 'row',
+  /* =======================================================
+     SUCCESS MESSAGE
+  ======================================================= */
+
+  successMessage: {
+  position: 'absolute',
+
+  width: '88%',
+  maxWidth: 390,
+  height: '50%',
+
+  left: '6%',
+  top: '25%',
+
+  backgroundColor: '#FFFFFF',
+
+  borderRadius: 24,
+
+  paddingHorizontal: 22,
+  paddingTop: 28,
+  paddingBottom: 24,
+
   alignItems: 'center',
-  backgroundColor: '#FAFAFA',
-  borderWidth: 1,
-  borderColor: '#E5E7EB',
-  borderRadius: 12,
-  paddingHorizontal: 16,
-  height: 55,
-  marginBottom: 16,
+  justifyContent: 'center',
+
+  elevation: 30,
+
+  shadowColor: '#000',
+  shadowOffset: {
+    width: 0,
+    height: 8,
+  },
+  shadowOpacity: 0.30,
+  shadowRadius: 18,
+
+  zIndex: 100,
 },
 
-passwordInput: {
-  flex: 1,
-  fontSize: 16,
-  color: '#222',
+
+  successIcon: {
+    width: 56,
+    height: 56,
+
+    borderRadius: 28,
+
+    backgroundColor: '#2E7D32',
+
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    marginBottom: 8,
+  },
+
+  successTitle: {
+    fontSize: 21,
+    fontWeight: '800',
+    color: '#012353',
+    marginBottom: 2,
+  },
+
+  successSubtitle: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#F58220',
+    marginBottom: 3,
+  },
+
+  joinText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#012353',
+    marginBottom: 4,
+  },
+
+  successDescription: {
+    fontSize: 11.5,
+    color: '#777',
+
+    textAlign: 'center',
+
+    lineHeight: 16,
+
+    marginBottom: 10,
+  },
+  homeButton: {
+  width: '100%',
+  height: 44,
+
+  backgroundColor: '#012353',
+
+  borderRadius: 10,
+
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+
+  marginTop: 8,
+
+  gap: 7,
+},
+
+homeButtonText: {
+  color: '#FFFFFF',
+  fontSize: 13.5,
+  fontWeight: '800',
 },
 
 });
-
-export default RoleBasedRegistrationScreen;
-

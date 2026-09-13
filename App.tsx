@@ -17,6 +17,7 @@ import ProjectListScreen from './src/screens/ProjectListScreen';
 import RentalListScreen from './src/screens/RentalListScreen';
 import RentHomeScreen from './src/screens/RentHomeScreen';
 import ProjectDetailsScreen from './src/screens/ProjectDetailsScreen';
+import RentalDetailsScreen from './src/screens/RentalDetailedScreen';
 import RoleBasedRegistrationScreen from './src/screens/RoleBasedRegistrationScreen'
 import OTPScreen  from './src/screens/OTPScreen'
 
@@ -130,6 +131,7 @@ function App() {
             }}
         />
 
+        <Stack.Screen name="RentDetails" component={RentalDetailsScreen} />
         </Stack.Navigator>
 
     </NavigationContainer>

@@ -1,96 +1,72 @@
 import React from 'react';
+import {View, Text, StyleSheet} from 'react-native';
 
-import {
+const NearbyPlaces = ({nearby = ''}) => {
+  const nearbyText = String(nearby || '').trim();
 
-View,
+  if (!nearbyText) {
+    return null;
+  }
 
-Text,
+  return (
+    <View style={styles.card}>
 
-FlatList,
+      <Text style={styles.heading}>
+        Nearby Places
+      </Text>
 
-StyleSheet
+      <View style={styles.box}>
 
-} from 'react-native';
+        <Text style={styles.icon}>
+          📍
+        </Text>
 
-const NearbyPlaces=({nearby=[]})=>{
+        <Text style={styles.description}>
+          {nearbyText}
+        </Text>
 
-const renderItem=({item})=>(
+      </View>
 
-<View style={styles.box}>
-
-<Text style={styles.name}>
-
-{item.name}
-
-</Text>
-
-<Text>
-
-{item.distance}
-
-</Text>
-
-</View>
-
-)
-
-return(
-
-<View style={styles.card}>
-
-<Text style={styles.heading}>
-
-Nearby Places
-
-</Text>
-
-<FlatList
-
-horizontal
-
-data={nearby}
-
-renderItem={renderItem}
-
-showsHorizontalScrollIndicator={false}
-
-/>
-
-</View>
-
-)
-
-}
+    </View>
+  );
+};
 
 export default NearbyPlaces;
 
-const styles=StyleSheet.create({
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: '#fff',
+    marginHorizontal: 15,
+    marginBottom: 20,
+    padding: 18,
+    borderRadius: 15,
+    elevation: 3,
+  },
 
-card:{
-backgroundColor:'#fff',
-marginHorizontal:15,
-marginBottom:20,
-padding:18,
-borderRadius:15
-},
+  heading: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 12,
+    color: '#222',
+  },
 
-heading:{
-fontSize:16,
-fontWeight:'700',
-marginBottom:15
-},
+  box: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    padding: 15,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
 
-box:{
-width:170,
-padding:15,
-backgroundColor:'#F5F5F5',
-marginRight:12,
-borderRadius:12
-},
+  icon: {
+    fontSize: 20,
+    marginRight: 10,
+  },
 
-name:{
-fontWeight:'700',
-fontSize:16
-}
-
+  description: {
+    flex: 1,
+    fontSize: 13,
+    color: '#555',
+    lineHeight: 22,
+  },
 });

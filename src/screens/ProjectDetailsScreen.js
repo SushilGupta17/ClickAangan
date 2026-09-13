@@ -151,16 +151,20 @@ const ProjectDetailsScreen = ({ route }) => {
                      <OverviewCard project={project} />
                 )}
 
+                <VideoSection project={project} />
+
                 <FloorPlans image={project?.FloorPlans || []} />
+
+  <NearbyPlaces
+  nearby={project?.nearby || project?.NearBy || ''}
+/>
+
 
                 <BuilderCard project={project} />
 
-{Array.isArray(project?.nearby) &&
-  project.nearby.length > 0 && (
-    <NearbyPlaces
-      nearby={project.nearby}
-    />
-  )}
+
+
+ 
 
 {/* 
  <VideoSection project={project} />

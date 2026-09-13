@@ -16,6 +16,7 @@ function RentHomeScreen({navigation}) {
 const [showPopup, setShowPopup] = useState(false);
 const [showTopFilters, setShowTopFilters] = useState(true);
 const [lastOffset, setLastOffset] = useState(0);
+
 const [selectedType, setSelectedType] =
     useState('Apartment');
 

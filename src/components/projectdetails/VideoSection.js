@@ -1,62 +1,61 @@
 import React from 'react';
+import {View, Text, StyleSheet} from 'react-native';
+import Video from 'react-native-video';
 
-import {
+const VideoSection = ({project}) => {
+  const videoPath = project?.videoUrl || project?.VideoUrl || '';
 
-View,
-Text,
-StyleSheet
+  if (!videoPath) {
+    return null;
+  }
 
-} from 'react-native';
+  const videoUrl = videoPath.startsWith('http')
+    ? videoPath
+    : `https://savariyaproperty.in/${videoPath}`;
 
-//import YoutubePlayer from 'react-native-youtube-iframe';
+  return (
+    <View style={styles.card}>
+      <Text style={styles.heading}>
+        Video Tour
+      </Text>
 
-const VideoSection=({project})=>{
-
-if(!project.videoId){
-
-return null;
-
-}
-
-return(
-
-<View style={styles.card}>
-
-<Text style={styles.heading}>
-
-Video Tour
-
-</Text>
-
-<YoutubePlayer
-
-height={220}
-
-videoId={project.videoId}
-
-/>
-
-</View>
-
-)
-
-}
+      <Video
+        source={{uri: videoUrl}}
+        style={styles.video}
+        controls={true}
+        resizeMode="contain"
+        paused={true}
+        onError={error => {
+          console.log('VIDEO ERROR:', error);
+        }}
+      />
+    </View>
+  );
+};
 
 export default VideoSection;
 
-const styles=StyleSheet.create({
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: '#fff',
+    marginHorizontal: 15,
+    marginBottom: 20,
+    padding: 18,
+    borderRadius: 15,
+    elevation: 3,
+  },
 
-card:{
-backgroundColor:'#fff',
-margin:15,
-padding:18,
-borderRadius:15
-},
+  heading: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#222',
+    marginBottom: 15,
+  },
 
-heading:{
-fontWeight:'700',
-fontSize:20,
-marginBottom:15
-}
-
+  video: {
+    width: '100%',
+    height: 220,
+    backgroundColor: '#000',
+    borderRadius: 12,
+  },
 });

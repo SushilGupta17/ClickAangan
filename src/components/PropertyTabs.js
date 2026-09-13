@@ -70,7 +70,7 @@ const PropertyTabs = ({
     }
 
     if (type === 'Rent') {
-      setShowProjects?.(false);
+        setShowProjects?.(false);
 
       // IMPORTANT:
       // Ye name exactly Stack.Screen ke name se match hona chahiye

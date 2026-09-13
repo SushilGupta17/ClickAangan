@@ -19,13 +19,13 @@ function RoleSelectionScreen({navigation}) {
 
   const roles = [
     {
-      id: 'BUILDER_INVESTOR',
+      id: 'BUILDER',
       title: 'Builder / Investor',
       subtitle: 'Manage projects & investments',
       icon: 'office-building-outline',
     },
     {
-      id: 'PROPERTY_EXECUTIVE',
+      id: 'EXECUTIVE',
       title: 'Property Executive',
       subtitle: 'Manage properties & clients',
       icon: 'account-tie-outline',

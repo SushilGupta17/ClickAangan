@@ -1,33 +1,45 @@
-// RoleSelectionScreen.js
 
-import React, {useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
+
 import {
   View,
-  SafeAreaView,
-  ScrollView,
   Text,
   TouchableOpacity,
   StyleSheet,
-  StatusBar,
+  Animated,
+  Dimensions,
 } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 
-function RegisterScreen({navigation}) {
-  const [selectedRole, setSelectedRole] = useState(null);
+const {width} = Dimensions.get('window');
+
+function RegisterScreen({navigation, route}) {
+  const scaleAnim = useRef(
+    new Animated.Value(0.7),
+  ).current;
+
+  const opacityAnim = useRef(
+    new Animated.Value(0),
+  ).current;
+
+  const [selectedRole, setSelectedRole] =
+    useState(null);
+
+  // =====================================================
+  // ROLES
+  // =====================================================
 
   const roles = [
     {
-      id: 'BUILDER_INVESTOR',
+      id: 'BUILDER',
       title: 'Builder / Investor',
       subtitle: 'Manage projects & investments',
       icon: 'office-building-outline',
     },
     {
-      id: 'PROPERTY_EXECUTIVE',
+      id: 'EXECUTIVE',
       title: 'Property Executive',
       subtitle: 'Manage properties & clients',
       icon: 'account-tie-outline',
@@ -46,116 +58,254 @@ function RegisterScreen({navigation}) {
     },
   ];
 
+  // =====================================================
+  // POPUP ANIMATION
+  // =====================================================
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 7,
+        tension: 60,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [opacityAnim, scaleAnim]);
+
+  // =====================================================
+  // CLOSE
+  // =====================================================
+
+  const handleClose = () => {
+    Animated.parallel([
+      Animated.timing(opacityAnim, {
+        toValue: 0,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+
+      Animated.timing(scaleAnim, {
+        toValue: 0.7,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      }
+    });
+  };
+
+  // =====================================================
+  // CONTINUE
+  // =====================================================
+
   const handleContinue = async () => {
     if (!selectedRole) {
       return;
     }
 
-    await AsyncStorage.setItem('selectedRole', selectedRole);
+    try {
+      await AsyncStorage.setItem(
+        'selectedRole',
+        selectedRole,
+      );
 
-   navigation.navigate('RoleBasedRegistration', {role: selectedRole,});
+      navigation.navigate(
+        'RoleBasedRegistration',
+        {
+          role: selectedRole,
+        },
+      );
+    } catch (error) {
+      console.log(
+        'ROLE SAVE ERROR:',
+        error,
+      );
+    }
   };
 
+  // =====================================================
+  // UI
+  // =====================================================
+
   return (
-    <SafeAreaView style={styles.safeContainer}>
-      <Header />
+    <Animated.View
+      style={[
+        styles.overlay,
+        {
+          opacity: opacityAnim,
+        },
+      ]}>
 
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#F5F7FA"
-      />
+      <Animated.View
+        style={[
+          styles.card,
+          {
+            transform: [
+              {
+                scale: scaleAnim,
+              },
+            ],
+          },
+        ]}>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}>
+        {/* ================================================= */}
+        {/* CLOSE BUTTON */}
+        {/* ================================================= */}
 
-      
-        {/* Title */}
-        <View style={styles.titleSection}>
-             <Text style={styles.title}>
-            How would you like to continue?
+        <TouchableOpacity
+          style={styles.close}
+          onPress={handleClose}
+          activeOpacity={0.7}>
+
+          <Text style={styles.closeText}>
+            ✕
           </Text>
 
-          <Text style={styles.description}>
-            Select your role to get a personalized
-            property experience.
-          </Text>
+        </TouchableOpacity>
+
+        {/* ================================================= */}
+        {/* LOGO */}
+        {/* ================================================= */}
+
+        <View style={styles.logoCircle}>
+
+          <Icon
+            name="account-group-outline"
+            size={29}
+            color="#012353"
+          />
+
         </View>
 
-        {/* Role Cards */}
+        {/* ================================================= */}
+        {/* TITLE */}
+        {/* ================================================= */}
+
+        <Text style={styles.title}>
+          Welcome to
+        </Text>
+
+        <Text style={styles.brand}>
+          Savariya Property
+        </Text>
+
+        <Text style={styles.desc}>
+          Choose your role to get a personalized
+          property experience.
+        </Text>
+
+        {/* ================================================= */}
+        {/* ROLE BOX */}
+        {/* ================================================= */}
+
         <View style={styles.rolesContainer}>
 
           {roles.map(role => {
-            const isSelected = selectedRole === role.id;
+
+            const isSelected =
+              selectedRole === role.id;
 
             return (
               <TouchableOpacity
                 key={role.id}
                 activeOpacity={0.85}
-                onPress={() => setSelectedRole(role.id)}
+                onPress={() =>
+                  setSelectedRole(role.id)
+                }
                 style={[
                   styles.roleCard,
-                  isSelected && styles.selectedRoleCard,
+                  isSelected &&
+                    styles.selectedRoleCard,
                 ]}>
 
-                {/* Icon */}
+                {/* ICON */}
+
                 <View
                   style={[
                     styles.iconContainer,
-                    isSelected && styles.selectedIconContainer,
+                    isSelected &&
+                      styles.selectedIconContainer,
                   ]}>
+
                   <Icon
                     name={role.icon}
-                    size={30}
-                    color={isSelected ? '#FFFFFF' : '#1F6FEB'}
+                    size={25}
+                    color={
+                      isSelected
+                        ? '#FFFFFF'
+                        : '#012353'
+                    }
                   />
+
                 </View>
 
-                {/* Text */}
+                {/* CONTENT */}
+
                 <View style={styles.roleContent}>
+
                   <Text
                     style={[
                       styles.roleTitle,
-                      isSelected && styles.selectedRoleTitle,
+                      isSelected &&
+                        styles.selectedRoleTitle,
                     ]}>
+
                     {role.title}
+
                   </Text>
 
                   <Text style={styles.roleSubtitle}>
                     {role.subtitle}
                   </Text>
+
                 </View>
 
-                {/* Selection */}
+                {/* RADIO */}
+
                 <View
                   style={[
                     styles.radioOuter,
-                    isSelected && styles.radioOuterSelected,
+                    isSelected &&
+                      styles.radioOuterSelected,
                   ]}>
 
                   {isSelected && (
-                    <View style={styles.radioInner}>
-                      <Icon
-                        name="check"
-                        size={13}
-                        color="#FFFFFF"
-                      />
-                    </View>
+                    <Icon
+                      name="check"
+                      size={14}
+                      color="#FFFFFF"
+                    />
                   )}
+
                 </View>
+
               </TouchableOpacity>
             );
           })}
+
         </View>
 
-        {/* Continue Button */}
+        {/* ================================================= */}
+        {/* CONTINUE */}
+        {/* ================================================= */}
+
         <TouchableOpacity
           activeOpacity={0.85}
           disabled={!selectedRole}
           onPress={handleContinue}
           style={[
             styles.continueButton,
-            !selectedRole && styles.disabledButton,
+            !selectedRole &&
+              styles.disabledButton,
           ]}>
 
           <Text style={styles.continueText}>
@@ -164,256 +314,378 @@ function RegisterScreen({navigation}) {
 
           <Icon
             name="arrow-right"
-            size={22}
+            size={20}
             color="#FFFFFF"
           />
+
         </TouchableOpacity>
 
-        {/* Bottom Note */}
+        {/* ================================================= */}
+        {/* BOTTOM NOTE */}
+        {/* ================================================= */}
+
         <View style={styles.bottomNote}>
+
           <Icon
             name="shield-check-outline"
-            size={18}
-            color="#6B7280"
+            size={16}
+            color="#777"
           />
 
           <Text style={styles.bottomNoteText}>
             Your role helps us personalize your experience
           </Text>
-        </View>
- 
 
-      </ScrollView>
-      <Footer />
-    </SafeAreaView>
+        </View>
+
+      </Animated.View>
+    </Animated.View>
   );
 }
 
+export default RegisterScreen;
+
+// =====================================================
+// STYLES
+// =====================================================
+
 const styles = StyleSheet.create({
 
-  safeContainer: {
-    flex: 1,
-    backgroundColor: '#F5F7FA',
-  },
+  // =====================================================
+  // OVERLAY
+  // =====================================================
 
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 25,
-    paddingBottom: 35,
-  },
+  overlay: {
+    position: 'absolute',
 
-  /* Header */
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
 
-  header: {
-    alignItems: 'center',
-    marginBottom: 1,
-  },
+    backgroundColor:
+      'rgba(0,0,0,0.60)',
 
-  logoCircle: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: '#1F6FEB',
-    alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
-    elevation: 5,
-    shadowColor: '#1F6FEB',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-  },
-
-  appName: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#111827',
-    letterSpacing: 0.2,
-  },
-
-  tagline: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginTop: 4,
-  },
-
-  /* Title */
-
-  titleSection: {
-    marginBottom: 22,
-  },
-
-  welcomeText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1F6FEB',
-    marginBottom: 5,
-  },
-
-  title: {
-    fontSize: 19,
-    fontWeight: '600',
-    color: '#111827',
-    lineHeight: 32,
-  },
-
-  description: {
-    fontSize: 14,
-    color: '#6B7280',
-    lineHeight: 21,
-    marginTop: 8,
-  },
-
-  /* Roles */
-
-  rolesContainer: {
-    gap: 13,
-  },
-
-  roleCard: {
-    minHeight: 88,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    paddingHorizontal: 15,
-    paddingVertical: 14,
-
-    flexDirection: 'row',
     alignItems: 'center',
 
-    elevation: 2,
+    zIndex: 999,
+  },
+
+  // =====================================================
+  // CARD
+  // =====================================================
+
+  card: {
+    width: width - 32,
+
+    backgroundColor: '#FFFFFF',
+
+    borderRadius: 20,
+
+    paddingHorizontal: 17,
+    paddingTop: 16,
+    paddingBottom: 14,
+
+    alignItems: 'center',
+
+    elevation: 10,
+
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 6,
     },
-    shadowOpacity: 0.06,
-    shadowRadius: 5,
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+
+    maxHeight: '90%',
   },
 
-  selectedRoleCard: {
-    borderColor: '#1F6FEB',
-    borderWidth: 2,
-    backgroundColor: '#F0F6FF',
-    elevation: 4,
-  },
+  // =====================================================
+  // CLOSE
+  // =====================================================
 
-  /* Icon */
+  close: {
+    position: 'absolute',
 
-  iconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 15,
-    backgroundColor: '#EEF5FF',
-    alignItems: 'center',
+    right: 9,
+    top: 8,
+
+    width: 32,
+    height: 32,
+
     justifyContent: 'center',
-    marginRight: 14,
+    alignItems: 'center',
+
+    zIndex: 10,
   },
 
-  selectedIconContainer: {
-    backgroundColor: '#1F6FEB',
+  closeText: {
+    fontSize: 20,
+
+    color: '#777',
+
+    fontWeight: '600',
   },
 
-  /* Content */
+  // =====================================================
+  // LOGO
+  // =====================================================
 
-  roleContent: {
-    flex: 1,
-    paddingRight: 8,
+  logoCircle: {
+    width: 58,
+    height: 58,
+
+    borderRadius: 29,
+
+    backgroundColor: '#EAF4FF',
+
+    justifyContent: 'center',
+    alignItems: 'center',
+
+    marginBottom: 7,
   },
 
-  roleTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 4,
-  },
+  // =====================================================
+  // TITLE
+  // =====================================================
 
-  selectedRoleTitle: {
-    color: '#1456B8',
-  },
+  title: {
+    fontSize: 15,
 
-  roleSubtitle: {
-    fontSize: 12.5,
-    color: '#6B7280',
+    color: '#555',
+
+    fontWeight: '500',
+
     lineHeight: 18,
   },
 
-  /* Radio */
+  brand: {
+    fontSize: 23,
+
+    fontWeight: 'bold',
+
+    color: '#012353',
+
+    marginTop: 1,
+
+    textAlign: 'center',
+
+    lineHeight: 28,
+  },
+
+  desc: {
+    marginTop: 6,
+
+    marginHorizontal: 8,
+
+    textAlign: 'center',
+
+    color: '#666',
+
+    lineHeight: 17,
+
+    fontSize: 12.5,
+  },
+
+  // =====================================================
+  // ROLES
+  // =====================================================
+
+  rolesContainer: {
+    width: '100%',
+
+    marginTop: 12,
+
+    gap: 8,
+  },
+
+  // =====================================================
+  // ROLE CARD
+  // =====================================================
+
+  roleCard: {
+    minHeight: 66,
+
+    width: '100%',
+
+    backgroundColor: '#FFFFFF',
+
+    borderRadius: 12,
+
+    borderWidth: 1,
+
+    borderColor: '#E2E6EC',
+
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+
+    flexDirection: 'row',
+
+    alignItems: 'center',
+  },
+
+  selectedRoleCard: {
+    borderColor: '#012353',
+
+    borderWidth: 1.5,
+
+    backgroundColor: '#F2F7FC',
+
+    elevation: 2,
+  },
+
+  // =====================================================
+  // ROLE ICON
+  // =====================================================
+
+  iconContainer: {
+    width: 43,
+    height: 43,
+
+    borderRadius: 11,
+
+    backgroundColor: '#EAF4FF',
+
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    marginRight: 10,
+  },
+
+  selectedIconContainer: {
+    backgroundColor: '#012353',
+  },
+
+  // =====================================================
+  // ROLE CONTENT
+  // =====================================================
+
+  roleContent: {
+    flex: 1,
+
+    paddingRight: 5,
+  },
+
+  roleTitle: {
+    fontSize: 13.5,
+
+    fontWeight: '700',
+
+    color: '#222',
+
+    marginBottom: 2,
+  },
+
+  selectedRoleTitle: {
+    color: '#012353',
+  },
+
+  roleSubtitle: {
+    fontSize: 10.8,
+
+    color: '#777',
+
+    lineHeight: 15,
+  },
+
+  // =====================================================
+  // RADIO
+  // =====================================================
 
   radioOuter: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 22,
+    height: 22,
+
+    borderRadius: 11,
+
     borderWidth: 1.5,
+
     borderColor: '#D1D5DB',
+
     alignItems: 'center',
     justifyContent: 'center',
   },
 
   radioOuterSelected: {
-    borderColor: '#1F6FEB',
-    backgroundColor: '#1F6FEB',
+    borderColor: '#012353',
+
+    backgroundColor: '#012353',
   },
 
-  radioInner: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  /* Button */
+  // =====================================================
+  // CONTINUE BUTTON
+  // =====================================================
 
   continueButton: {
-    height: 56,
-    borderRadius: 14,
-    backgroundColor: '#1F6FEB',
-    marginTop: 25,
+    marginTop: 13,
+
+    width: '100%',
+
+    height: 43,
+
+    borderRadius: 10,
+
+    backgroundColor: '#012353',
+
+    justifyContent: 'center',
+    alignItems: 'center',
 
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
 
-    elevation: 4,
-    shadowColor: '#1F6FEB',
+    elevation: 3,
+
+    shadowColor: '#012353',
+
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 3,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 7,
+
+    shadowOpacity: 0.20,
+
+    shadowRadius: 5,
   },
 
   disabledButton: {
     backgroundColor: '#B8C4D6',
+
     elevation: 0,
   },
 
   continueText: {
     color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '700',
-    marginRight: 8,
+
+    fontSize: 15,
+
+    fontWeight: 'bold',
+
+    marginRight: 7,
   },
 
-  /* Bottom */
+  // =====================================================
+  // BOTTOM NOTE
+  // =====================================================
 
   bottomNote: {
     flexDirection: 'row',
+
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 22,
-    paddingHorizontal: 10,
+
+    marginTop: 10,
+
+    paddingHorizontal: 5,
   },
 
   bottomNoteText: {
-    fontSize: 11.5,
-    color: '#6B7280',
-    marginLeft: 6,
+    fontSize: 10.5,
+
+    color: '#777',
+
+    marginLeft: 5,
+
     textAlign: 'center',
   },
 });
-
-export default RegisterScreen;
