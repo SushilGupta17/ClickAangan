@@ -13,8 +13,8 @@ import ImageViewing from 'react-native-image-viewing';
 
 const {width} = Dimensions.get('window');
 
-const API_URL1 = 'https://savariyaproperty.in';
-const API_URL = 'http://192.168.1.3:7045';
+const API_URL = 'https://savariyaproperty.in';
+const API_URL1 = 'http://192.168.1.3:7045';
 const IMAGE_HEIGHT = 300;
 
 const RentalImagesSlider = ({property}) => {

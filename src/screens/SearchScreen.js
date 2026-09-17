@@ -20,8 +20,8 @@ import Footer from '../components/Footer';
 import PropImageRotator from '../components/PropImgRotator';
 import {formatPrice} from '../helpers/priceHelper';
 
-const API_URL1 = 'https://savariyaproperty.in';
-const API_URL = 'http://192.168.1.3:7045';
+const API_URL = 'https://savariyaproperty.in';
+const API_URL2 = 'http://192.168.1.3:7045';
 
 
 // ============================================================
@@ -221,7 +221,7 @@ const getPropertyImages = item => {
 // PROPERTY CARD
 // ============================================================
 
-const PropertyCard = ({item, openProperty}) => {
+const PropertyCard = ({item, openProperty, listingType}) => {
   const propertyImages = useMemo(
     () => getPropertyImages(item),
     [item],
@@ -324,7 +324,7 @@ const PropertyCard = ({item, openProperty}) => {
 
             <View style={styles.statusBadge}>
               <Text style={styles.statusText}>
-                {status}
+                {propertyTypeText}
               </Text>
             </View>
 
@@ -355,16 +355,7 @@ const PropertyCard = ({item, openProperty}) => {
           {title}
         </Text>
 
-
-        {propertyTypeText ? (
-          <Text style={styles.propertyType}>
-            {propertyTypeText}
-          </Text>
-        ) : null}
-
-
         <View style={styles.locationRow}>
-
           <Icon
             name="map-marker-alt"
             color="#FF5722"
@@ -380,75 +371,38 @@ const PropertyCard = ({item, openProperty}) => {
 
         </View>
 
-
-        {(bedroom || area) && (
-          <View style={styles.infoRow}>
-
-            {bedroom ? (
-              <View style={styles.infoItem}>
-
-                <Icon
-                  name="bed"
-                  size={13}
-                  color="#666"
-                />
-
-                <Text style={styles.infoText}>
-                  {bedroom} BHK
-                </Text>
-
-              </View>
-            ) : null}
-
-
-            {area ? (
-              <View style={styles.infoItem}>
-
-                <Icon
-                  name="vector-square"
-                  size={13}
-                  color="#666"
-                />
-
-                <Text style={styles.infoText}>
-                  {area} Sq.Ft.
-                </Text>
-
-              </View>
-            ) : null}
-
-          </View>
-        )}
-
-
-        <View style={styles.priceRow}>
-
-      <Text style={styles.price}>
-        {Number(item?.Price || 0) > 0
-          ? formatPrice(item.Price)
-          : `${formatPrice(item.MinPrice)} - ${formatPrice(item.MaxPrice)}`}
-      </Text>
-
-        </View>
-
+ <View style={styles.priceRow}>
+  <Text style={styles.price}>
+    {Number(item?.price ?? item?.Price ?? 0) > 0
+      ? formatPrice(item?.price ?? item?.Price)
+      : Number(item?.minPrice ?? item?.MinPrice ?? 0) > 0 ||
+        Number(item?.maxPrice ?? item?.MaxPrice ?? 0) > 0
+      ? `${formatPrice(item?.minPrice ?? item?.MinPrice ?? 0)} - ${formatPrice(
+          item?.maxPrice ?? item?.MaxPrice ?? 0,
+        )}`
+      : 'Price on Request'}
+  </Text>
+</View>
 
         <TouchableOpacity
-          style={styles.detailsButton}
-          activeOpacity={0.85}
-          onPress={() => openProperty(item)}
-        >
+  style={styles.detailsButton}
+  activeOpacity={0.85}
+  onPress={() => openProperty(item)}
+>
+  <Icon
+    name="eye"
+    size={14}
+    color="#FFF"
+  />
 
-          <Icon
-            name="eye"
-            size={14}
-            color="#FFF"
-          />
-
-          <Text style={styles.detailsButtonText}>
-            View Property Details
-          </Text>
-
-        </TouchableOpacity>
+  <Text style={styles.detailsButtonText}>
+    {listingType === 'PROJECT'
+      ? 'View Project Details'
+      : listingType === 'RENT'
+      ? 'View Rent Details'
+      : 'View Property Details'}
+  </Text>
+</TouchableOpacity>
 
       </View>
     </View>
@@ -485,11 +439,79 @@ const FilterModal = ({
   onReset,
   onSearch,
 }) => {
+const propertyTypes =
+  listingType === 'PROJECT'
+    ? category === 'RESIDENTIAL'
+      ? [
+          'Residential Project',
+          'Villa Project',
+          'Plot Project'
+        ]
+      : [
+          'Plot Project',
+          'Shops Project',
+        ]
+    : category === 'RESIDENTIAL'
+    ? RESIDENTIAL_TYPES
+    : COMMERCIAL_TYPES;
 
-  const propertyTypes =
-    category === 'RESIDENTIAL'
-      ? RESIDENTIAL_TYPES
-      : COMMERCIAL_TYPES;
+
+const quickBudgets =
+  listingType === 'RENT'
+    ? [
+        {
+          label: 'Under ₹10K',
+          from: '0',
+          to: '10000',
+        },
+        {
+          label: '₹10K - ₹20K',
+          from: '10000',
+          to: '20000',
+        },
+        {
+          label: '₹20K - ₹30K',
+          from: '20000',
+          to: '30000',
+        },
+        {
+          label: '₹30K - ₹50K',
+          from: '30000',
+          to: '50000',
+        },
+        {
+          label: '₹50K+',
+          from: '50000',
+          to: '',
+        },
+      ]
+    : [
+        {
+          label: 'Under 20L',
+          from: '0',
+          to: '2000000',
+        },
+        {
+          label: '20L - 50L',
+          from: '2000000',
+          to: '5000000',
+        },
+        {
+          label: '50L - 1Cr',
+          from: '5000000',
+          to: '10000000',
+        },
+        {
+          label: '1Cr - 2Cr',
+          from: '10000000',
+          to: '20000000',
+        },
+        {
+          label: '2Cr+',
+          from: '20000000',
+          to: '',
+        },
+      ];
 
 
   return (
@@ -777,33 +799,8 @@ const FilterModal = ({
 
             <View style={styles.chipsContainer}>
 
-              {[
-                {
-                  label: 'Under 20L',
-                  from: '0',
-                  to: '2000000',
-                },
-                {
-                  label: '20L - 50L',
-                  from: '2000000',
-                  to: '5000000',
-                },
-                {
-                  label: '50L - 1Cr',
-                  from: '5000000',
-                  to: '10000000',
-                },
-                {
-                  label: '1Cr - 2Cr',
-                  from: '10000000',
-                  to: '20000000',
-                },
-                {
-                  label: '2Cr+',
-                  from: '20000000',
-                  to: '',
-                },
-              ].map(item => (
+              {
+              quickBudgets.map(item => (
 
                 <TouchableOpacity
                   key={item.label}
@@ -1107,18 +1104,35 @@ console.log('SEARCH API URL:', url);
   // OPEN PROPERTY
   // ==========================================================
 
-  const openProperty = item => {
+const openProperty = item => {
+  const propertyId =
+    item?.id ||
+    item?.Id;
 
-    navigation.navigate(
-      'PropertyDetails',
-      {
-        property: item,
-        id:
-          item?.id ||
-          item?.Id,
-      },
-    );
-  };
+  // PROJECT
+  if (listingType === 'PROJECT') {
+    navigation.navigate('ProjectDetails', {
+      project: item,
+      id: propertyId,
+    });
+    return;
+  }
+
+  // RENT
+  if (listingType === 'RENT') {
+    navigation.navigate('RentDetails', {
+      property: item,
+      id: propertyId,
+    });
+    return;
+  }
+
+  // BUY - Default
+  navigation.navigate('PropertyDetails', {
+    property: item,
+    id: propertyId,
+  });
+};
 
 
   // ==========================================================
@@ -2057,7 +2071,7 @@ const styles = StyleSheet.create({
   },
 
   propertyTitle: {
-    fontSize: 17,
+    fontSize: 13,
 
     fontWeight: '800',
 
@@ -2121,9 +2135,9 @@ const styles = StyleSheet.create({
   },
 
   price: {
-    fontSize: 20,
+    fontSize: 12,
 
-    fontWeight: '900',
+    fontWeight: '700',
 
     color: '#102A47',
   },

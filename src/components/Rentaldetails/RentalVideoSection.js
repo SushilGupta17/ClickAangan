@@ -35,8 +35,8 @@ const RentalVideoSection = ({property}) => {
   // VIDEO URL
   // =======================================================
 
-   const videoUrl = `http://192.168.1.3:7045/${videoPath.replace(/^\/+/, '')}`
-   const videoUrl1 = `https://savariyaproperty.in/${videoPath.replace(/^\/+/, '')}`
+   const videoUrl2 = `http://192.168.1.3:7045/${videoPath.replace(/^\/+/, '')}`
+   const videoUrl = `https://savariyaproperty.in/${videoPath.replace(/^\/+/, '')}`
 
 
   // =======================================================

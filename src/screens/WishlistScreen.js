@@ -702,7 +702,7 @@ const styles = StyleSheet.create({
   },
 
   heading: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700',
     color: '#222',
     textAlign: 'center',
@@ -825,7 +825,7 @@ const styles = StyleSheet.create({
   // ========================================
 
   propertyName: {
-    fontSize: 20,
+    fontSize: 13,
     fontWeight: '700',
     color: '#222',
   },
@@ -854,7 +854,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     color: '#555',
     flex: 1,
-    fontSize: 13,
+    fontSize: 12,
   },
 
   // ========================================

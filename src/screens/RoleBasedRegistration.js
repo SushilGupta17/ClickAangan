@@ -35,6 +35,25 @@ const LoginPopup = ({
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
   // =========================================================
+// REGISTRATION - SCREEN 2
+// =========================================================
+
+const [companyName, setCompanyName] = useState('');
+const [businessType, setBusinessType] = useState('');
+const [city, setCity] = useState('');
+const [experience, setExperience] = useState('');
+const [workingArea, setWorkingArea] = useState('');
+
+const [propertyType, setPropertyType] = useState('');
+const [propertyLocation, setPropertyLocation] = useState('');
+const [purpose, setPurpose] = useState('');
+
+const [lookingFor, setLookingFor] = useState('');
+const [preferredLocation, setPreferredLocation] = useState('');
+const [budget, setBudget] = useState('');
+
+
+  // =========================================================
   // POPUP MODE
   // =========================================================
   // main
@@ -123,6 +142,18 @@ const LoginPopup = ({
     setEmail('');
     setRegisterPassword('');
     setConfirmPassword('');
+
+    setCompanyName('');
+    setBusinessType('');
+    setCity('');
+    setExperience('');
+    setWorkingArea('');
+    setPropertyType('');
+    setPropertyLocation('');
+    setPurpose('');
+    setLookingFor('');
+    setPreferredLocation('');
+    setBudget('');
 
     setShowRegisterPassword(false);
     setShowConfirmPassword(false);
@@ -346,225 +377,225 @@ const LoginPopup = ({
   // =========================================================
 
   const handleRegister = async () => {
-    // ROLE
-    if (selectedRole === '') {
-      Alert.alert(
-        'Error',
-        'Please select registration role',
-      );
-      return;
-    }
+  // =========================================================
+  // ROLE
+  // =========================================================
+  if (selectedRole === '') {
+    Alert.alert('Error', 'Please select registration role');
+    return;
+  }
 
-    // NAME
-    if (name.trim() === '') {
-      Alert.alert(
-        'Error',
-        'Please enter full name',
-      );
-      return;
-    }
+  // =========================================================
+  // NAME
+  // =========================================================
+  if (name.trim() === '') {
+    Alert.alert('Error', 'Please enter full name');
+    return;
+  }
 
-    // MOBILE
-    if (registerMobile.trim() === '') {
-      Alert.alert(
-        'Error',
-        'Please enter mobile number',
-      );
-      return;
-    }
+  // =========================================================
+  // MOBILE
+  // =========================================================
+  if (registerMobile.trim() === '') {
+    Alert.alert('Error', 'Please enter mobile number');
+    return;
+  }
 
-    if (registerMobile.length !== 10) {
-      Alert.alert(
-        'Error',
-        'Mobile number must be 10 digits',
-      );
-      return;
-    }
+  if (registerMobile.length !== 10) {
+    Alert.alert('Error', 'Mobile number must be 10 digits');
+    return;
+  }
 
-    // EMAIL
+  // =========================================================
+  // EMAIL
+  // =========================================================
+  if (email.trim() !== '' && !email.includes('@')) {
+    Alert.alert('Error', 'Please enter valid email');
+    return;
+  }
+
+  // =========================================================
+  // PASSWORD
+  // =========================================================
+  if (registerPassword === '') {
+    Alert.alert('Error', 'Please enter password');
+    return;
+  }
+
+  if (registerPassword.length < 6) {
+    Alert.alert(
+      'Error',
+      'Password must be minimum 6 characters',
+    );
+    return;
+  }
+
+  // =========================================================
+  // CONFIRM PASSWORD
+  // =========================================================
+  if (confirmPassword === '') {
+    Alert.alert(
+      'Error',
+      'Please confirm password',
+    );
+    return;
+  }
+
+  if (registerPassword !== confirmPassword) {
+    Alert.alert(
+      'Error',
+      'Passwords do not match',
+    );
+    return;
+  }
+
+  try {
+
+    alert('1');
+    setIsLoading(true);
+alert('2');
+    Alert.alert(
+  'REGISTER API START',
+  `ROLE: ${selectedRole}
+NAME: ${name}
+MOBILE: ${registerMobile}
+EMAIL: ${email}`,
+);
+
+alert('3');
+
+   const response = await fetch(
+  'http://192.168.1.3:7045/api/Register',
+  {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+        body: JSON.stringify({
+          name: name.trim(),
+          mobile: registerMobile.trim(),
+          email: email.trim(),
+          password: registerPassword,
+
+          // IMPORTANT
+          role: selectedRole,
+        }),
+      },
+    );
+
+alert('4');
+    console.log('REGISTER HTTP STATUS:', response.status);
+
+    const result = await response.json();
+
+    console.log(
+      'REGISTER RESPONSE:',
+      JSON.stringify(result, null, 2),
+    );
+alert('5');
     if (
-      email.trim() !== '' &&
-      !email.includes('@')
+      response.ok &&
+      result.success
     ) {
-      Alert.alert(
-        'Error',
-        'Please enter valid email',
-      );
-      return;
-    }
+      alert('6');
+      const userId =
+        result.userId ??
+        result.data?.id ??
+        result.data?.userId ??
+        result.data?.ID;
 
-    // PASSWORD
-    if (registerPassword === '') {
-      Alert.alert(
-        'Error',
-        'Please enter password',
-      );
-      return;
-    }
+      const userRole =
+        result.role ||
+        result.userRole ||
+        result.data?.role ||
+        result.data?.userRole ||
+        selectedRole;
 
-    if (registerPassword.length < 6) {
-      Alert.alert(
-        'Error',
-        'Password must be minimum 6 characters',
-      );
-      return;
-    }
-
-    // CONFIRM
-    if (confirmPassword === '') {
-      Alert.alert(
-        'Error',
-        'Please confirm password',
-      );
-      return;
-    }
-
-    if (registerPassword !== confirmPassword) {
-      Alert.alert(
-        'Error',
-        'Passwords do not match',
-      );
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-
-      const response = await fetch(
-        'https://savariyaproperty.in/api/Register',
-        {
-          method: 'POST',
-
-          headers: {
-            'Content-Type': 'application/json',
-          },
-
-          body: JSON.stringify({
-            name: name.trim(),
-            mobile: registerMobile.trim(),
-            email: email.trim(),
-            password: registerPassword,
-
-            // IMPORTANT
-            role: selectedRole,
-          }),
-        },
+      await AsyncStorage.setItem(
+        'userLogin',
+        'true',
       );
 
-      const result = await response.json();
-
-      console.log(
-        'REGISTER RESPONSE:',
-        result,
-      );
-
-      if (response.ok && result.success) {
-        // ===================================================
-        // USER ID
-        // ===================================================
-
-        const userId =
-          result.userId ??
-          result.data?.id ??
-          result.data?.userId;
-
-        // ===================================================
-        // ROLE
-        // ===================================================
-
-        const userRole =
-          result.role ||
-          result.userRole ||
-          result.data?.role ||
-          result.data?.userRole ||
-          selectedRole;
-
-        // ===================================================
-        // AUTO LOGIN SESSION
-        // ===================================================
-
+      if (
+        userId !== undefined &&
+        userId !== null
+      ) {
         await AsyncStorage.setItem(
-          'userLogin',
-          'true',
-        );
-
-        if (
-          userId !== undefined &&
-          userId !== null
-        ) {
-          await AsyncStorage.setItem(
-            'userId',
-            userId.toString(),
-          );
-        }
-
-        await AsyncStorage.setItem(
-          'userName',
-          name.trim(),
-        );
-
-        await AsyncStorage.setItem(
-          'userMobile',
-          registerMobile.trim(),
-        );
-
-        await AsyncStorage.setItem(
-          'userEmail',
-          email.trim(),
-        );
-
-        await AsyncStorage.setItem(
-          'userRole',
-          userRole,
-        );
-
-        setIsLoading(false);
-
-        // ===================================================
-        // SUCCESS
-        // ===================================================
-
-        Alert.alert(
-          'Registration Successful',
-          `Welcome to Savariya Property, ${name.trim()}!`,
-          [
-            {
-              text: 'Continue',
-              onPress: () => {
-                resetPopup();
-
-                if (onLogin) {
-                  onLogin();
-                } else if (onClose) {
-                  onClose();
-                }
-              },
-            },
-          ],
-        );
-      } else {
-        setIsLoading(false);
-
-        Alert.alert(
-          'Registration Failed',
-          result.message ||
-            'Unable to create account',
+          'userId',
+          userId.toString(),
         );
       }
-    } catch (error) {
-      console.log(
-        'REGISTER ERROR:',
-        error,
+
+      await AsyncStorage.setItem(
+        'userName',
+        name.trim(),
+      );
+
+      await AsyncStorage.setItem(
+        'userMobile',
+        registerMobile.trim(),
+      );
+
+      await AsyncStorage.setItem(
+        'userEmail',
+        email.trim(),
+      );
+
+      await AsyncStorage.setItem(
+        'userRole',
+        userRole,
       );
 
       setIsLoading(false);
+alert('10');
+      Alert.alert(
+        'Registration Successful',
+        `Welcome to Savariya Property, ${name.trim()}!`,
+        [
+          {
+            text: 'Continue',
+            onPress: () => {
+              resetPopup();
+
+              if (onLogin) {
+                onLogin();
+              } else if (onClose) {
+                onClose();
+              }
+            },
+          },
+        ],
+      );
+    } else {
+      setIsLoading(false);
 
       Alert.alert(
-        'Error',
-        'Server connection failed. Please try again.',
+        'Registration Failed',
+        result.message ||
+          result.responseMessage ||
+          'Unable to create account',
       );
     }
-  };
+  } catch (error) {
+    console.log(
+      '====================================',
+    );
+    console.log(
+      'REGISTER ERROR:',
+      error,
+    );
+    console.log(
+      '====================================');
+
+    setIsLoading(false);
+
+    Alert.alert(
+      'Error',
+      'Server connection failed. Please try again.',
+    );
+  }
+};
+
 
   // =========================================================
   // HEADER DESCRIPTION
@@ -583,7 +614,7 @@ const LoginPopup = ({
       return `Create your ${selectedRole} account`;
     }
 
-    return "India's growing property platform for Owners, Builders, Customers and Property Executives.";
+    return "India's growing property platform for Owners, Builders, Customers and Property Partners.";
   };
 
   // =========================================================
@@ -601,7 +632,7 @@ const LoginPopup = ({
       case 'Builder / Investor':
         return 'Promote projects and properties';
 
-      case 'Property Executive':
+      case 'Property Partner':
         return 'Connect customers and earn money';
 
       default:
@@ -624,7 +655,7 @@ const LoginPopup = ({
       case 'Builder / Investor':
         return 'building';
 
-      case 'Property Executive':
+      case 'Property Partner':
         return 'briefcase';
 
       default:
@@ -794,7 +825,7 @@ const LoginPopup = ({
 
                   </View>
 
-                  {/* EXECUTIVE */}
+                  {/* PARTNER */}
 
                   <View style={styles.featureRow}>
 
@@ -805,7 +836,7 @@ const LoginPopup = ({
                     <View style={styles.featureContent}>
 
                       <Text style={styles.featureTitle}>
-                        Earn Money as Property Executive
+                        Earn Money as Property Partners
                       </Text>
 
                       <Text style={styles.featureSub}>
@@ -1003,13 +1034,13 @@ const LoginPopup = ({
 
                 </TouchableOpacity>
 
-                {/* EXECUTIVE */}
+                {/* PARTNER */}
 
                 <TouchableOpacity
                   style={styles.roleCard}
                   onPress={() =>
                     handleSelectRole(
-                      'Property Executive',
+                      'Property Partner',
                     )
                   }
                 >
@@ -1025,7 +1056,7 @@ const LoginPopup = ({
                   <View style={styles.roleContent}>
 
                     <Text style={styles.roleTitle}>
-                      Property Executive
+                      Property Partner
                     </Text>
 
                     <Text style={styles.roleSub}>
@@ -1453,11 +1484,14 @@ const LoginPopup = ({
 
                 {/* CREATE ACCOUNT */}
 
-                <TouchableOpacity
-                  style={styles.loginBtn}
-                  onPress={handleRegister}
-                  disabled={isLoading}
-                >
+              <TouchableOpacity
+  style={styles.loginBtn}
+  onPress={() => {
+    Alert.alert('BUTTON TEST', 'Create Account button clicked');
+    handleRegister();
+  }}
+  disabled={isLoading}
+>
 
                   {isLoading ? (
                     <ActivityIndicator

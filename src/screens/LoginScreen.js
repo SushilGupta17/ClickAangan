@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
 const {width, height} = Dimensions.get('window');
@@ -36,7 +35,7 @@ const LoginPopup = ({
 
   // =====================================================
   // POPUP MODE
-  // main  -> Main popup
+  // main -> Main popup
   // login -> Login form
   // =====================================================
 
@@ -61,7 +60,6 @@ const LoginPopup = ({
     }
 
     setPopupMode('main');
-
     setMobile('');
     setPassword('');
     setShowPassword(false);
@@ -92,7 +90,6 @@ const LoginPopup = ({
 
   const handleClose = () => {
     setPopupMode('main');
-
     setMobile('');
     setPassword('');
     setShowPassword(false);
@@ -109,7 +106,6 @@ const LoginPopup = ({
 
   const handleOpenLogin = () => {
     setPopupMode('login');
-
     setMobile('');
     setPassword('');
     setShowPassword(false);
@@ -121,7 +117,6 @@ const LoginPopup = ({
 
   const handleBack = () => {
     setPopupMode('main');
-
     setMobile('');
     setPassword('');
     setShowPassword(false);
@@ -326,6 +321,10 @@ const LoginPopup = ({
             },
           ]}>
 
+          {/* TOP ORANGE ACCENT */}
+
+          <View style={styles.topAccent} />
+
           <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
@@ -342,7 +341,7 @@ const LoginPopup = ({
               activeOpacity={0.7}>
 
               <Text style={styles.closeText}>
-                ✕
+                ×
               </Text>
 
             </TouchableOpacity>
@@ -368,7 +367,7 @@ const LoginPopup = ({
             <Text style={styles.desc}>
               {popupMode === 'login'
                 ? 'Login to continue to your account'
-                : "India's growing property platform for Owners, Builders, Customers and Property Executives."}
+                : "India's growing property platform for Owners, Builders, Customers and Property Partners."}
             </Text>
 
             {/* ================================================= */}
@@ -385,14 +384,19 @@ const LoginPopup = ({
 
                   <View style={styles.featureRow}>
 
-                    <Text style={styles.featureIcon}>
-                      🏠
-                    </Text>
+                    <View style={styles.featureIconCircle}>
+                      <Text style={styles.featureIcon}>
+                        🏠
+                      </Text>
+                    </View>
 
                     <View style={styles.featureContent}>
 
                       <Text style={styles.featureTitle}>
-                        First 100 Property Listings – FREE
+                        First 100 Property Listings
+                        <Text style={styles.orangeText}>
+                          {' '}– FREE
+                        </Text>
                       </Text>
 
                       <Text style={styles.featureSub}>
@@ -400,16 +404,17 @@ const LoginPopup = ({
                       </Text>
 
                     </View>
-
                   </View>
 
                   {/* FEATURE 2 */}
 
                   <View style={styles.featureRow}>
 
-                    <Text style={styles.featureIcon}>
-                      📝
-                    </Text>
+                    <View style={styles.featureIconCircle}>
+                      <Text style={styles.featureIcon}>
+                        📝
+                      </Text>
+                    </View>
 
                     <View style={styles.featureContent}>
 
@@ -422,16 +427,17 @@ const LoginPopup = ({
                       </Text>
 
                     </View>
-
                   </View>
 
                   {/* FEATURE 3 */}
 
                   <View style={styles.featureRow}>
 
-                    <Text style={styles.featureIcon}>
-                      🔍
-                    </Text>
+                    <View style={styles.featureIconCircle}>
+                      <Text style={styles.featureIcon}>
+                        🔍
+                      </Text>
+                    </View>
 
                     <View style={styles.featureContent}>
 
@@ -444,21 +450,26 @@ const LoginPopup = ({
                       </Text>
 
                     </View>
-
                   </View>
 
                   {/* FEATURE 4 */}
 
-                  <View style={styles.featureRow}>
+                  <View
+                    style={[
+                      styles.featureRow,
+                      styles.lastFeatureRow,
+                    ]}>
 
-                    <Text style={styles.featureIcon}>
-                      💰
-                    </Text>
+                    <View style={styles.featureIconCircle}>
+                      <Text style={styles.featureIcon}>
+                        💰
+                      </Text>
+                    </View>
 
                     <View style={styles.featureContent}>
 
                       <Text style={styles.featureTitle}>
-                        Earn Money as Property Executive
+                        Earn Money as Property Partner
                       </Text>
 
                       <Text style={styles.featureSub}>
@@ -466,7 +477,6 @@ const LoginPopup = ({
                       </Text>
 
                     </View>
-
                   </View>
 
                 </View>
@@ -542,12 +552,13 @@ const LoginPopup = ({
 
                 <View style={styles.inputContainer}>
 
-                  <Icon
-                    name="mobile-alt"
-                    size={16}
-                    color="#012353"
-                    style={styles.inputIcon}
-                  />
+                  <View style={styles.inputIconCircle}>
+                    <Icon
+                      name="mobile-alt"
+                      size={14}
+                      color="#012353"
+                    />
+                  </View>
 
                   <TextInput
                     placeholder="Enter mobile number"
@@ -574,12 +585,13 @@ const LoginPopup = ({
 
                 <View style={styles.passwordContainer}>
 
-                  <Icon
-                    name="lock"
-                    size={15}
-                    color="#012353"
-                    style={styles.inputIcon}
-                  />
+                  <View style={styles.inputIconCircle}>
+                    <Icon
+                      name="lock"
+                      size={14}
+                      color="#012353"
+                    />
+                  </View>
 
                   <TextInput
                     placeholder="Enter password"
@@ -712,15 +724,18 @@ const LoginPopup = ({
 
 const styles = StyleSheet.create({
 
+  // =====================================================
+  // OVERLAY
+  // =====================================================
+
   overlay: {
     position: 'absolute',
-
     left: 0,
     right: 0,
     top: 0,
     bottom: 0,
 
-    backgroundColor: 'rgba(0,0,0,0.60)',
+    backgroundColor: 'rgba(1,35,83,0.58)',
 
     justifyContent: 'center',
     alignItems: 'center',
@@ -737,6 +752,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
+  // =====================================================
+  // CARD
+  // =====================================================
+
   card: {
     width: width - 32,
 
@@ -747,20 +766,36 @@ const styles = StyleSheet.create({
     borderRadius: 20,
 
     paddingHorizontal: 18,
-    paddingTop: 14,
-    paddingBottom: 10,
+    paddingTop: 20,
+    paddingBottom: 15,
 
-    elevation: 10,
+    alignItems: 'center',
 
-    shadowColor: '#000',
+    elevation: 12,
+
+    shadowColor: '#012353',
 
     shadowOffset: {
       width: 0,
       height: 5,
     },
 
-    shadowOpacity: 0.20,
-    shadowRadius: 8,
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+
+    overflow: 'hidden',
+  },
+
+  topAccent: {
+    position: 'absolute',
+
+    top: 0,
+    left: 0,
+    right: 0,
+
+    height: 4,
+
+    backgroundColor: '#F58220',
   },
 
   scrollView: {
@@ -772,14 +807,22 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
 
+  // =====================================================
+  // CLOSE
+  // =====================================================
+
   close: {
     position: 'absolute',
 
-    right: 2,
-    top: -2,
+    right: 11,
+    top: 11,
 
-    width: 32,
-    height: 32,
+    width: 30,
+    height: 30,
+
+    borderRadius: 15,
+
+    backgroundColor: '#F4F7FB',
 
     justifyContent: 'center',
     alignItems: 'center',
@@ -788,36 +831,59 @@ const styles = StyleSheet.create({
   },
 
   closeText: {
-    fontSize: 20,
-    color: '#777',
-    fontWeight: '600',
+    fontSize: 22,
+    lineHeight: 23,
+
+    color: '#012353',
+
+    fontWeight: '500',
   },
 
-  logoCircle: {
-    width: 58,
-    height: 58,
+  // =====================================================
+  // LOGO
+  // =====================================================
 
-    borderRadius: 29,
+  logoCircle: {
+    width: 60,
+    height: 60,
+
+    borderRadius: 30,
 
     backgroundColor: '#EAF4FF',
+
+    borderWidth: 1,
+    borderColor: '#D6E9FA',
 
     justifyContent: 'center',
     alignItems: 'center',
 
     marginBottom: 7,
 
-    borderWidth: 1,
-    borderColor: '#D9E8F7',
+    shadowColor: '#012353',
+
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+
+    elevation: 2,
   },
 
   logo: {
     fontSize: 29,
   },
 
+  // =====================================================
+  // HEADER
+  // =====================================================
+
   title: {
     fontSize: 15,
 
-    color: '#555',
+    color: '#666',
 
     fontWeight: '500',
 
@@ -839,9 +905,9 @@ const styles = StyleSheet.create({
   },
 
   desc: {
-    marginTop: 5,
+    marginTop: 6,
 
-    marginHorizontal: 5,
+    marginHorizontal: 7,
 
     textAlign: 'center',
 
@@ -849,19 +915,24 @@ const styles = StyleSheet.create({
 
     lineHeight: 17,
 
-    fontSize: 12.5,
-
-    marginBottom: 10,
+    fontSize: 12.3,
   },
 
+  // =====================================================
+  // FEATURE BOX
+  // =====================================================
+
   featureBox: {
-    marginTop: 1,
+    marginTop: 9,
 
     width: '100%',
 
-    backgroundColor: '#F6F8FC',
+    backgroundColor: '#F7FAFE',
 
-    borderRadius: 12,
+    borderRadius: 13,
+
+    borderWidth: 1,
+    borderColor: '#E5EDF6',
 
     paddingHorizontal: 9,
     paddingVertical: 4,
@@ -872,17 +943,33 @@ const styles = StyleSheet.create({
 
     alignItems: 'center',
 
-    paddingVertical: 5,
+    paddingVertical: 6,
+
+    borderBottomWidth: 1,
+
+    borderBottomColor: '#E9EEF5',
+  },
+
+  lastFeatureRow: {
+    borderBottomWidth: 0,
+  },
+
+  featureIconCircle: {
+    width: 31,
+    height: 31,
+
+    borderRadius: 16,
+
+    backgroundColor: '#EAF4FF',
+
+    justifyContent: 'center',
+    alignItems: 'center',
+
+    marginRight: 8,
   },
 
   featureIcon: {
-    width: 29,
-
-    fontSize: 17,
-
-    textAlign: 'center',
-
-    marginRight: 6,
+    fontSize: 15,
   },
 
   featureContent: {
@@ -890,7 +977,7 @@ const styles = StyleSheet.create({
   },
 
   featureTitle: {
-    fontSize: 12.8,
+    fontSize: 12.6,
 
     fontWeight: '700',
 
@@ -899,56 +986,75 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
 
+  orangeText: {
+    color: '#F58220',
+  },
+
   featureSub: {
-    fontSize: 10.8,
+    fontSize: 10.7,
 
     color: '#666',
 
+    marginTop: 0,
+
     lineHeight: 14,
   },
+
+  // =====================================================
+  // LABEL
+  // =====================================================
 
   label: {
     width: '100%',
 
     fontSize: 11.5,
 
-    fontWeight: '700',
-
     color: '#012353',
 
-    marginBottom: 4,
+    fontWeight: '700',
 
-    marginTop: 3,
+    marginTop: 4,
+    marginBottom: 4,
   },
+
+  // =====================================================
+  // INPUT
+  // =====================================================
 
   inputContainer: {
     width: '100%',
 
-    height: 42,
+    height: 43,
 
     flexDirection: 'row',
 
     alignItems: 'center',
 
-    backgroundColor: '#FAFBFD',
+    backgroundColor: '#FAFCFF',
 
     borderWidth: 1,
 
-    borderColor: '#E2E6EC',
+    borderColor: '#DCE5EF',
 
-    borderRadius: 9,
+    borderRadius: 10,
 
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
 
     marginBottom: 7,
   },
 
-  inputIcon: {
-    width: 22,
+  inputIconCircle: {
+    width: 27,
+    height: 27,
 
-    textAlign: 'center',
+    borderRadius: 14,
 
-    marginRight: 5,
+    backgroundColor: '#EAF4FF',
+
+    justifyContent: 'center',
+    alignItems: 'center',
+
+    marginRight: 7,
   },
 
   input: {
@@ -963,24 +1069,28 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
 
+  // =====================================================
+  // PASSWORD
+  // =====================================================
+
   passwordContainer: {
     width: '100%',
 
-    height: 42,
+    height: 43,
 
     flexDirection: 'row',
 
     alignItems: 'center',
 
-    backgroundColor: '#FAFBFD',
+    backgroundColor: '#FAFCFF',
 
     borderWidth: 1,
 
-    borderColor: '#E2E6EC',
+    borderColor: '#DCE5EF',
 
-    borderRadius: 9,
+    borderRadius: 10,
 
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
 
     marginBottom: 10,
   },
@@ -999,17 +1109,22 @@ const styles = StyleSheet.create({
 
   eyeButton: {
     width: 32,
-
     height: 40,
 
     justifyContent: 'center',
     alignItems: 'center',
   },
 
+  // =====================================================
+  // LOGIN BUTTON
+  // =====================================================
+
   loginBtn: {
+    marginTop: 11,
+
     width: '100%',
 
-    height: 43,
+    height: 44,
 
     borderRadius: 10,
 
@@ -1020,9 +1135,18 @@ const styles = StyleSheet.create({
 
     flexDirection: 'row',
 
-    elevation: 3,
+    elevation: 4,
 
-    marginTop: 1,
+    shadowColor: '#012353',
+
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+
+    shadowOpacity: 0.18,
+
+    shadowRadius: 4,
   },
 
   loginBtnDisabled: {
@@ -1032,17 +1156,21 @@ const styles = StyleSheet.create({
   loginText: {
     color: '#FFFFFF',
 
-    fontSize: 15,
+    fontSize: 15.5,
 
-    fontWeight: '700',
+    fontWeight: 'bold',
 
     marginLeft: 7,
   },
 
+  // =====================================================
+  // REGISTER BUTTON
+  // =====================================================
+
   registerBtn: {
     width: '100%',
 
-    height: 42,
+    height: 43,
 
     borderRadius: 10,
 
@@ -1057,32 +1185,37 @@ const styles = StyleSheet.create({
 
     marginTop: 7,
 
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FFF',
+
+    elevation: 1,
   },
 
   registerText: {
     color: '#F58220',
 
-    fontWeight: '700',
+    fontWeight: 'bold',
 
-    fontSize: 13.5,
+    fontSize: 14.5,
 
-    marginLeft: 7,
+    marginLeft: 6,
   },
+
+  // =====================================================
+  // BACK
+  // =====================================================
 
   backBtn: {
     flexDirection: 'row',
 
     alignItems: 'center',
+
     justifyContent: 'center',
 
-    marginTop: 9,
-
-    paddingVertical: 3,
+    marginTop: 10,
   },
 
   backText: {
-    color: '#666',
+    color: '#777',
 
     fontSize: 11.5,
 
@@ -1091,16 +1224,22 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
 
+  // =====================================================
+  // SECURITY
+  // =====================================================
+
   secureRow: {
     flexDirection: 'row',
 
     alignItems: 'center',
 
+    justifyContent: 'center',
+
     marginTop: 9,
   },
 
   secureText: {
-    color: '#888',
+    color: '#777',
 
     fontSize: 10.5,
 

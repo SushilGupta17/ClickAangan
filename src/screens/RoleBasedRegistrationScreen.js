@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState, useCallback} from 'react';
 
 import {
   View,
@@ -11,6 +11,7 @@ import {
   Animated,
   Pressable,
   Keyboard,
+  useWindowDimensions,
 } from 'react-native';
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -73,6 +74,8 @@ const InputBox = ({
 ========================================================= */
 
 const RoleBasedRegistrationScreen = ({navigation, route}) => {
+  const {height: screenHeight} = useWindowDimensions();
+
   const role = route?.params?.role || 'CUSTOMER';
 
   /* =======================================================
@@ -112,7 +115,7 @@ const RoleBasedRegistrationScreen = ({navigation, route}) => {
   const [businessType, setBusinessType] = useState('');
 
   /* =======================================================
-     PROPERTY EXECUTIVE
+     PROPERTY PARTNER
   ======================================================= */
 
   const [workingArea, setWorkingArea] = useState('');
@@ -245,37 +248,54 @@ const RoleBasedRegistrationScreen = ({navigation, route}) => {
   /* =======================================================
      KEYBOARD - MOVE POPUP UP
   ======================================================= */
+useEffect(() => {
+  const keyboardDidShow = Keyboard.addListener(
+    'keyboardDidShow',
+    event => {
+      const keyboardHeight = event?.endCoordinates?.height || 0;
 
-  useEffect(() => {
-    const keyboardDidShow = Keyboard.addListener(
-      'keyboardDidShow',
-      () => {
-        Animated.spring(keyboardOffset, {
-          toValue: -120,
-          friction: 8,
-          tension: 70,
-          useNativeDriver: true,
-        }).start();
-      },
-    );
+      // Small screen protection
+      const availableHeight = screenHeight - keyboardHeight;
 
-    const keyboardDidHide = Keyboard.addListener(
-      'keyboardDidHide',
-      () => {
-        Animated.spring(keyboardOffset, {
-          toValue: 0,
-          friction: 8,
-          tension: 70,
-          useNativeDriver: true,
-        }).start();
-      },
-    );
+      let offset = -80;
 
-    return () => {
-      keyboardDidShow.remove();
-      keyboardDidHide.remove();
-    };
-  }, [keyboardOffset]);
+      if (availableHeight < 500) {
+        offset = -35;
+      } else if (availableHeight < 600) {
+        offset = -55;
+      } else if (availableHeight < 700) {
+        offset = -70;
+      } else {
+        offset = -85;
+      }
+
+      Animated.spring(keyboardOffset, {
+        toValue: offset,
+        friction: 8,
+        tension: 70,
+        useNativeDriver: true,
+      }).start();
+    },
+  );
+
+  const keyboardDidHide = Keyboard.addListener(
+    'keyboardDidHide',
+    () => {
+      Animated.spring(keyboardOffset, {
+        toValue: 0,
+        friction: 8,
+        tension: 70,
+        useNativeDriver: true,
+      }).start();
+    },
+  );
+
+  return () => {
+    keyboardDidShow.remove();
+    keyboardDidHide.remove();
+  };
+}, [keyboardOffset, screenHeight]);
+
 
   /* =======================================================
      SUCCESS -> AUTO LOGIN -> HOME
@@ -313,8 +333,8 @@ const RoleBasedRegistrationScreen = ({navigation, route}) => {
       icon: 'office-building-outline',
     },
 
-    EXECUTIVE: {
-      title: 'Property Executive',
+    PARTNER: {
+      title: 'Property Partner',
       description:
         'Create your account to manage properties & clients',
       icon: 'account-tie-outline',
@@ -473,10 +493,10 @@ const RoleBasedRegistrationScreen = ({navigation, route}) => {
     }
 
     /* -----------------------------------------------
-       PROPERTY EXECUTIVE
+       PROPERTY PARTNER
     ------------------------------------------------ */
 
-    if (role === 'EXECUTIVE') {
+    if (role === 'PARTNER') {
       if (!companyName.trim()) {
         Alert.alert(
           'Required',
@@ -592,11 +612,66 @@ const RoleBasedRegistrationScreen = ({navigation, route}) => {
   ======================================================= */
 
   const handleRegister = async () => {
-    if (!validateStepTwo()) {
-      return;
-    }
+  console.log('REGISTER BUTTON CLICKED');
 
-    try {
+  if (!validateStepTwo()) {
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const cleanMobile = mobile.replace(/[^0-9]/g, '');
+
+    const payload = {
+      name: name.trim(),
+      mobile: cleanMobile,
+      email: email.trim(),
+      password: password,
+
+      // IMPORTANT
+      roleType: role,
+
+      // STEP 2
+      companyName: companyName.trim() || null,
+      businessType: businessType.trim() || null,
+      city: city.trim() || null,
+      experience: experience
+        ? Number(experience)
+        : null,
+      workingArea: workingArea.trim() || null,
+      propertyType: propertyType.trim() || null,
+      propertyLocation:
+        propertyLocation.trim() || null,
+      purpose: purpose.trim() || null,
+      lookingFor: lookingFor.trim() || null,
+      preferredLocation:
+        preferredLocation.trim() || null,
+      budget: budget ? Number(budget) : null,
+    };
+
+
+    const response = await fetch(
+      'https://savariyaproperty.in/api/Register',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      },
+    );
+
+    const result = await response.json();
+
+    console.log(
+      'REGISTER RESPONSE:',
+      JSON.stringify(result, null, 2),
+    );
+
+    if (response.ok && result.success) {
+      console.log('REGISTRATION SUCCESS');
+
       setLoading(false);
 
       setShowSuccess(true);
@@ -609,15 +684,30 @@ const RoleBasedRegistrationScreen = ({navigation, route}) => {
         tension: 70,
         useNativeDriver: true,
       }).start();
-    } catch (error) {
-      console.log(
-        'REGISTRATION ERROR:',
-        error,
-      );
-
+    } else {
       setLoading(false);
+
+      Alert.alert(
+        'Registration Failed',
+        result.message ||
+          'Unable to create your account.',
+      );
     }
-  };
+  } catch (error) {
+    console.log(
+      'REGISTRATION ERROR:',
+      error,
+    );
+
+    setLoading(false);
+
+    Alert.alert(
+      'Registration Error',
+      String(error?.message || error),
+    );
+  }
+};
+
 
   /* =======================================================
      STEP 2 UI
@@ -672,10 +762,10 @@ const RoleBasedRegistrationScreen = ({navigation, route}) => {
     }
 
     /* =====================================================
-       PROPERTY EXECUTIVE
+       PROPERTY PARTNER
     ===================================================== */
 
-    if (role === 'EXECUTIVE') {
+    if (role === 'PARTNER') {
       return (
         <>
           <InputBox

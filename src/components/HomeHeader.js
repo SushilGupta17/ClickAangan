@@ -10,7 +10,7 @@ import {
   Image,
 } from 'react-native';
 
-import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import {useFocusEffect} from '@react-navigation/native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -18,27 +18,35 @@ import Menu from '../components/Menu';
 
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
-const HomeHeader = () => {
-  const navigation = useNavigation();
-
+const HomeHeader = ({onLoginPress, loggedInUser, onLogout}) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userMobile, setUserMobile] = useState('');
   const [userRole, setUserRole] = useState('');
   const [showMenu, setShowMenu] = useState(false);
 
-  // ==============================
-  // CHECK LOGIN
-  // ==============================
+  const displayRole =
+  userRole === 'PROPERTY_SEEKER'
+    ? 'SEEKER'
+    : userRole;
+
+  // ========================================
+  // CHECK LOGIN FROM ASYNC STORAGE
+  // ========================================
+
   const checkLogin = async () => {
     try {
       const loginStatus = await AsyncStorage.getItem('userLogin');
       const mobile = await AsyncStorage.getItem('userMobile');
       const role = await AsyncStorage.getItem('userRole');
 
+      console.log('HOME HEADER LOGIN STATUS:', loginStatus);
+      console.log('HOME HEADER MOBILE:', mobile);
+      console.log('HOME HEADER ROLE:', role);
+
       if (loginStatus === 'true') {
         setIsLoggedIn(true);
         setUserMobile(mobile || '');
-        setUserRole(role || '');
+        setUserRole(role || 'USER');
       } else {
         setIsLoggedIn(false);
         setUserMobile('');
@@ -49,25 +57,46 @@ const HomeHeader = () => {
     }
   };
 
-  // ==============================
-  // CHECK LOGIN WHEN SCREEN FOCUSES
-  // ==============================
+  // ========================================
+  // LOGIN USER DIRECTLY FROM HOMESCREEN
+  // ========================================
+
+  useEffect(() => {
+    if (loggedInUser) {
+      console.log('HOME HEADER USER RECEIVED:', loggedInUser);
+
+      setIsLoggedIn(true);
+
+      setUserMobile(
+        loggedInUser.mobile ||
+          loggedInUser.Mobile ||
+          '',
+      );
+
+      setUserRole(
+        loggedInUser.role ||
+          loggedInUser.Role ||
+          'USER',
+      );
+    } else {
+      checkLogin();
+    }
+  }, [loggedInUser]);
+
+  // ========================================
+  // CHECK LOGIN WHEN HOME SCREEN FOCUSES
+  // ========================================
+
   useFocusEffect(
     useCallback(() => {
       checkLogin();
     }, []),
   );
 
-  // ==============================
-  // INITIAL LOGIN CHECK
-  // ==============================
-  useEffect(() => {
-    checkLogin();
-  }, []);
-
-  // ==============================
+  // ========================================
   // LOGOUT
-  // ==============================
+  // ========================================
+
   const handleLogout = () => {
     Alert.alert(
       'Logout Confirmation',
@@ -77,29 +106,50 @@ const HomeHeader = () => {
           text: 'Cancel',
           style: 'cancel',
         },
+
         {
           text: 'Logout',
           style: 'destructive',
+
           onPress: async () => {
             try {
-              // await AsyncStorage.multiRemove([
-              //   'userLogin',
-              //   'userMobile',
-              //   'userRole',
-              //   'userToken',
-              // ]);
+              // ========================================
+              // REMOVE LOGIN / SESSION DATA
+              // ========================================
 
-              // setIsLoggedIn(false);
-              // setUserMobile('');
-              // setUserRole('');
-              // setShowMenu(false);
+              await AsyncStorage.removeItem('userLogin');
+              await AsyncStorage.removeItem('userMobile');
+              await AsyncStorage.removeItem('userRole');
+              await AsyncStorage.removeItem('userToken');
+              await AsyncStorage.removeItem('userId');
+              await AsyncStorage.removeItem('userEmail');
+              await AsyncStorage.removeItem('userName');
+              await AsyncStorage.removeItem('loginStatus');
 
-              navigation.replace('Login');
+              // ========================================
+              // IMMEDIATELY UPDATE HEADER
+              // ========================================
+
+              setIsLoggedIn(false);
+              setUserMobile('');
+              setUserRole('');
+              setShowMenu(false);
+
+              // ========================================
+              // INFORM HOMESCREEN
+              // ========================================
+
+              if (onLogout) {
+                onLogout();
+              }
+
+              console.log('LOGOUT SUCCESS');
             } catch (error) {
+              console.log('Logout Error:', error);
 
               Alert.alert(
-                'Error',
-                'Unable to logout. Please try again.',
+                'Logout Error',
+                String(error?.message || error),
               );
             }
           },
@@ -113,41 +163,53 @@ const HomeHeader = () => {
 
   return (
     <>
-      {/* ==============================
+      {/* ========================================
           STATUS BAR
-      ============================== */}
+      ======================================== */}
+
       <StatusBar
         backgroundColor="#0A3D62"
         barStyle="light-content"
       />
 
-      {/* ==============================
+      {/* ========================================
           MENU
-      ============================== */}
+      ======================================== */}
+
       {showMenu && (
         <View style={styles.menuWrapper}>
           <Menu />
         </View>
       )}
 
-      {/* ==============================
+      {/* ========================================
           HEADER
-      ============================== */}
+      ======================================== */}
+
       <View style={styles.header}>
 
-        {/* MENU BUTTON */}
+        {/* ========================================
+            MENU BUTTON
+        ======================================== */}
+
         <TouchableOpacity
           style={styles.menuButton}
           onPress={() => setShowMenu(!showMenu)}>
+
           <Icon
             name="bars"
             size={24}
             color="#333"
           />
+
         </TouchableOpacity>
 
-        {/* LOGO */}
+        {/* ========================================
+            LOGO
+        ======================================== */}
+
         <View style={styles.logoSection}>
+
           <Image
             source={{
               uri: 'https://savariyaproperty.in/assets/img/logo/logo.png',
@@ -157,41 +219,49 @@ const HomeHeader = () => {
           />
 
           <View style={styles.divider} />
+
         </View>
 
-        {/* ==============================
+        {/* ========================================
             USER SECTION
-        ============================== */}
+        ======================================== */}
+
         {isLoggedIn ? (
+
           <View style={styles.userSection}>
 
-            {/* =================================
+            {/* ====================================
                 FIRST LINE - MOBILE + ROLE
-            ================================= */}
-          <View style={styles.userRow}>
+            ==================================== */}
 
-  {/* USER ICON */}
-  <Icon
-    name="user"
-    size={12}
-    color="#012353"
-  />
+            <View style={styles.userRow}>
 
-  {/* MOBILE */}
-  <Text style={styles.userMobile}>
-    {userMobile}
-  </Text>
+              {/* USER ICON */}
 
-  {/* ROLE */}
-  <Text style={styles.userRole}>
-    ({userRole || 'USER'})
-  </Text>
+              <Icon
+                name="user"
+                size={12}
+                color="#012353"
+              />
 
-</View>
+              {/* MOBILE */}
 
-            {/* =================================
+              <Text style={styles.userMobile}>
+                {userMobile}
+              </Text>
+
+              {/* ROLE */}
+
+              <Text style={styles.userRole}>
+                ({displayRole  || 'USER'})
+              </Text>
+
+            </View>
+
+            {/* ====================================
                 SECOND LINE - LOGOUT
-            ================================= */}
+            ==================================== */}
+
             <TouchableOpacity
               style={styles.logoutBtn}
               onPress={handleLogout}
@@ -210,20 +280,28 @@ const HomeHeader = () => {
             </TouchableOpacity>
 
           </View>
+
         ) : (
 
-          /* ==============================
-             LOGIN BUTTON
-          ============================== */
+          /* ======================================
+              LOGIN BUTTON
+          ====================================== */
+
           <TouchableOpacity
             style={styles.loginBtn}
-            onPress={() => navigation.navigate('Login')}>
+            onPress={() => {
+              if (onLoginPress) {
+                onLoginPress();
+              }
+            }}
+            activeOpacity={0.8}>
 
             <Text style={styles.btnText}>
               Login
             </Text>
 
           </TouchableOpacity>
+
         )}
 
       </View>
@@ -233,16 +311,16 @@ const HomeHeader = () => {
 
 export default HomeHeader;
 
-
 // ========================================
 // STYLES
 // ========================================
 
 const styles = StyleSheet.create({
 
-  // ==============================
+  // ========================================
   // HEADER
-  // ==============================
+  // ========================================
+
   header: {
     backgroundColor: '#fff',
     flexDirection: 'row',
@@ -252,18 +330,20 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
 
-  // ==============================
+  // ========================================
   // MENU BUTTON
-  // ==============================
+  // ========================================
+
   menuButton: {
     paddingHorizontal: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  // ==============================
+  // ========================================
   // LOGO SECTION
-  // ==============================
+  // ========================================
+
   logoSection: {
     flex: 1,
     flexDirection: 'row',
@@ -282,28 +362,30 @@ const styles = StyleSheet.create({
     height: 45,
   },
 
-  // ==============================
+  // ========================================
   // USER SECTION
-  // ==============================
+  // ========================================
+
   userSection: {
     alignItems: 'flex-end',
     justifyContent: 'center',
     paddingRight: 6,
   },
 
-  // ==============================
+  // ========================================
   // FIRST LINE
-  // MOBILE + ROLE
-  // ==============================
+  // ========================================
+
   userRow: {
     flexDirection: 'row',
     alignItems: 'center',
     height: 18,
   },
 
-  // ==============================
+  // ========================================
   // MOBILE
-  // ==============================
+  // ========================================
+
   userMobile: {
     color: '#012353',
     fontSize: 12,
@@ -311,16 +393,18 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // ==============================
+  // ========================================
   // ROLE ICON
-  // ==============================
+  // ========================================
+
   roleIcon: {
     marginLeft: 8,
   },
 
-  // ==============================
+  // ========================================
   // ROLE
-  // ==============================
+  // ========================================
+
   userRole: {
     color: '#777',
     fontSize: 9,
@@ -329,10 +413,10 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
 
-  // ==============================
-  // SECOND LINE
+  // ========================================
   // LOGOUT BUTTON
-  // ==============================
+  // ========================================
+
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -351,9 +435,10 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
 
-  // ==============================
+  // ========================================
   // LOGIN BUTTON
-  // ==============================
+  // ========================================
+
   loginBtn: {
     backgroundColor: '#012353',
     paddingHorizontal: 12,
@@ -368,9 +453,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 
-  // ==============================
+  // ========================================
   // MENU WRAPPER
-  // ==============================
+  // ========================================
+
   menuWrapper: {
     position: 'absolute',
     top: 60,
@@ -380,4 +466,5 @@ const styles = StyleSheet.create({
     elevation: 10,
     zIndex: 9999,
   },
+
 });

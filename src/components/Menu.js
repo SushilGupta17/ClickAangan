@@ -1,4 +1,5 @@
 import React, {useState} from 'react';
+
 import {
   View,
   Text,
@@ -6,19 +7,19 @@ import {
   Alert,
   Linking,
   Share,
-  StyleSheet, // add this
+  StyleSheet,
 } from 'react-native';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation} from '@react-navigation/native';
 
 const Menu = () => {
   const navigation = useNavigation();
+
   const [activeMenu, setActiveMenu] = useState('');
   const [showMenu, setShowMenu] = useState(true);
 
-  
-
-    const handleMenuPress = async (menu) => {
+  const handleMenuPress = async menu => {
     setActiveMenu(menu);
     setShowMenu(false);
 
@@ -32,27 +33,75 @@ const Menu = () => {
         break;
 
       case 'WhatsApp':
-        Linking.openURL(
-          'https://wa.me/9314630866?text=Hello%20I%20need%20help'
-        );
-        break;
-
-      case 'Share':
         try {
-          await Share.share({
-            message: 'Check out this amazing real estate app! Download now.',
-          });
+          const userName = await AsyncStorage.getItem('userName');
+          const userMobile = await AsyncStorage.getItem('userMobile');
+
+          let message;
+
+          if (userName && userMobile) {
+            message =
+              `🏠 Hello Savariya Property Team,\n\n` +
+              `My name is ${userName} and my registered mobile number is ${userMobile}.\n\n` +
+              `I would like to know more about properties available on Savariya Property.\n\n` +
+              `Please assist me with suitable residential or commercial property options for Buy, Sell or Rent.\n\n` +
+              `Thank you.\n` +
+              `Savariya Property`;
+          } else {
+            message =
+              `🏠 Hello Savariya Property Team,\n\n` +
+              `I would like to know more about properties available on Savariya Property.\n\n` +
+              `Please assist me with suitable residential or commercial property options for Buy, Sell or Rent.\n\n` +
+              `Thank you.\n` +
+              `Savariya Property`;
+          }
+
+          const whatsappUrl =
+            'https://wa.me/9314630866?text=' +
+            encodeURIComponent(message);
+
+          await Linking.openURL(whatsappUrl);
         } catch (error) {
-          Alert.alert('Error', 'Unable to share');
+          Alert.alert(
+            'WhatsApp',
+            'Unable to open WhatsApp. Please try again.',
+          );
         }
         break;
 
-      case 'Contact':
-         navigation.navigate('ContactOwner');
-         break;
+     case 'Share':
+  try {
+    const userName = await AsyncStorage.getItem('userName');
+    const userMobile = await AsyncStorage.getItem('userMobile');
 
-      case 'Map':
-        Linking.openURL('https://www.google.com/maps?q=Office+Location');
+    let shareMessage;
+
+    if (userName && userMobile) {
+      shareMessage =
+        `🏠 Savariya Property\n\n` +
+        `Your trusted destination for Buy • Sell • Rent.\n\n` +
+        `Explore a wide range of residential and commercial properties, discover suitable opportunities, and connect with property owners and builders — all in one place.\n\n` +
+        `Shared by ${userName}\n` +
+        `Registered Mobile: ${userMobile}\n\n` +
+        `Begin your property journey with Savariya Property — simple, convenient and reliable.`;
+    } else {
+      shareMessage =
+        `🏠 Savariya Property\n\n` +
+        `Your trusted destination for Buy • Sell • Rent.\n\n` +
+        `Explore a wide range of residential and commercial properties, discover suitable opportunities, and connect with property owners and builders — all in one place.\n\n` +
+        `Begin your property journey with Savariya Property — simple, convenient and reliable.`;
+    }
+
+    await Share.share({
+      message: shareMessage,
+    });
+  } catch (error) {
+    Alert.alert('Error', 'Unable to share');
+  }
+  break;
+  
+      case 'Contact':
+        navigation.navigate('ContactOwner');
         break;
 
       default:
@@ -60,10 +109,10 @@ const Menu = () => {
     }
   };
 
-    if (!showMenu) return null;
+  if (!showMenu) return null;
 
   return (
-    <View>
+    <View style={styles.menuContainer}>
 
       <TouchableOpacity
         style={[
@@ -71,8 +120,8 @@ const Menu = () => {
           activeMenu === 'Home' && styles.activeMenu,
         ]}
         onPress={() => handleMenuPress('Home')}
-      >
-        <Text>🏠 Home</Text>
+        activeOpacity={0.7}>
+        <Text style={styles.menuText}>🏠 Home</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -81,8 +130,8 @@ const Menu = () => {
           activeMenu === 'Call' && styles.activeMenu,
         ]}
         onPress={() => handleMenuPress('Call')}
-      >
-        <Text>📞 Call</Text>
+        activeOpacity={0.7}>
+        <Text style={styles.menuText}>📞 Call</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -91,8 +140,8 @@ const Menu = () => {
           activeMenu === 'WhatsApp' && styles.activeMenu,
         ]}
         onPress={() => handleMenuPress('WhatsApp')}
-      >
-        <Text>💬 WhatsApp</Text>
+        activeOpacity={0.7}>
+        <Text style={styles.menuText}>💬 WhatsApp</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -101,8 +150,8 @@ const Menu = () => {
           activeMenu === 'Share' && styles.activeMenu,
         ]}
         onPress={() => handleMenuPress('Share')}
-      >
-        <Text>📤 Share</Text>
+        activeOpacity={0.7}>
+        <Text style={styles.menuText}>📤 Share</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -111,30 +160,57 @@ const Menu = () => {
           activeMenu === 'Contact' && styles.activeMenu,
         ]}
         onPress={() => handleMenuPress('Contact')}
-      >
-        <Text>👤 Contact</Text>
+        activeOpacity={0.7}>
+        <Text style={styles.menuText}>👤 Contact</Text>
       </TouchableOpacity>
 
+      {/* Close */}
       <TouchableOpacity
-        style={[
-          styles.menuItem,
-          activeMenu === 'Map' && styles.activeMenu,
-        ]}
-        onPress={() => handleMenuPress('Map')}
-      >
-        <Text>📍 Map</Text>
+        style={[styles.menuItem, styles.closeMenuItem]}
+        onPress={() => setShowMenu(false)}
+        activeOpacity={0.7}>
+        <Text style={styles.closeSymbol}>✕</Text>
+        <Text style={styles.menuText}>Close</Text>
       </TouchableOpacity>
 
     </View>
   );
 };
+
 export default Menu;
 
 const styles = StyleSheet.create({
-  menuItem: {
-    padding: 12,
+  menuContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    paddingVertical: 5,
+    elevation: 5,
   },
+
+  menuItem: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+
   activeMenu: {
     backgroundColor: '#e6f0ff',
+  },
+
+  menuText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#012353',
+  },
+
+  closeMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  closeSymbol: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#012353',
+    marginRight: 7,
   },
 });

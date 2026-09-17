@@ -66,6 +66,9 @@ const loadWishlist = async () => {
   }
 };
 
+useEffect(() => {
+  console.log('PROJECT POPUP STATE:', showProjects);
+}, [showProjects]);
 
 useEffect(() => {
   loadProperties();
@@ -547,21 +550,37 @@ const openWhatsApp1 = () => {
       <ProjectPopup
       visible={showProjects}
       navigation={navigation}
-      onClose={() => setShowProjects(false)}
-    />
+      onClose={() => {
+  setShowProjects(false);
+  setSelectedProperty('Villa');
+}}
+/>
 
-
-  <LoginPopup
+<LoginPopup
   visible={showPopup}
-  onClose={() => setShowPopup(false)}
-  onGuest={() => setShowPopup(false)}
-  onLogin={() => {
+
+  onClose={() => {
     setShowPopup(false);
-    navigation.navigate("Login");
   }}
+
+  onGuest={() => {
+    setShowPopup(false);
+  }}
+
+  onLogin={() => {
+    // LoginPopup ke andar successful login hone par
+    // popup close hoga, Home par hi rahenge
+    setShowPopup(false);
+  }}
+
   onRegister={() => {
     setShowPopup(false);
-    navigation.navigate("Register");
+    navigation.navigate('Register');
+  }}
+
+  onForgotPassword={() => {
+    setShowPopup(false);
+    navigation.navigate('Forgot');
   }}
 />
     </View>

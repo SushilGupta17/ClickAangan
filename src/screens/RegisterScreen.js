@@ -39,8 +39,8 @@ function RegisterScreen({navigation, route}) {
       icon: 'office-building-outline',
     },
     {
-      id: 'EXECUTIVE',
-      title: 'Property Executive',
+      id: 'PARTNER',
+      title: 'Property Partner',
       subtitle: 'Manage properties & clients',
       icon: 'account-tie-outline',
     },

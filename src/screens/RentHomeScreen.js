@@ -103,6 +103,10 @@ const checkLoginAndProceed = async (callback) => {
           setShowPopup(false);
           navigation.navigate('Register');
         }}
+        onForgotPassword={() => {
+  setShowPopup(false);
+  navigation.navigate('Forgot');
+}}
       />
       <Footer />
     </SafeAreaView>

@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
+ 
+import React, {useEffect, useState, useCallback} from 'react';
 
 import {
   SafeAreaView,
@@ -17,10 +18,8 @@ import UnitTypesCard from '../components/projectdetails/UnitTypesCard';
 import AmenitiesGrid from '../components/projectdetails/AmenitiesGrid';
 import ProjectTitle from '../components/projectdetails/ProjectTitle';
 import ProjectStatusCard from '../components/projectdetails/ProjectStatusCard';
-
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-
 import MapSection from '../components/projectdetails/MapSection';
 import NearbyPlaces from '../components/projectdetails/NearbyPlaces';
 import BuilderCard from '../components/projectdetails/BuilderCard';
@@ -30,179 +29,160 @@ import MasterPlan from '../components/projectdetails/MasterPlan';
 import EnquiryForm from '../components/projectdetails/EnquiryForm';
 import StickyBottomBar from '../components/projectdetails/StickyBottomBar';
 
-import { getProjectDetails } from '../services/ProjectService';
+import {getProjectDetails} from '../services/ProjectService';
 
+const ProjectDetailsScreen = ({route}) => {
+  const {project: projectData, id} = route?.params || {};
 
-const ProjectDetailsScreen = ({ route }) => {
+  // SearchScreen se aane wala id sabse pehle use hoga.
+  // ProjectListScreen ke case mein project object se fallback milega.
+  const projectId =
+    id ||
+    projectData?.projectId ||
+    projectData?.ProjectId ||
+    projectData?.PROJECTID;
 
-    const { project: projectData } = route.params;
+  const [project, setProject] = useState(projectData || null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-    const projectId =  projectData.projectId || projectData.ProjectId;
-    
-    const [project, setProject] = useState(projectData);
+  const loadProject = useCallback(async () => {
+    if (!projectId) {
+      console.log('PROJECT ID NOT FOUND');
 
-    const [loading, setLoading] = useState(true);
+      setLoading(false);
+      setRefreshing(false);
 
-    const [refreshing, setRefreshing] = useState(false);
-
-    const loadProject = async () => {
-
-        try {
-            const response = await getProjectDetails(projectId);
-
-            setProject(response);
-
-        } catch (e) {
-
-            console.log(e);
-
-        } finally {
-
-            setLoading(false);
-
-            setRefreshing(false);
-
-        }
-
-    };
-
-    useEffect(() => {
-
-        loadProject();
-
-    }, []);
-
-    const onRefresh = useCallback(() => {
-
-        setRefreshing(true);
-
-        loadProject();
-
-    }, []);
-
-    if (loading) {
-
-        return (
-
-            <SafeAreaView style={styles.loaderContainer}>
-
-                <ActivityIndicator size="large" color="#1B5E20" />
-
-            </SafeAreaView>
-
-        );
-
+      return;
     }
 
+    try {
+      console.log('Loading full project details:', projectId);
+
+      const response = await getProjectDetails(projectId);
+
+      console.log('FULL PROJECT DETAILS:', response);
+
+      if (response) {
+        setProject(response);
+      }
+    } catch (e) {
+      console.log('PROJECT DETAILS ERROR:', e);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [projectId]);
+
+  useEffect(() => {
+    loadProject();
+  }, [loadProject]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadProject();
+  }, [loadProject]);
+
+  if (loading) {
     return (
+      <SafeAreaView style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#1B5E20" />
+      </SafeAreaView>
+    );
+  }
 
-        <SafeAreaView style={styles.container}>
-<Header />
-            <StatusBar
-                backgroundColor="#ffffff"
-                barStyle="dark-content"
+  return (
+    <SafeAreaView style={styles.container}>
+      <Header />
+
+      <StatusBar
+        backgroundColor="#ffffff"
+        barStyle="dark-content"
+      />
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />
+        }
+        contentContainerStyle={{paddingBottom: 150}}>
+
+        <ImageCarousel project={project} />
+
+        <ProjectTitle project={project} />
+
+        <ProjectStatusCard project={project} />
+
+        <PriceCard project={project} />
+
+        {Array.isArray(project?.units) &&
+          project.units.length > 0 && (
+            <UnitTypesCard units={project.units} />
+          )}
+
+        {Array.isArray(project?.amenities) &&
+          project.amenities.length > 0 && (
+            <AmenitiesGrid
+              amenities={project.amenities}
             />
+          )}
 
-            <ScrollView
-            
-                showsVerticalScrollIndicator={false}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                    />
-                }
-                contentContainerStyle={{ paddingBottom: 150 }}>
+        {project?.masterPlan &&
+          project.masterPlan.length > 0 && (
+            <MasterPlan
+              image={project.masterPlan}
+            />
+          )}
 
-                <ImageCarousel project={project} />
+        {project && (
+          <OverviewCard project={project} />
+        )}
 
-                <ProjectTitle project={project} />
+        <VideoSection project={project} />
 
-                <ProjectStatusCard project={project} />
+        <FloorPlans
+          image={project?.FloorPlans || []}
+        />
 
-                
+        <NearbyPlaces
+          nearby={
+            project?.nearby ||
+            project?.NearBy ||
+            ''
+          }
+        />
 
-                <PriceCard project={project} />
+        <BuilderCard project={project} />
 
-                            {Array.isArray(project?.units) &&
-                project.units.length > 0 && (
-                    <UnitTypesCard
-                    units={project.units}
-                    />
-                )}
+        {/*
+        <VideoSection project={project} />
+        <MapSection project={project} />
+        */}
+      </ScrollView>
 
-                {Array.isArray(project?.amenities) &&
-                project.amenities.length > 0 && (
-                    <AmenitiesGrid
-                    amenities={project.amenities}
-                    />
-                )}
+      <StickyBottomBar project={project} />
 
-                {project?.masterPlan &&
-                project.masterPlan.length > 0 && (
-                <MasterPlan
-                    image={project.masterPlan}
-                />
-                )}
-
-               
-                
-                {project && (
-                     <OverviewCard project={project} />
-                )}
-
-                <VideoSection project={project} />
-
-                <FloorPlans image={project?.FloorPlans || []} />
-
-  <NearbyPlaces
-  nearby={project?.nearby || project?.NearBy || ''}
-/>
-
-
-                <BuilderCard project={project} />
-
-
-
- 
-
-{/* 
- <VideoSection project={project} />
-<MapSection project={project} /> */}
-{/* 
-
-*/}
-
- </ScrollView>
- <StickyBottomBar project={project} />
-        <Footer />
- </SafeAreaView>
-);
-
+      <Footer />
+    </SafeAreaView>
+  );
 };
 
 export default ProjectDetailsScreen;
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F6FA',
+  },
 
-    container: {
-
-        flex:1,
-
-        backgroundColor:'#F5F6FA',
-
-    },
-
-    loaderContainer:{
-
-        flex:1,
-
-        justifyContent:'center',
-
-        alignItems:'center',
-
-        backgroundColor:'#fff',
-
-    }
-
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
 });
+ 

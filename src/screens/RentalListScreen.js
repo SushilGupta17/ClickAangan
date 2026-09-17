@@ -683,7 +683,10 @@ return (
     <ProjectPopup
       visible={showProjects}
       navigation={navigation}
-      onClose={() => setShowProjects(false)}
+      onClose={() => {
+            setShowProjects(false);
+            setSelectedProperty('Apartment');
+        }}
     />
 
     {/* =================================================
@@ -701,6 +704,10 @@ return (
         setShowPopup(false);
         navigation.navigate('Register');
       }}
+       onForgotPassword={() => {
+  setShowPopup(false);
+  navigation.navigate('Forgot');
+}}
     />
 
   </View>

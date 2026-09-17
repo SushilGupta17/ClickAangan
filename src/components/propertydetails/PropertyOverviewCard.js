@@ -4,141 +4,249 @@ import {
   View,
   Text,
   StyleSheet,
+  useWindowDimensions,
 } from 'react-native';
 
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import RenderHTML from 'react-native-render-html';
+
+// =========================================================
+// RENTAL OVERVIEW CARD
+// =========================================================
 
 const PropertyOverviewCard = ({property}) => {
+  const {width} = useWindowDimensions();
 
-  const items = [
-    {
-      icon: 'bed-outline',
-      value: property?.bhk || '-',
-      label: 'Bedrooms',
-    },
+  // =======================================================
+  // DESCRIPTION
+  // =======================================================
 
-    {
-      icon: 'shower',
-      value: property?.bathrooms || '-',
-      label: 'Bathrooms',
-    },
+  const description =
+    property?.description ||
+    property?.Description ||
+    property?.overview ||
+    property?.Overview ||
+    '';
 
-    {
-      icon: 'floor-plan',
-      value: property?.area || '-',
-      label: 'Area',
-    },
+  // =======================================================
+  // DON'T RENDER EMPTY SECTION
+  // =======================================================
 
-    {
-      icon: 'balcony',
-      value: property?.balconies || '-',
-      label: 'Balconies',
-    },
-  ];
+  if (
+    !description ||
+    !String(description).replace(/<[^>]*>/g, '').trim()
+  ) {
+    return null;
+  }
 
   return (
-
     <View style={styles.card}>
 
+      {/* ===================================================
+          HEADING
+      =================================================== */}
+
       <Text style={styles.heading}>
-        Property Overview
+        Rental Property Overview
       </Text>
 
-      <View style={styles.grid}>
+      {/* ===================================================
+          HTML DESCRIPTION
+      =================================================== */}
 
-        {items.map((item, index) => (
+      <RenderHTML
+        contentWidth={width - 66}
+        source={{
+          html: String(description),
+        }}
+        tagsStyles={{
 
-          <View
-            key={index}
-            style={styles.item}>
+          // =================================================
+          // PARAGRAPH
+          // =================================================
 
-            <View style={styles.iconContainer}>
+          p: {
+            fontSize: 12,
 
-              <Icon
-                name={item.icon}
-                size={22}
-                color="#1959A2"
-              />
+            color: '#555',
 
-            </View>
+            lineHeight: 24,
 
-            <Text
-              style={styles.value}
-              numberOfLines={1}>
+            marginTop: 0,
 
-              {item.value}
+            marginBottom: 8,
+          },
 
-            </Text>
+          // =================================================
+          // STRONG
+          // =================================================
 
-            <Text style={styles.label}>
-              {item.label}
-            </Text>
+          strong: {
+            fontWeight: '700',
 
-          </View>
+            color: '#333',
+          },
 
-        ))}
+          // =================================================
+          // BOLD
+          // =================================================
 
-      </View>
+          b: {
+            fontWeight: '700',
+
+            color: '#333',
+          },
+
+          // =================================================
+          // UNORDERED LIST
+          // =================================================
+
+          ul: {
+            marginTop: 5,
+
+            marginBottom: 8,
+
+            paddingLeft: 5,
+          },
+
+          // =================================================
+          // ORDERED LIST
+          // =================================================
+
+          ol: {
+            marginTop: 5,
+
+            marginBottom: 8,
+
+            paddingLeft: 5,
+          },
+
+          // =================================================
+          // LIST ITEM
+          // =================================================
+
+          li: {
+            fontSize: 12,
+
+            color: '#555',
+
+            lineHeight: 22,
+          },
+
+          // =================================================
+          // HEADINGS
+          // =================================================
+
+          h1: {
+            fontSize: 18,
+
+            fontWeight: '700',
+
+            color: '#222',
+
+            marginTop: 8,
+
+            marginBottom: 8,
+          },
+
+          h2: {
+            fontSize: 16,
+
+            fontWeight: '700',
+
+            color: '#222',
+
+            marginTop: 8,
+
+            marginBottom: 8,
+          },
+
+          h3: {
+            fontSize: 14,
+
+            fontWeight: '700',
+
+            color: '#222',
+
+            marginTop: 6,
+
+            marginBottom: 6,
+          },
+
+          // =================================================
+          // LINK
+          // =================================================
+
+          a: {
+            color: '#1959A2',
+
+            textDecorationLine: 'underline',
+          },
+
+          // =================================================
+          // BLOCKQUOTE
+          // =================================================
+
+          blockquote: {
+            borderLeftWidth: 3,
+
+            borderLeftColor: '#1959A2',
+
+            paddingLeft: 10,
+
+            color: '#666',
+
+            marginVertical: 8,
+          },
+        }}
+      />
 
     </View>
-
   );
 };
 
 export default PropertyOverviewCard;
 
+// =========================================================
+// STYLES
+// =========================================================
 
 const styles = StyleSheet.create({
 
   card: {
     backgroundColor: '#fff',
+
     marginHorizontal: 15,
+
     marginTop: 15,
+
     marginBottom: 15,
-    padding: 18,
+
     borderRadius: 15,
+
+    padding: 18,
+
     elevation: 3,
+
+    shadowColor: '#000',
+
+    shadowOffset: {
+      width: 0,
+
+      height: 2,
+    },
+
+    shadowOpacity: 0.08,
+
+    shadowRadius: 5,
   },
 
   heading: {
     fontSize: 16,
+
     fontWeight: '700',
-    color: '#102A47',
-    marginBottom: 15,
-  },
 
-  grid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
+    marginBottom: 10,
 
-  item: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#F5F7FA',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 7,
-  },
-
-  value: {
-    fontSize: 15,
-    fontWeight: '700',
     color: '#102A47',
   },
-
-  label: {
-    marginTop: 3,
-    fontSize: 10,
-    color: '#777',
-    textAlign: 'center',
-  },
-
 });

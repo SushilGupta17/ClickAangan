@@ -20,6 +20,8 @@ import ProjectDetailsScreen from './src/screens/ProjectDetailsScreen';
 import RentalDetailsScreen from './src/screens/RentalDetailedScreen';
 import RoleBasedRegistrationScreen from './src/screens/RoleBasedRegistrationScreen'
 import OTPScreen  from './src/screens/OTPScreen'
+import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen'
+
 
 const Stack = createNativeStackNavigator();
 
@@ -67,10 +69,13 @@ function App() {
   name="RoleBasedRegistration"
   component={RoleBasedRegistrationScreen}
 />
-        <Stack.Screen
+       <Stack.Screen
           name="Login"
           component={LoginScreen}
         />
+
+        <Stack.Screen name="Forgot" component={ForgotPasswordScreen} />
+
         <Stack.Screen
           name="OTP"
           component={OTPScreen}

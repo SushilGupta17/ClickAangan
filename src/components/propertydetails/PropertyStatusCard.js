@@ -1,311 +1,247 @@
 import React from 'react';
 
 import {
-View,
-Text,
-StyleSheet,
+  View,
+  Text,
+  StyleSheet,
 } from 'react-native';
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const PropertyStatusCard = ({property}) => {
+// =========================================================
+// RENTAL STATUS CONFIG
+// =========================================================
 
-const status =
-property?.propertyStatus ||
-property?.status ||
-'Available';
-
-const getStatusDetails = () => {
-
-   
-const value =
-  String(status).toLowerCase();
-
-
-if (
-  value.includes('ready') ||
-  value.includes('move')
-) {
-
-  return {
-    icon: 'home-check-outline',
+const statusIcons = {
+  Available: {
+    name: 'home-check',
     color: '#2E7D32',
-    background: '#EAF6EC',
-    title: 'Ready to Move',
-    description:
-      'This property is ready for immediate possession.',
-  };
+    description: 'This property is currently available for rent.',
+  },
 
-}
+  Approved: {
+    name: 'check-decagram',
+    color: '#2E7D32',
+    description: 'This rental property has been approved and is available.',
+  },
 
+  Rented: {
+    name: 'home-lock',
+    color: '#C62828',
+    description: 'This property is currently rented out.',
+  },
 
-if (
-  value.includes('under') ||
-  value.includes('construction')
-) {
-
-  return {
-    icon: 'hammer-wrench',
+  Pending: {
+    name: 'clock-outline',
     color: '#F57C00',
-    background: '#FFF4E5',
-    title: 'Under Construction',
-    description:
-      'Construction work is currently in progress.',
-  };
+    description: 'This rental property is currently under verification.',
+  },
 
-}
-
-
-if (
-  value.includes('new') ||
-  value.includes('launch')
-) {
-
-  return {
-    icon: 'rocket-launch-outline',
-    color: '#1959A2',
-    background: '#EEF4FB',
-    title: 'New Launch',
-    description:
-      'Explore this newly launched property.',
-  };
-
-}
-
-
-if (value.includes('sold')) {
-
-  return {
-    icon: 'home-remove-outline',
-    color: '#D32F2F',
-    background: '#FDECEC',
-    title: 'Sold',
-    description:
-      'This property has already been sold.',
-  };
-
-}
-
-
-if (value.includes('rent')) {
-
-  return {
-    icon: 'home-clock-outline',
-    color: '#7B1FA2',
-    background: '#F5EAF9',
-    title: 'Available for Rent',
-    description:
-      'This property is currently available for rent.',
-  };
-
-}
-
-
-return {
-
-  icon: 'check-circle-outline',
-  color: '#1959A2',
-  background: '#EEF4FB',
-  title: status,
-  description:
-    'This property is currently available.',
-
-};
-   
-
+  Inactive: {
+    name: 'home-off',
+    color: '#757575',
+    description: 'This rental property is currently inactive.',
+  },
 };
 
-const details = getStatusDetails();
+// =========================================================
+// RENTAL STATUS CARD
+// =========================================================
 
-return (
+const RentalStatusCard = ({property}) => {
+  const rawStatus =
+    property?.status ||
+    property?.Status ||
+    property?.propertyStatus ||
+    property?.PropertyStatus ||
+    'Available';
 
-   
-<View style={styles.card}>
+  // =======================================================
+  // NORMALIZE STATUS
+  // =======================================================
 
-  {/* HEADER */}
+  const status = String(rawStatus).trim();
 
-  <Text style={styles.heading}>
+  const icon =
+    statusIcons[status] ||
+    statusIcons.Available;
 
-    Property Status
+  // =======================================================
+  // FALLBACK DESCRIPTION
+  // =======================================================
 
-  </Text>
+  const description =
+    icon.description ||
+    'This rental property is currently available.';
 
+  return (
+    <View style={styles.card}>
 
-  {/* STATUS ROW */}
+      {/* ===================================================
+          HEADING
+      =================================================== */}
 
-  <View style={styles.statusRow}>
-
-
-    {/* ICON */}
-
-    <View
-      style={[
-        styles.iconBox,
-        {
-          backgroundColor:
-            details.background,
-        },
-      ]}>
-
-      <Icon
-        name={details.icon}
-        size={24}
-        color={details.color}
-      />
-
-    </View>
-
-
-    {/* STATUS DETAILS */}
-
-    <View style={styles.info}>
-
-      <Text
-        style={[
-          styles.statusTitle,
-          {
-            color: details.color,
-          },
-        ]}>
-
-        {details.title}
-
+      <Text style={styles.heading}>
+        Rental Property Status
       </Text>
 
+      {/* ===================================================
+          CONTENT
+      =================================================== */}
 
-      <Text style={styles.description}>
+      <View style={styles.content}>
 
-        {details.description}
+        {/* =================================================
+            ICON
+        ================================================= */}
 
-      </Text>
+        <View
+          style={[
+            styles.iconContainer,
+            {
+              borderColor: `${icon.color}25`,
+            },
+          ]}>
+          <Icon
+            name={icon.name}
+            size={42}
+            color={icon.color}
+          />
+        </View>
 
+        {/* =================================================
+            STATUS INFO
+        ================================================= */}
+
+        <View style={styles.info}>
+
+          <Text
+            style={[
+              styles.status,
+              {
+                color: icon.color,
+              },
+            ]}>
+            {status}
+          </Text>
+
+          <Text style={styles.desc}>
+            {description}
+          </Text>
+
+        </View>
+      </View>
     </View>
-
-  </View>
-
-</View>
-   
-
-);
-
+  );
 };
 
-export default PropertyStatusCard;
+export default RentalStatusCard;
 
-/* ============================================= */
-/* STYLES */
-/* ============================================= */
+// =========================================================
+// STYLES
+// =========================================================
 
 const styles = StyleSheet.create({
+  card: {
+    marginHorizontal: 15,
 
-card: {
+    marginTop: 15,
 
-   
-backgroundColor: '#fff',
+    backgroundColor: '#fff',
 
-marginHorizontal: 15,
+    borderRadius: 15,
 
-marginTop: 15,
+    padding: 16,
 
-marginBottom: 0,
+    elevation: 3,
 
-borderRadius: 15,
+    shadowColor: '#000',
 
-padding: 18,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
 
-elevation: 3,
-   
+    shadowOpacity: 0.08,
 
-},
+    shadowRadius: 5,
+  },
 
-heading: {
+  // =======================================================
+  // HEADING
+  // =======================================================
 
-   
-fontSize: 16,
+  heading: {
+    fontSize: 16,
 
-fontWeight: '700',
+    fontWeight: '700',
 
-color: '#102A47',
+    color: '#102A47',
 
-marginBottom: 15,
-   
+    marginBottom: 15,
+  },
 
-},
+  // =======================================================
+  // CONTENT
+  // =======================================================
 
-/* STATUS ROW */
+  content: {
+    flexDirection: 'row',
 
-statusRow: {
+    alignItems: 'center',
+  },
 
-   
-flexDirection: 'row',
+  // =======================================================
+  // ICON
+  // =======================================================
 
-alignItems: 'center',
+  iconContainer: {
+    width: 62,
 
-backgroundColor: '#FAFBFC',
+    height: 62,
 
-borderRadius: 12,
+    borderRadius: 31,
 
-padding: 12,
+    backgroundColor: '#F5F7FA',
 
-borderWidth: 1,
+    justifyContent: 'center',
 
-borderColor: '#EEF1F4',
-   
+    alignItems: 'center',
 
-},
+    borderWidth: 1,
+  },
 
-/* ICON */
+  // =======================================================
+  // INFO
+  // =======================================================
 
-iconBox: {
+  info: {
+    flex: 1,
 
-   
-width: 48,
+    marginLeft: 15,
+  },
 
-height: 48,
+  // =======================================================
+  // STATUS
+  // =======================================================
 
-borderRadius: 12,
+  status: {
+    fontSize: 18,
 
-justifyContent: 'center',
+    fontWeight: '700',
+  },
 
-alignItems: 'center',
-   
+  // =======================================================
+  // DESCRIPTION
+  // =======================================================
 
-},
+  desc: {
+    marginTop: 7,
 
-/* INFO */
+    color: '#666',
 
-info: {
+    lineHeight: 20,
 
-   
-flex: 1,
-
-marginLeft: 12,
-   
-
-},
-
-statusTitle: {
-
-   
-fontSize: 16,
-
-fontWeight: '700',
-   
-
-},
-
-description: {
-
-   
-marginTop: 4,
-
-color: '#777',
-
-fontSize: 12,
-
-lineHeight: 18,
-   
-
-},
-
+    fontSize: 13,
+  },
 });

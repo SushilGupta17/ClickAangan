@@ -1,23 +1,27 @@
+
 import React, {useCallback, useEffect, useState} from 'react';
 
 import {
   SafeAreaView,
+  View,
+  Text,
   ScrollView,
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
-  View,
-  Text,
+  StatusBar,
   Linking,
   TouchableOpacity,
   Share,
+  TextInput,
 } from 'react-native';
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {WebView} from 'react-native-webview';
+
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import PropImageRotator from '../components/PropImgRotator';
+
 import PropertyImageCarousel from '../components/propertydetails/PropertyImageCarousel';
 import PropertyTitle from '../components/propertydetails/PropertyTitle';
 import PropertyStatusCard from '../components/propertydetails/PropertyStatusCard';
@@ -27,28 +31,75 @@ import PropertyAmenities from '../components/propertydetails/PropertyAmenities';
 
 const API_URL = 'https://savariyaproperty.in';
 
+// =========================================================
+// PROPERTY DETAILS SCREEN
+// =========================================================
+
 const DetailsScreen = ({route}) => {
+  // =======================================================
+  // ROUTE DATA
+  // =======================================================
 
-  const [property, setProperty] = useState(
-    route.params?.property || null,
-  );
+  const routeProperty =
+    route?.params?.property || null;
 
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const propertyId =
+    route?.params?.id ||
+    routeProperty?.id ||
+    routeProperty?.Id ||
+    routeProperty?.propertyId ||
+    routeProperty?.PropertyId;
 
-  const id = route.params?.id;
+  // =======================================================
+  // STATES
+  // =======================================================
 
-  const loadPropertyDetails = async () => {
+  const [property, setProperty] =
+    useState(routeProperty);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [refreshing, setRefreshing] =
+    useState(false);
+
+  // =======================================================
+  // LOAD PROPERTY
+  // =======================================================
+
+  const loadPropertyDetails = useCallback(async () => {
     try {
+      if (!propertyId) {
+        console.log(
+          'Property ID not available',
+        );
 
-      if (!id) {
+        setLoading(false);
+        setRefreshing(false);
         return;
       }
+
+      console.log(
+        '=================================',
+      );
+
+      console.log(
+        'LOADING PROPERTY DETAILS',
+      );
+
+      console.log(
+        'PROPERTY ID:',
+        propertyId,
+      );
+
+      console.log(
+        '=================================',
+      );
 
       setLoading(true);
 
       const response = await fetch(
-        `${API_URL}/api/Property/${id}`,
+        `${API_URL}/api/Property/${propertyId}`,
       );
 
       if (!response.ok) {
@@ -60,51 +111,91 @@ const DetailsScreen = ({route}) => {
       const data = await response.json();
 
       console.log(
-        'Property API Data =>',
-        data,
+        'PROPERTY API DATA =>',
+        JSON.stringify(
+          data,
+          null,
+          2,
+        ),
       );
 
-      setProperty(data);
+      /*
+       * Keep API response compatible with
+       * existing Property API.
+       */
 
+      let propertyData = data;
+
+      if (
+        data?.data &&
+        !Array.isArray(data.data)
+      ) {
+        propertyData = data.data;
+      } else if (
+        data?.result &&
+        !Array.isArray(data.result)
+      ) {
+        propertyData = data.result;
+      } else if (
+        data?.property &&
+        !Array.isArray(data.property)
+      ) {
+        propertyData = data.property;
+      }
+
+      if (propertyData) {
+        setProperty(propertyData);
+      }
     } catch (error) {
-
       console.log(
         'Property Details Error =>',
         error,
       );
 
-    } finally {
+      /*
+       * API fail hone par route se
+       * aaya hua property data preserve rahega.
+       */
 
+      if (!routeProperty) {
+        setProperty(null);
+      }
+    } finally {
       setLoading(false);
       setRefreshing(false);
-
     }
-  };
+  }, [propertyId, routeProperty]);
 
+  // =======================================================
+  // INITIAL LOAD
+  // =======================================================
 
   useEffect(() => {
+    loadPropertyDetails();
+  }, [loadPropertyDetails]);
 
-    if (id) {
-      loadPropertyDetails();
-    }
-
-  }, [id]);
-
+  // =======================================================
+  // REFRESH
+  // =======================================================
 
   const onRefresh = useCallback(() => {
-
     setRefreshing(true);
-
     loadPropertyDetails();
+  }, [loadPropertyDetails]);
 
-  }, [id]);
-
+  // =======================================================
+  // LOADING
+  // =======================================================
 
   if (loading && !property) {
-
     return (
       <SafeAreaView
         style={styles.loaderContainer}>
+
+        <StatusBar
+          backgroundColor="#FFFFFF"
+          barStyle="dark-content"
+        />
 
         <ActivityIndicator
           size="large"
@@ -113,324 +204,425 @@ const DetailsScreen = ({route}) => {
 
       </SafeAreaView>
     );
-
   }
 
+  // =======================================================
+  // NO PROPERTY
+  // =======================================================
 
   if (!property) {
-
     return (
       <SafeAreaView
         style={styles.loaderContainer}>
 
-        <Icon
-          name="home-alert-outline"
-          size={50}
-          color="#999"
+        <StatusBar
+          backgroundColor="#FFFFFF"
+          barStyle="dark-content"
         />
 
-        <Text style={styles.noProperty}>
-          Property details not available
-        </Text>
+        <View
+          style={styles.noDataContainer}>
+
+          <View
+            style={styles.noDataIcon}>
+
+            <Icon
+              name="home-alert-outline"
+              size={34}
+              color="#1959A2"
+            />
+
+          </View>
+
+          <Text
+            style={styles.noDataTitle}>
+
+            Property Not Found
+
+          </Text>
+
+          <Text
+            style={styles.noDataText}>
+
+            Property details are not available
+            at the moment.
+
+          </Text>
+
+        </View>
 
       </SafeAreaView>
     );
-
   }
 
+  // =======================================================
+  // LATITUDE / LONGITUDE
+  // =======================================================
 
   const latitude =
-    Number(property?.latitude) || 26.9124;
+    Number(
+      property?.latitude ??
+        property?.Latitude ??
+        property?.lat ??
+        property?.Lat,
+    ) || 26.9124;
 
   const longitude =
-    Number(property?.longitude) || 75.7873;
+    Number(
+      property?.longitude ??
+        property?.Longitude ??
+        property?.lng ??
+        property?.Lng,
+    ) || 75.7873;
 
+  // =======================================================
+  // SCREEN
+  // =======================================================
 
   return (
+    <SafeAreaView
+      style={styles.container}>
 
-    <SafeAreaView style={styles.container}>
-    <Header />
+      {/* =================================================
+          STATUS BAR
+      ================================================= */}
 
-     <ScrollView
+      <StatusBar
+        backgroundColor="#FFFFFF"
+        barStyle="dark-content"
+      />
 
+      {/* =================================================
+          HEADER
+      ================================================= */}
+
+      <Header />
+
+      {/* =================================================
+          CONTENT
+      ================================================= */}
+
+      <ScrollView
         showsVerticalScrollIndicator={false}
 
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
+            colors={['#1959A2']}
+            tintColor="#1959A2"
           />
         }
 
-        contentContainerStyle={{
-          paddingBottom: 110,
-        }}>
+        contentContainerStyle={
+          styles.scrollContent
+        }>
 
-
-        {/* ================================= */}
-        {/* IMAGE CAROUSEL */}
-        {/* ================================= */}
+        {/* =================================================
+            PROPERTY IMAGE
+        ================================================= */}
 
         <PropertyImageCarousel
           property={property}
         />
 
-
-        {/* ================================= */}
-        {/* TITLE */}
-        {/* ================================= */}
+        {/* =================================================
+            TITLE
+        ================================================= */}
 
         <PropertyTitle
           property={property}
         />
 
-
-        {/* ================================= */}
-        {/* STATUS */}
-        {/* ================================= */}
+        {/* =================================================
+            STATUS
+        ================================================= */}
 
         <PropertyStatusCard
           property={property}
         />
 
+        
 
-        {/* ================================= */}
-        {/* PRICE */}
-        {/* ================================= */}
-
-        <PropertyPriceCard
-          property={property}
-        />
-
-
-        {/* ================================= */}
-        {/* OVERVIEW */}
-        {/* ================================= */}
+        {/* =================================================
+            OVERVIEW
+        ================================================= */}
 
         <PropertyOverviewCard
           property={property}
         />
 
+        {/* =================================================
+            PROPERTY DETAILS
 
-        {/* ================================= */}
-        {/* PROPERTY DETAILS */}
-        {/* ================================= */}
+            Existing functionality preserved.
+            Currently disabled exactly as your
+            previous screen.
+        ================================================= */}
 
-        {/* <PropertyDetailsCard
-          property={property}
-        /> */}
-
-
-        {/* ================================= */}
-        {/* AMENITIES */}
-        {/* ================================= */}
-
-        <PropertyAmenities
-          amenities={property?.amenities || []}
-        />
-
-
-        {/* ================================= */}
-        {/* DESCRIPTION */}
-        {/* ================================= */}
-
-        <PropertyDescription
+        {/*
+        <PropertyDetailsCard
           property={property}
         />
+        */}
 
+        {/* =================================================
+            AMENITIES
+        ================================================= */}
 
-        {/* ================================= */}
-        {/* BROCHURE */}
-        {/* ================================= */}
+        {Array.isArray(
+          property?.amenities,
+        ) &&
+          property.amenities.length > 0 && (
 
-        <PropertyBrochure
-          property={property}
-        />
+            <PropertyAmenities
+              amenities={
+                property.amenities
+              }
+            />
 
+          )}
+   
 
-        {/* ================================= */}
-        {/* OWNER */}
-        {/* ================================= */}
+        {/* =================================================
+            OWNER
+        ================================================= */}
 
         <OwnerCard
           property={property}
         />
 
+      
 
-        {/* ================================= */}
-        {/* LOCATION */}
-        {/* ================================= */}
+      </ScrollView>
 
-        <PropertyMapSection
-          property={property}
-          latitude={latitude}
-          longitude={longitude}
-        />
+      {/* =================================================
+          FOOTER
+      ================================================= */}
 
+      <Footer />
 
-        {/* ================================= */}
-        {/* ENQUIRY */}
-        {/* ================================= */}
-
-        {/* <PropertyEnquiryForm
-          property={property}
-        /> */}
-
-     </ScrollView>
-
-     <Footer/>
-
-      {/* ================================= */}
-      {/* STICKY BOTTOM BAR */}
-      {/* ================================= */}
+      {/* =================================================
+          STICKY BAR
+      ================================================= */}
 
       <PropertyStickyBottomBar
         property={property}
       />
 
     </SafeAreaView>
-
   );
 };
 
-/* ========================================================= */
-/* PROPERTY DETAILS CARD */
-/* ========================================================= */
+// =========================================================
+// PROPERTY DETAILS CARD
+// =========================================================
 
-const PropertyDetailsCard = ({property}) => {
+const PropertyDetailsCard = ({
+  property,
+}) => {
   const rows = [
     {
       title: 'Configuration',
-      value: property?.bhk,
+      value:
+        property?.bhk ??
+        property?.BHK ??
+        property?.configuration,
     },
-
     {
       title: 'Area',
-      value: property?.area
-        ? `${property.area} Sq.Ft.`
-        : null,
+      value:
+        property?.area ||
+        property?.Area
+          ? `${
+              property?.area ??
+              property?.Area
+            } Sq.Ft.`
+          : null,
     },
-
     {
       title: 'Furnishing',
-      value: property?.furnishing,
+      value:
+        property?.furnishing ??
+        property?.Furnishing,
     },
-
     {
       title: 'Parking',
-      value: property?.parking,
+      value:
+        property?.parking ??
+        property?.Parking,
     },
-
     {
       title: 'Property Type',
-      value: property?.propertyType,
+      value:
+        property?.propertyType ??
+        property?.PropertyType,
     },
-
   ];
 
-
   return (
-
     <View style={styles.card}>
 
-      <Text style={styles.heading}>
-        Property Details
-      </Text>
+      <View
+        style={styles.sectionHeader}>
 
+        <View
+          style={styles.sectionLine}
+        />
+
+        <Text
+          style={styles.heading}>
+
+          Property Details
+
+        </Text>
+
+      </View>
 
       {rows.map((row, index) => {
 
-        if (!row.value) {
+        if (
+          row.value === null ||
+          row.value === undefined ||
+          row.value === ''
+        ) {
           return null;
         }
 
         return (
-
           <View
             key={index}
             style={[
               styles.detailRow,
-              index === rows.length - 1 &&
+              index ===
+                rows.length - 1 &&
                 styles.lastRow,
             ]}>
 
-            <Text style={styles.rowTitle}>
+            <Text
+              style={styles.rowTitle}>
+
               {row.title}
+
             </Text>
 
-            <Text style={styles.rowValue}>
+            <Text
+              style={styles.rowValue}>
+
               {row.value}
+
             </Text>
 
           </View>
-
         );
-
       })}
 
     </View>
-
   );
 };
 
+// =========================================================
+// DESCRIPTION
+// =========================================================
 
-/* ========================================================= */
-/* DESCRIPTION */
-/* ========================================================= */
+const PropertyDescription = ({
+  property,
+}) => {
+  const description =
+    property?.description ??
+    property?.Description;
 
-const PropertyDescription = ({property}) => {
-
-  if (!property?.description) {
+  if (!description) {
     return null;
   }
 
   return (
-
     <View style={styles.card}>
 
-      <Text style={styles.heading}>
-        Description
-      </Text>
+      <View
+        style={styles.sectionHeader}>
 
-      <Text style={styles.description}>
-        {property.description}
+        <View
+          style={styles.sectionLine}
+        />
+
+        <Text
+          style={styles.heading}>
+
+          Description
+
+        </Text>
+
+      </View>
+
+      <Text
+        style={styles.description}>
+
+        {description}
+
       </Text>
 
     </View>
-
   );
 };
 
+// =========================================================
+// OWNER
+// =========================================================
 
-/* ========================================================= */
-/* OWNER CARD */
-/* ========================================================= */
+const OwnerCard = ({
+  property,
+}) => {
+  const mobile =
+    property?.mobile ??
+    property?.Mobile ??
+    property?.contactMobile ??
+    property?.ContactMobile;
 
-const OwnerCard = ({property}) => {
+  const owner =
+    property?.owner ??
+    property?.Owner ??
+    property?.ownerName ??
+    property?.OwnerName ??
+    property?.contactPerson ??
+    property?.ContactPerson;
+
+  if (!owner && !mobile) {
+    return null;
+  }
 
   const callOwner = () => {
-
-    if (property?.mobile) {
+    if (mobile) {
       Linking.openURL(
-        `tel:${property.mobile}`,
+        `tel:${mobile}`,
       );
     }
-
   };
 
-
   return (
-
     <View style={styles.card}>
 
-      <Text style={styles.heading}>
-        Owner Details
-      </Text>
+      <View
+        style={styles.sectionHeader}>
 
+        <View
+          style={styles.sectionLine}
+        />
 
-      <View style={styles.ownerRow}>
+        <Text
+          style={styles.heading}>
 
-        <View style={styles.ownerIcon}>
+          Owner Details
+
+        </Text>
+
+      </View>
+
+      <View
+        style={styles.ownerRow}>
+
+        <View
+          style={styles.ownerIcon}>
 
           <Icon
             name="account"
@@ -440,101 +632,139 @@ const OwnerCard = ({property}) => {
 
         </View>
 
+        <View
+          style={styles.ownerInfo}>
 
-        <View style={styles.ownerInfo}>
+          <Text
+            style={styles.ownerName}>
 
-          <Text style={styles.ownerName}>
-            {property?.owner || 'Property Owner'}
+            {owner ||
+              'Property Owner'}
+
           </Text>
 
-          {property?.mobile ? (
-            <Text style={styles.ownerMobile}>
-              +91 {property.mobile}
+          {mobile ? (
+            <Text
+              style={
+                styles.ownerMobile
+              }>
+
+              +91 {mobile}
+
             </Text>
           ) : null}
 
         </View>
 
-
-        {property?.mobile ? (
-
+        {mobile ? (
           <TouchableOpacity
-            style={styles.ownerCall}
+            style={
+              styles.ownerCall
+            }
             onPress={callOwner}>
 
             <Icon
               name="phone"
               size={20}
-              color="#fff"
+              color="#FFFFFF"
             />
 
           </TouchableOpacity>
-
         ) : null}
 
       </View>
 
     </View>
-
   );
 };
 
+// =========================================================
+// BROCHURE
+// =========================================================
 
-/* ========================================================= */
-/* BROCHURE */
-/* ========================================================= */
-
-const PropertyBrochure = ({property}) => {
-
+const PropertyBrochure = ({
+  property,
+}) => {
   const brochure =
     property?.brochurePath ||
+    property?.BrochurePath ||
     property?.brochure ||
-    property?.brochureUrl;
-
+    property?.Brochure ||
+    property?.brochureUrl ||
+    property?.BrochureUrl;
 
   if (!brochure) {
     return null;
   }
 
-
   const openBrochure = () => {
-
-    const url = brochure.startsWith('http')
-      ? brochure
-      : `${API_URL}${brochure}`;
+    const url =
+      brochure.startsWith('http')
+        ? brochure
+        : `${API_URL}${brochure}`;
 
     Linking.openURL(url);
-
   };
 
-
   return (
-
     <View style={styles.card}>
 
-      <Text style={styles.heading}>
-        Property Brochure
-      </Text>
+      <View
+        style={styles.sectionHeader}>
 
-
-      <TouchableOpacity
-        style={styles.brochureButton}
-        onPress={openBrochure}>
-
-        <Icon
-          name="file-pdf-box"
-          size={30}
-          color="#D32F2F"
+        <View
+          style={styles.sectionLine}
         />
 
-        <View style={styles.brochureInfo}>
+        <Text
+          style={styles.heading}>
 
-          <Text style={styles.brochureTitle}>
+          Property Brochure
+
+        </Text>
+
+      </View>
+
+      <TouchableOpacity
+        style={
+          styles.brochureButton
+        }
+        onPress={openBrochure}>
+
+        <View
+          style={
+            styles.brochureIconBox
+          }>
+
+          <Icon
+            name="file-pdf-box"
+            size={30}
+            color="#D32F2F"
+          />
+
+        </View>
+
+        <View
+          style={
+            styles.brochureInfo
+          }>
+
+          <Text
+            style={
+              styles.brochureTitle
+            }>
+
             Download Brochure
+
           </Text>
 
-          <Text style={styles.brochureSub}>
+          <Text
+            style={
+              styles.brochureSub
+            }>
+
             View property brochure PDF
+
           </Text>
 
         </View>
@@ -542,72 +772,100 @@ const PropertyBrochure = ({property}) => {
         <Icon
           name="chevron-right"
           size={24}
-          color="#777"
+          color="#777777"
         />
 
       </TouchableOpacity>
 
     </View>
-
   );
 };
 
-
-/* ========================================================= */
-/* MAP */
-/* ========================================================= */
+// =========================================================
+// MAP
+// =========================================================
 
 const PropertyMapSection = ({
   property,
   latitude,
   longitude,
 }) => {
+  const title =
+    property?.title ||
+    property?.Title ||
+    'Property';
+
+  const location =
+    property?.location ||
+    property?.Location;
 
   const openFullMap = () => {
+    const url =
+      `https://www.openstreetmap.org/?mlat=${latitude}` +
+      `&mlon=${longitude}` +
+      `#map=16/${latitude}/${longitude}`;
 
-    Linking.openURL(
-      `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=16/${latitude}/${longitude}`,
-    );
-
+    Linking.openURL(url);
   };
 
-
   return (
-
     <View style={styles.card}>
 
-      <Text style={styles.heading}>
-        Location
-      </Text>
+      <View
+        style={styles.sectionHeader}>
 
+        <View
+          style={styles.sectionLine}
+        />
 
-      {property?.location ? (
+        <Text
+          style={styles.heading}>
 
-        <View style={styles.locationRow}>
+          Location
 
-          <Icon
-            name="map-marker"
-            size={20}
-            color="#1959A2"
-          />
+        </Text>
 
-          <Text style={styles.locationText}>
-            {property.location}
+      </View>
+
+      {location ? (
+        <View
+          style={
+            styles.locationRow
+          }>
+
+          <View
+            style={
+              styles.locationIcon
+            }>
+
+            <Icon
+              name="map-marker"
+              size={19}
+              color="#1959A2"
+            />
+
+          </View>
+
+          <Text
+            style={
+              styles.locationText
+            }>
+
+            {location}
+
           </Text>
 
         </View>
-
       ) : null}
 
-
-      <View style={styles.mapContainer}>
+      <View
+        style={styles.mapContainer}>
 
         <WebView
           scrollEnabled={false}
-          javaScriptEnabled
-          domStorageEnabled
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
           originWhitelist={['*']}
-
           source={{
             html: `
               <!DOCTYPE html>
@@ -655,11 +913,12 @@ const PropertyMapSection = ({
 
                 <script>
 
-                  var map = L.map('map')
-                    .setView(
-                      [${latitude}, ${longitude}],
-                      15
-                    );
+                  var map =
+                    L.map('map')
+                      .setView(
+                        [${latitude}, ${longitude}],
+                        15
+                      );
 
                   L.tileLayer(
                     'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -675,7 +934,7 @@ const PropertyMapSection = ({
                   )
                   .addTo(map)
                   .bindPopup(
-                    "${property?.title || 'Property'}"
+                    ${JSON.stringify(title)}
                   )
                   .openPopup();
 
@@ -686,11 +945,9 @@ const PropertyMapSection = ({
               </html>
             `,
           }}
-
         />
 
       </View>
-
 
       <TouchableOpacity
         style={styles.mapButton}
@@ -699,69 +956,88 @@ const PropertyMapSection = ({
         <Icon
           name="map-outline"
           size={18}
-          color="#fff"
+          color="#FFFFFF"
         />
 
-        <Text style={styles.mapButtonText}>
+        <Text
+          style={
+            styles.mapButtonText
+          }>
+
           Open Full Map
+
         </Text>
 
       </TouchableOpacity>
 
     </View>
-
   );
 };
 
+// =========================================================
+// ENQUIRY FORM
+// =========================================================
 
-/* ========================================================= */
-/* ENQUIRY */
-/* ========================================================= */
+const PropertyEnquiryForm = ({
+  property,
+}) => {
+  const [name, setName] =
+    useState('');
 
-const PropertyEnquiryForm = ({property}) => {
-
-  const [name, setName] = useState('');
-  const [mobile, setMobile] = useState('');
-
+  const [mobile, setMobile] =
+    useState('');
 
   const submit = () => {
-
     if (!name.trim()) {
-
       return;
-
     }
 
     if (!mobile.trim()) {
-
       return;
-
     }
 
+    console.log(
+      'Property Enquiry',
+      {
+        propertyId:
+          property?.id ??
+          property?.Id,
+        name,
+        mobile,
+      },
+    );
   };
 
-
   return (
-
     <View style={styles.card}>
 
-      <Text style={styles.heading}>
-        Enquire About This Property
-      </Text>
+      <View
+        style={styles.sectionHeader}>
 
+        <View
+          style={styles.sectionLine}
+        />
+
+        <Text
+          style={styles.heading}>
+
+          Enquire About This Property
+
+        </Text>
+
+      </View>
 
       <TextInput
         placeholder="Your Name"
-        placeholderTextColor="#999"
+        placeholderTextColor="#999999"
         style={styles.input}
         value={name}
         onChangeText={setName}
       />
 
-
       <TextInput
         placeholder="Mobile Number"
-        placeholderTextColor="#999"
+        placeholderTextColor="#999999"
         keyboardType="phone-pad"
         maxLength={10}
         style={styles.input}
@@ -769,91 +1045,108 @@ const PropertyEnquiryForm = ({property}) => {
         onChangeText={setMobile}
       />
 
-
       <TouchableOpacity
-        style={styles.enquiryButton}
+        style={
+          styles.enquiryButton
+        }
         onPress={submit}>
 
         <Icon
           name="send"
           size={18}
-          color="#fff"
+          color="#FFFFFF"
         />
 
-        <Text style={styles.enquiryText}>
+        <Text
+          style={
+            styles.enquiryText
+          }>
+
           Submit Enquiry
+
         </Text>
 
       </TouchableOpacity>
 
     </View>
-
   );
 };
 
+// =========================================================
+// STICKY BOTTOM BAR
+// =========================================================
 
-/* ========================================================= */
-/* STICKY BOTTOM BAR */
-/* ========================================================= */
-
-const PropertyStickyBottomBar = ({property}) => {
+const PropertyStickyBottomBar = ({
+  property,
+}) => {
+  const mobile =
+    property?.mobile ??
+    property?.Mobile ??
+    property?.contactMobile ??
+    property?.ContactMobile;
 
   const callOwner = () => {
-
-    if (property?.mobile) {
-
+    if (mobile) {
       Linking.openURL(
-        `tel:${property.mobile}`,
+        `tel:${mobile}`,
       );
-
     }
-
   };
-
 
   const openWhatsapp = () => {
+    if (!mobile) {
+      return;
+    }
 
-    if (property?.mobile) {
-
-      Linking.openURL(
-        `https://wa.me/91${property.mobile}`,
+    const cleanMobile =
+      String(mobile).replace(
+        /[^0-9]/g,
+        '',
       );
 
-    }
-
+    Linking.openURL(
+      `https://wa.me/91${cleanMobile}`,
+    );
   };
-
 
   const shareProperty = async () => {
-
     try {
+      const title =
+        property?.title ||
+        property?.Title ||
+        'Property';
+
+      const location =
+        property?.location ||
+        property?.Location ||
+        '';
+
+      const price =
+        property?.price ||
+        property?.Price ||
+        '';
 
       await Share.share({
-
-        message: `
-🏠 ${property?.title || 'Property'}
-
-📍 ${property?.location || ''}
-
-💰 Price: ₹ ${property?.price || ''}
-
-${API_URL}
-        `,
-
+        message:
+          `🏠 ${title}\n` +
+          `📍 ${location}\n` +
+          `💰 Price: ₹ ${price}\n\n` +
+          `View on Savariya Property\n` +
+          `${API_URL}`,
       });
-
     } catch (error) {
-
-      console.log(error);
-
+      console.log(
+        'Share Error:',
+        error,
+      );
     }
-
   };
 
-
   return (
+    <View
+      style={styles.bottomBar}>
 
-    <View style={styles.bottomBar}>
+      {/* CALL */}
 
       <TouchableOpacity
         style={[
@@ -865,15 +1158,21 @@ ${API_URL}
         <Icon
           name="phone"
           size={20}
-          color="#fff"
+          color="#FFFFFF"
         />
 
-        <Text style={styles.bottomText}>
+        <Text
+          style={
+            styles.bottomText
+          }>
+
           Call
+
         </Text>
 
       </TouchableOpacity>
 
+      {/* WHATSAPP */}
 
       <TouchableOpacity
         style={[
@@ -885,15 +1184,21 @@ ${API_URL}
         <Icon
           name="whatsapp"
           size={20}
-          color="#fff"
+          color="#FFFFFF"
         />
 
-        <Text style={styles.bottomText}>
+        <Text
+          style={
+            styles.bottomText
+          }>
+
           WhatsApp
+
         </Text>
 
       </TouchableOpacity>
 
+      {/* SHARE */}
 
       <TouchableOpacity
         style={[
@@ -905,68 +1210,139 @@ ${API_URL}
         <Icon
           name="share-variant"
           size={20}
-          color="#fff"
+          color="#FFFFFF"
         />
 
-        <Text style={styles.bottomText}>
+        <Text
+          style={
+            styles.bottomText
+          }>
+
           Share
+
         </Text>
 
       </TouchableOpacity>
 
     </View>
-
   );
 };
 
-
-export default DetailsScreen;
-
-
-/* ========================================================= */
-/* STYLES */
-/* ========================================================= */
+// =========================================================
+// STYLES
+// =========================================================
 
 const styles = StyleSheet.create({
+
+  // =======================================================
+  // MAIN
+  // =======================================================
 
   container: {
     flex: 1,
     backgroundColor: '#F5F6FA',
   },
 
+  scrollContent: {
+    paddingBottom: 165,
+  },
+
+  // =======================================================
+  // LOADER
+  // =======================================================
+
   loaderContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
   },
 
-  noProperty: {
-    marginTop: 10,
-    color: '#777',
-    fontSize: 14,
+  // =======================================================
+  // NO DATA
+  // =======================================================
+
+  noDataContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 25,
   },
 
-  /* CARD */
-
-  card: {
-    backgroundColor: '#fff',
-    marginHorizontal: 15,
-    marginTop: 15,
-    marginBottom: 0,
-    borderRadius: 15,
-    padding: 18,
-    elevation: 3,
-  },
-
-  heading: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#102A47',
+  noDataIcon: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#EEF4FB',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 15,
   },
 
-  /* DETAILS */
+  noDataTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#102A47',
+    textAlign: 'center',
+  },
+
+  noDataText: {
+    marginTop: 8,
+    fontSize: 13,
+    color: '#777777',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+
+  // =======================================================
+  // CARD
+  // =======================================================
+
+  card: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 15,
+    marginTop: 15,
+    borderRadius: 15,
+    padding: 18,
+
+    elevation: 3,
+
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 5,
+  },
+
+  // =======================================================
+  // SECTION HEADER
+  // =======================================================
+
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+
+  sectionLine: {
+    width: 4,
+    height: 20,
+    borderRadius: 2,
+    backgroundColor: '#F57C00',
+    marginRight: 9,
+  },
+
+  heading: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#102A47',
+  },
+
+  // =======================================================
+  // DETAILS
+  // =======================================================
 
   detailRow: {
     flexDirection: 'row',
@@ -981,27 +1357,31 @@ const styles = StyleSheet.create({
   },
 
   rowTitle: {
-    color: '#666',
+    color: '#666666',
     fontSize: 13,
   },
 
   rowValue: {
-    color: '#222',
+    color: '#102A47',
     fontSize: 13,
     fontWeight: '600',
     maxWidth: '55%',
     textAlign: 'right',
   },
 
-  /* DESCRIPTION */
+  // =======================================================
+  // DESCRIPTION
+  // =======================================================
 
   description: {
-    color: '#555',
+    color: '#555555',
     lineHeight: 24,
     fontSize: 13,
   },
 
-  /* OWNER */
+  // =======================================================
+  // OWNER
+  // =======================================================
 
   ownerRow: {
     flexDirection: 'row',
@@ -1030,7 +1410,7 @@ const styles = StyleSheet.create({
 
   ownerMobile: {
     marginTop: 5,
-    color: '#777',
+    color: '#777777',
     fontSize: 12,
   },
 
@@ -1043,10 +1423,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  /* BROCHURE */
+  // =======================================================
+  // BROCHURE
+  // =======================================================
 
   brochureButton: {
     flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  brochureIconBox: {
+    width: 46,
+    height: 46,
+    borderRadius: 10,
+    backgroundColor: '#FFF3F3',
+    justifyContent: 'center',
     alignItems: 'center',
   },
 
@@ -1056,18 +1447,20 @@ const styles = StyleSheet.create({
   },
 
   brochureTitle: {
-    fontWeight: '600',
     fontSize: 14,
-    color: '#222',
+    fontWeight: '700',
+    color: '#102A47',
   },
 
   brochureSub: {
     marginTop: 4,
-    color: '#777',
+    color: '#777777',
     fontSize: 11,
   },
 
-  /* MAP */
+  // =======================================================
+  // LOCATION
+  // =======================================================
 
   locationRow: {
     flexDirection: 'row',
@@ -1075,17 +1468,32 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
+  locationIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#EEF4FB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
   locationText: {
     flex: 1,
-    marginLeft: 7,
-    color: '#666',
+    marginLeft: 8,
+    color: '#666666',
     fontSize: 13,
+    lineHeight: 19,
   },
+
+  // =======================================================
+  // MAP
+  // =======================================================
 
   mapContainer: {
     height: 200,
     overflow: 'hidden',
     borderRadius: 12,
+    backgroundColor: '#EEEEEE',
   },
 
   mapButton: {
@@ -1099,12 +1507,15 @@ const styles = StyleSheet.create({
   },
 
   mapButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontWeight: '700',
+    fontSize: 13,
     marginLeft: 7,
   },
 
-  /* ENQUIRY */
+  // =======================================================
+  // ENQUIRY
+  // =======================================================
 
   input: {
     borderWidth: 1,
@@ -1115,10 +1526,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     fontSize: 14,
     backgroundColor: '#FAFAFA',
+    color: '#222222',
   },
 
   enquiryButton: {
-    backgroundColor: '#2E7D32',
+    backgroundColor: '#1959A2',
     paddingVertical: 15,
     borderRadius: 12,
     alignItems: 'center',
@@ -1127,23 +1539,38 @@ const styles = StyleSheet.create({
   },
 
   enquiryText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontWeight: '700',
     marginLeft: 8,
   },
 
-  /* BOTTOM BAR */
+  // =======================================================
+  // STICKY BOTTOM
+  // =======================================================
 
   bottomBar: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+
     flexDirection: 'row',
-    backgroundColor: '#fff',
+
+    backgroundColor: '#FFFFFF',
+
     paddingHorizontal: 10,
     paddingVertical: 9,
+
     elevation: 12,
+
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 5,
+
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
   },
@@ -1171,10 +1598,13 @@ const styles = StyleSheet.create({
   },
 
   bottomText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '700',
     marginLeft: 6,
   },
 
 });
+
+export default DetailsScreen;
+ 
