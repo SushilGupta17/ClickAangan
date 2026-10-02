@@ -29,7 +29,7 @@ import PropertyPriceCard from '../components/propertydetails/PropertyPriceCard';
 import PropertyOverviewCard from '../components/propertydetails/PropertyOverviewCard';
 import PropertyAmenities from '../components/propertydetails/PropertyAmenities';
 
-const API_URL = 'https://savariyaproperty.in';
+const API_URL = 'https://clickaangan.in';
 
 // =========================================================
 // PROPERTY DETAILS SCREEN
@@ -334,37 +334,10 @@ const DetailsScreen = ({route}) => {
           property={property}
         />
 
-        {/* =================================================
-            STATUS
-        ================================================= */}
-
-        <PropertyStatusCard
-          property={property}
-        />
-
-        
-
-        {/* =================================================
-            OVERVIEW
-        ================================================= */}
-
         <PropertyOverviewCard
           property={property}
         />
 
-        {/* =================================================
-            PROPERTY DETAILS
-
-            Existing functionality preserved.
-            Currently disabled exactly as your
-            previous screen.
-        ================================================= */}
-
-        {/*
-        <PropertyDetailsCard
-          property={property}
-        />
-        */}
 
         {/* =================================================
             AMENITIES
@@ -1131,7 +1104,7 @@ const PropertyStickyBottomBar = ({
           `🏠 ${title}\n` +
           `📍 ${location}\n` +
           `💰 Price: ₹ ${price}\n\n` +
-          `View on Savariya Property\n` +
+          `View on ClickAangan\n` +
           `${API_URL}`,
       });
     } catch (error) {

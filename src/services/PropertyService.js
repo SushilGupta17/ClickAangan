@@ -5,9 +5,10 @@ import axios from 'axios';
 // ===============================
 
 // Local
- const BASE_URL2 = 'http://192.168.1.3:7045/api/';
+ const BASE_URL1 = 'http://192.168.1.5:7045/api/';
 
 // Live
+const BASE_URL2= 'https://clickaangan.in/api/';
 const BASE_URL= 'https://savariyaproperty.in/api/';
 
 const api = axios.create({
@@ -105,6 +106,7 @@ export const getPropertyDetails = async id => {
 
 export const getProperties = async () => {
   try {
+     alert('gggaaa111');
     const response = await api.get(
       'Property/GetProperties',
     );

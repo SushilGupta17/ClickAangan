@@ -5,9 +5,12 @@ import {
   ScrollView,
   SafeAreaView,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
+import {useAppAlert} from '../../utils/AppAlert';
+
+
+
 
 import Animated, {
   FadeInDown,
@@ -18,6 +21,7 @@ import {addProject} from '../../services/ProjectService';
 import styles from '../../styles/AddPropertyStyle';
 
 const SummaryCard = ({title, children}) => (
+  
   <View
     style={{
       backgroundColor: '#FFFFFF',
@@ -90,6 +94,8 @@ const ProjectSummaryTab = ({
   property,
   previousTab,
 }) => {
+
+  const {success, error, warning} = useAppAlert();
 
   const [loading, setLoading] = useState(false);
 
@@ -327,7 +333,7 @@ const ProjectSummaryTab = ({
 
     await addProject(formData);
 
-    Alert.alert(
+    success(
       "Success",
       "Project Added Successfully"
     );
@@ -336,7 +342,7 @@ const ProjectSummaryTab = ({
 
     console.log(e);
 
-    Alert.alert(
+    error(
       "Error",
       e.message || "Something went wrong"
     );

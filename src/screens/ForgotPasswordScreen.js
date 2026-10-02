@@ -18,12 +18,15 @@ import {
 } from 'react-native';
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {useAppAlert} from '../utils/AppAlert';
 
 const {width} = Dimensions.get('window');
 
 const FIXED_OTP = '123456';
 
 const ForgotPasswordScreen = ({navigation}) => {
+  const {success, error, warning} = useAppAlert();
+
   const [step, setStep] = useState(1);
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
@@ -93,7 +96,7 @@ const ForgotPasswordScreen = ({navigation}) => {
   const cleanMobile = mobile.replace(/\D/g, '');
 
   if (cleanMobile.length !== 10) {
-    Alert.alert(
+    error(
       'Invalid Mobile',
       'Please enter a valid 10 digit mobile number.',
     );
@@ -106,7 +109,7 @@ const ForgotPasswordScreen = ({navigation}) => {
     console.log('CHECK MOBILE:', cleanMobile);
 
     const response = await fetch(
-      'https://savariyaproperty.in/api/Login/CheckMobile',
+      'https://clickaangan.in/api/Login/CheckMobile',
       {
         method: 'POST',
         headers: {
@@ -134,9 +137,9 @@ const ForgotPasswordScreen = ({navigation}) => {
     ) {
       setLoading(false);
 
-     Alert.alert(
+     warning(
     'Mobile Not Registered',
-    'This mobile number is not registered with Savariya Property.'
+    'This mobile number is not registered with ClickAangan.'
   );
 
 
@@ -160,7 +163,7 @@ const ForgotPasswordScreen = ({navigation}) => {
       setOtpTimer(30);
       setStep(2);
 
-      Alert.alert(
+      success(
         'OTP Sent',
         `Testing OTP: ${FIXED_OTP}`,
       );
@@ -173,7 +176,7 @@ const ForgotPasswordScreen = ({navigation}) => {
     // =========================================
     setLoading(false);
 
-    Alert.alert(
+    warning(
       'Unable to Verify',
       result?.message ||
         result?.Message ||
@@ -187,7 +190,7 @@ const ForgotPasswordScreen = ({navigation}) => {
 
     setLoading(false);
 
-    Alert.alert(
+    error(
       'Connection Error',
       'Unable to connect to server. Please try again.',
     );
@@ -203,7 +206,7 @@ const ForgotPasswordScreen = ({navigation}) => {
     Keyboard.dismiss();
 
     if (otp.trim().length !== 6) {
-      Alert.alert(
+      error(
         'Invalid OTP',
         'Please enter 6 digit OTP.',
       );
@@ -211,7 +214,7 @@ const ForgotPasswordScreen = ({navigation}) => {
     }
 
     if (otp.trim() !== FIXED_OTP) {
-      Alert.alert(
+      error(
         'Invalid OTP',
         'Please enter the correct OTP.',
       );
@@ -236,7 +239,7 @@ const ForgotPasswordScreen = ({navigation}) => {
     console.log('RESEND OTP TO:', mobile);
     console.log('TEMPORARY OTP:', FIXED_OTP);
 
-    Alert.alert(
+    success(
       'OTP Resent',
       `Testing OTP: ${FIXED_OTP}`,
     );
@@ -254,7 +257,7 @@ const ForgotPasswordScreen = ({navigation}) => {
     Keyboard.dismiss();
 
     if (!newPassword.trim()) {
-      Alert.alert(
+      success(
         'Password Required',
         'Please enter new password.',
       );
@@ -262,7 +265,7 @@ const ForgotPasswordScreen = ({navigation}) => {
     }
 
     if (newPassword.length < 6) {
-      Alert.alert(
+      warning(
         'Weak Password',
         'Password must be at least 6 characters.',
       );
@@ -270,7 +273,7 @@ const ForgotPasswordScreen = ({navigation}) => {
     }
 
     if (!confirmPassword.trim()) {
-      Alert.alert(
+      success(
         'Confirm Password',
         'Please confirm your password.',
       );
@@ -278,7 +281,7 @@ const ForgotPasswordScreen = ({navigation}) => {
     }
 
     if (newPassword !== confirmPassword) {
-      Alert.alert(
+      warning(
         'Password Mismatch',
         'New password and confirm password must be same.',
       );
@@ -302,7 +305,7 @@ const ForgotPasswordScreen = ({navigation}) => {
       // CHANGE PASSWORD API
       // =====================================================
       const response = await fetch(
-        'https://savariyaproperty.in/api/login/ChangePassword',
+        'https://clickaangan.in/api/login/ChangePassword',
         {
           method: 'POST',
           headers: {
@@ -341,7 +344,7 @@ const ForgotPasswordScreen = ({navigation}) => {
 
       setLoading(false);
 
-      Alert.alert(
+      error(
         'Change Password Failed',
         result?.message ||
           result?.Message ||
@@ -356,7 +359,7 @@ const ForgotPasswordScreen = ({navigation}) => {
 
       setLoading(false);
 
-      Alert.alert(
+      error(
         'Error',
         'Unable to connect to server. Please try again.',
       );

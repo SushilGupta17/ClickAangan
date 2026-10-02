@@ -10,8 +10,14 @@ StyleSheet,
 Alert
 
 } from 'react-native';
+import {useAppAlert} from '../../utils/AppAlert';
+
+
+
 
 const EnquiryForm=()=>{
+const {success, error, warning} = useAppAlert();
+
 
 const[name,setName]=useState('');
 
@@ -19,7 +25,7 @@ const[mobile,setMobile]=useState('');
 
 const submit=()=>{
 
-Alert.alert("Success","Enquiry Submitted");
+success("Success","Enquiry Submitted");
 
 }
 

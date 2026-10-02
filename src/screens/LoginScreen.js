@@ -6,7 +6,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Animated,
   Dimensions,
   KeyboardAvoidingView,
@@ -16,6 +15,7 @@ import {
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import {useAppAlert} from '../utils/AppAlert';
 
 const {width, height} = Dimensions.get('window');
 
@@ -29,7 +29,7 @@ const LoginPopup = ({
   // =====================================================
   // ANIMATION
   // =====================================================
-
+  const {success, error, warning} = useAppAlert();
   const scaleAnim = useRef(new Animated.Value(0.7)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
@@ -128,136 +128,132 @@ const LoginPopup = ({
   // =====================================================
 
   const handleLogin = async () => {
-    const cleanMobile = mobile.trim();
-    const cleanPassword = password.trim();
+  const cleanMobile = mobile.trim();
+  const cleanPassword = password.trim();
 
-    if (cleanMobile === '') {
-      Alert.alert('Error', 'Please enter mobile number');
-      return;
-    }
+  // =================================================
+  // VALIDATION
+  // =================================================
 
-    if (cleanMobile.length !== 10) {
-      Alert.alert('Error', 'Please enter valid mobile number');
-      return;
-    }
+  if (cleanMobile === '') {
+    warning('Please enter your mobile number.');
+    return;
+  }
 
-    if (cleanPassword === '') {
-      Alert.alert('Error', 'Please enter password');
-      return;
-    }
+  if (cleanMobile.length !== 10) {
+    warning('Please enter a valid 10-digit mobile number.');
+    return;
+  }
 
-    try {
-      setIsLoading(true);
+  if (cleanPassword === '') {
+    warning('Please enter your password.');
+    return;
+  }
 
-      const response = await fetch(
-        'https://savariyaproperty.in/api/Login',
-        {
-          method: 'POST',
+  try {
+    setIsLoading(true);
 
-          headers: {
-            'Content-Type': 'application/json',
-          },
-
-          body: JSON.stringify({
-            mobile: cleanMobile,
-            password: cleanPassword,
-          }),
+    const response = await fetch(
+      'https://clickaangan.in/api/Login',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          mobile: cleanMobile,
+          password: cleanPassword,
+        }),
+      },
+    );
+
+    const result = await response.json();
+
+    console.log('LOGIN RESPONSE:', result);
+
+    // =================================================
+    // LOGIN SUCCESS
+    // =================================================
+
+    if (
+      response.ok &&
+      result.success === true &&
+      result.statusCode === 1 &&
+      result.data
+    ) {
+      const user = result.data;
+
+      console.log('LOGIN USER:', user);
+
+      // =================================================
+      // SAVE USER DATA
+      // =================================================
+
+      await AsyncStorage.setItem('userLogin', 'true');
+
+      await AsyncStorage.setItem(
+        'userId',
+        user.id != null ? user.id.toString() : '',
       );
 
-      const result = await response.json();
+      await AsyncStorage.setItem(
+        'userName',
+        user.name || '',
+      );
 
-      console.log('LOGIN RESPONSE:', result);
+      await AsyncStorage.setItem(
+        'userMobile',
+        user.mobile || cleanMobile,
+      );
 
-      if (
-        response.ok &&
-        result.success === true &&
-        result.statusCode === 1 &&
-        result.data
-      ) {
-        const user = result.data;
+      await AsyncStorage.setItem(
+        'userEmail',
+        user.email || '',
+      );
 
-        console.log('LOGIN USER:', user);
+      await AsyncStorage.setItem(
+        'userRole',
+        user.role || user.Role || 'PROPERTY_SEEKER',
+      );
 
-        // =================================================
-        // SAVE USER DATA
-        // =================================================
+      // =================================================
+      // SUCCESS ALERT
+      // =================================================
 
-        await AsyncStorage.setItem('userLogin', 'true');
+      success(
+        result.message || 'Login successful.',
+        () => {
+          setIsLoading(false);
+          setPopupMode('main');
 
-        await AsyncStorage.setItem(
-          'userId',
-          user.id != null ? user.id.toString() : '',
-        );
-
-        await AsyncStorage.setItem(
-          'userName',
-          user.name || '',
-        );
-
-        await AsyncStorage.setItem(
-          'userMobile',
-          user.mobile || cleanMobile,
-        );
-
-        await AsyncStorage.setItem(
-          'userEmail',
-          user.email || '',
-        );
-
-        await AsyncStorage.setItem(
-          'userRole',
-          user.role || user.Role || 'PROPERTY_SEEKER',
-        );
-
-        // =================================================
-        // SUCCESS
-        // =================================================
-
-        Alert.alert(
-          'Success',
-          result.message || 'Login Successful',
-          [
-            {
-              text: 'OK',
-
-              onPress: () => {
-                setIsLoading(false);
-                setPopupMode('main');
-
-                if (onLogin) {
-                  onLogin(user);
-                } else if (onClose) {
-                  onClose();
-                }
-              },
-            },
-          ],
-          {
-            cancelable: false,
-          },
-        );
-      } else {
-        setIsLoading(false);
-
-        Alert.alert(
-          'Error',
-          result.message ||
-            'Invalid Mobile Number or Password',
-        );
-      }
-    } catch (error) {
-      console.log('LOGIN ERROR:', error);
+          if (onLogin) {
+            onLogin(user);
+          } else if (onClose) {
+            onClose();
+          }
+        },
+      );
+    } else {
+      // =================================================
+      // LOGIN FAILED
+      // =================================================
 
       setIsLoading(false);
 
-      Alert.alert(
-        'Error',
-        'Unable to connect server.',
+      error(
+        result.message ||
+          'Invalid mobile number or password.',
       );
     }
-  };
+  } catch (err) {
+  console.log('LOGIN ERROR:', err);
+  setIsLoading(false);
 
+  error(
+    'Unable to connect to the server. Please check your internet connection and try again.',
+  );
+}
+};
   // =====================================================
   // REGISTER
   // =====================================================
@@ -361,7 +357,7 @@ const LoginPopup = ({
             </Text>
 
             <Text style={styles.brand}>
-              Savariya Property
+              ClickAangan
             </Text>
 
             <Text style={styles.desc}>

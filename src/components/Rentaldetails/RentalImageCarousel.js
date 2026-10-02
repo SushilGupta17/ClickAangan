@@ -19,7 +19,7 @@ import Video from 'react-native-video';
 
 const {width} = Dimensions.get('window');
 
-const API_URL = 'https://savariyaproperty.in';
+const API_URL = 'https://clickaangan.in';
 
 const IMAGE_HEIGHT = 300;
 
@@ -366,7 +366,7 @@ ${location}${city ? `, ${city}` : ''}
 
 ₹ ${formatRentalPrice(price)} / Month
 
-https://savariyaproperty.in`,
+https://clickaangan.in`,
       });
     } catch (e) {
       console.log('RENTAL SHARE ERROR:', e);

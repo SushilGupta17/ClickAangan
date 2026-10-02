@@ -133,7 +133,7 @@ const ProjectHeader = () => {
         <View style={styles.logoSection}>
           <Image
             source={{
-              uri: 'https://savariyaproperty.in/assets/img/logo/logo.png',
+              uri: 'https://clickaangan.in/assets/img/logo/logo.png',
             }}
             style={styles.logo}
             resizeMode="contain"

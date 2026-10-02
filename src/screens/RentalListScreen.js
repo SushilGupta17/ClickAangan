@@ -430,10 +430,7 @@ const RentalListScreen = ({navigation}) => {
       ]);
 
 
-      Alert.alert(
-        'Success',
-        'Added to Wishlist'
-      );
+      
 
     }
 
@@ -538,7 +535,7 @@ const RentalListScreen = ({navigation}) => {
 
 
     const webLink =
-      `https://savariyaproperty.in/properties/${item.id}`;
+      `https://clickaangan.in/properties/${item.id}`;
 
 
     const message = `

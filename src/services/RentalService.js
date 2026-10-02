@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API_URL1 = 'http://192.168.1.3:7045/api/rent';
-const API_URL = 'https://savariyaproperty.in/api/rent'
+const API_URL = 'https://clickaangan.in/api/rent'
 
 export const getRentalProperties = async () => {
   try {

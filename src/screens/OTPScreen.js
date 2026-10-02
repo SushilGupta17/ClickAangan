@@ -50,7 +50,7 @@ const handleVerify = async () => {
 
   try {
     const response = await axios.post(
-      'https://savariyaproperty.in/api/auth/VerifyOTP',
+      'https://clickaangan.in/api/auth/VerifyOTP',
       {
         mobile: mobile,
         otp: otp,
@@ -100,7 +100,7 @@ const handleResend = async () => {
 
   try {
     const response = await axios.post(
-      'https://savariyaproperty.in/api/auth/SendOTP',
+      'https://clickaangan.in/api/auth/SendOTP',
       {
         mobile: mobile,
       },
@@ -269,7 +269,7 @@ const handleResend = async () => {
             />
 
             <Text style={styles.securityText}>
-              Your verification is secure with Savariya Property.
+              Your verification is secure with ClickAangan.
             </Text>
           </View>
 

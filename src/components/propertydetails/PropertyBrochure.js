@@ -10,7 +10,7 @@ import {
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const API_URL = 'https://savariyaproperty.in';
+const API_URL = 'https://clickaangan.in';
 
 const PropertyBrochure = ({property}) => {
 

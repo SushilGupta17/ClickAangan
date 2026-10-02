@@ -22,8 +22,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatPrice } from '../helpers/priceHelper';
 import ProjectPopup from '../components/ProjectListing/ProjectPopup';
 
-const API_URL = 'https://savariyaproperty.in/';
-const API_URL1 = 'http://192.168.1.3:7045';
+const API_URL = 'https://clickaangan.in/';
+const API_URL1 = 'http://192.168.1.5:7045';
 
 const PropertyListScreen = ({
   navigation,
@@ -101,10 +101,9 @@ const filteredProperties = properties.filter(item => {
 
 const loadProperties = async () => {
   try {
-    const data = await getProperties();
+   
 
-    console.log('FULL API RESPONSE:', JSON.stringify(data, null, 2));
-    console.log('IS ARRAY:', Array.isArray(data));
+    const data = await getProperties();
 
     if (Array.isArray(data)) {
       setProperties(data);
@@ -389,7 +388,7 @@ const addToWishlist = async (item) => {
     // ✅ IMPORTANT: update UI state
     setLikedItems(prev => [...prev, item.id]);
 
-    Alert.alert('Success', 'Added to Wishlist');
+  
   } catch (error) {
     console.log(error);
   }

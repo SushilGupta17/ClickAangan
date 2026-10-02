@@ -3,10 +3,12 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
+
+import {useAppAlert} from '../../utils/AppAlert';
+
 
 import Animated,{
 FadeInDown,
@@ -22,6 +24,8 @@ property,
 previousTab,
 
 })=>{
+
+const {success, error, warning} = useAppAlert();
 
 const [loading,setLoading]=useState(false);
 
@@ -65,8 +69,23 @@ property.description,
 );
 
 formData.append(
-'Price',
-property.price,
+  'Price',
+  property.price ?? '',
+);
+
+formData.append(
+  'SecurityAmount',
+  property.securityAmount ?? '',
+);
+
+formData.append(
+  'MaintenanceAmount',
+  property.maintenanceAmount ?? '',
+);
+
+formData.append(
+  'LockingPeriod',
+  property.lockingPeriod ?? '',
 );
 
 formData.append(
@@ -249,7 +268,7 @@ const res=
 
 await addProperty(formData);
 
-Alert.alert(
+success(
 
 'Success',
 
@@ -260,7 +279,7 @@ Alert.alert(
 }
 catch(e){
 
-Alert.alert(
+error(
 
 'Error',
 

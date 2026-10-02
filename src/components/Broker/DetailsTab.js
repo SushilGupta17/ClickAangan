@@ -132,35 +132,109 @@ const DetailsTab = ({
           />  
       </View>
 
-      {/* Price */}
-          {property.listingType !== 'Builder' && (
-                <View style={styles.card}>
+    {/* Price & Rental Details */}
+{property.listingType !== 'Builder' && (
+  <View style={styles.card}>
+    <Text style={styles.title}>Price</Text>
 
-                  <Text style={styles.title}>
-                    Price
-                  </Text>
+    {/* Price */}
+    <TextInput
+      style={styles.input}
+      keyboardType="numeric"
+      placeholder="Enter Price"
+      value={property.price}
+      onChangeText={text => update('price', text)}
+    />
 
-                <TextInput
-            style={styles.input}
-            keyboardType="numeric"
-            placeholder="Enter Price"
-            value={property.price}
-            onChangeText={text => update('price', text)}
-          />
+    {property.price ? (
+      <Text
+        style={{
+          marginTop: 8,
+          color: '#0A7C3B',
+          fontSize: 14,
+          fontWeight: '600',
+        }}>
+        ₹ {formatPrice(property.price)}
+      </Text>
+    ) : null}
 
-          {property.price ? (
-            <Text
-              style={{
-                marginTop: 8,
-                color: '#0A7C3B',
-                fontSize: 14,
-                fontWeight: '600',
-              }}>
-              ₹ {formatPrice(property.price)}
-            </Text>
-          ) : null}
-                </View>
-          )}
+    {/* Maintenance Amount */}
+    <Text style={[styles.title, {marginTop: 18}]}>
+      Maintenance Amount
+    </Text>
+
+    <TextInput
+      style={styles.input}
+      keyboardType="numeric"
+      placeholder="Enter Maintenance Amount"
+      value={property.maintenanceAmount}
+      onChangeText={text => update('maintenanceAmount', text)}
+    />
+
+    {property.maintenanceAmount ? (
+      <Text
+        style={{
+          marginTop: 8,
+          color: '#0A7C3B',
+          fontSize: 14,
+          fontWeight: '600',
+        }}>
+        ₹ {formatPrice(property.maintenanceAmount)}
+      </Text>
+    ) : null}
+
+    {/* Security Amount */}
+    <Text style={[styles.title, {marginTop: 18}]}>
+      Security Amount
+    </Text>
+
+    <TextInput
+      style={styles.input}
+      keyboardType="numeric"
+      placeholder="Enter Security Amount"
+      value={property.securityAmount}
+      onChangeText={text => update('securityAmount', text)}
+    />
+
+    {property.securityAmount ? (
+      <Text
+        style={{
+          marginTop: 8,
+          color: '#0A7C3B',
+          fontSize: 14,
+          fontWeight: '600',
+        }}>
+        ₹ {formatPrice(property.securityAmount)}
+      </Text>
+    ) : null}
+
+    {/* Locking Period */}
+    <Text style={[styles.title, {marginTop: 18}]}>
+      Locking Period
+    </Text>
+
+    <TextInput
+      style={styles.input}
+      keyboardType="numeric"
+      placeholder="Enter Locking Period (Months)"
+      value={property.lockingPeriod}
+      onChangeText={text => update('lockingPeriod', text)}
+    />
+
+    {property.lockingPeriod ? (
+      <Text
+        style={{
+          marginTop: 8,
+          color: '#0A7C3B',
+          fontSize: 14,
+          fontWeight: '600',
+        }}>
+        {property.lockingPeriod} Months
+      </Text>
+    ) : null}
+  </View>
+)}
+
 
       {/* Area */}
 

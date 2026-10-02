@@ -13,7 +13,7 @@ import Video from 'react-native-video';
 import {formatRentalPrice} from '../../helpers/formatRentalPrice';
 import PropImageRotator from '../../components/PropImgRotator';
 
-const API_URL = 'https://savariyaproperty.in';
+const API_URL = 'https://clickaangan.in';
 
 // ==================================================
 // RENTAL CARD

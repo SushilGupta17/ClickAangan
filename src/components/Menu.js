@@ -41,19 +41,19 @@ const Menu = () => {
 
           if (userName && userMobile) {
             message =
-              `🏠 Hello Savariya Property Team,\n\n` +
+              `🏠 Hello ClickAangan Team,\n\n` +
               `My name is ${userName} and my registered mobile number is ${userMobile}.\n\n` +
-              `I would like to know more about properties available on Savariya Property.\n\n` +
+              `I would like to know more about properties available on ClickAangan.\n\n` +
               `Please assist me with suitable residential or commercial property options for Buy, Sell or Rent.\n\n` +
               `Thank you.\n` +
-              `Savariya Property`;
+              `ClickAangan`;
           } else {
             message =
-              `🏠 Hello Savariya Property Team,\n\n` +
-              `I would like to know more about properties available on Savariya Property.\n\n` +
+              `🏠 Hello ClickAangan Team,\n\n` +
+              `I would like to know more about properties available on ClickAangan.\n\n` +
               `Please assist me with suitable residential or commercial property options for Buy, Sell or Rent.\n\n` +
               `Thank you.\n` +
-              `Savariya Property`;
+              `ClickAangan`;
           }
 
           const whatsappUrl =
@@ -78,18 +78,18 @@ const Menu = () => {
 
     if (userName && userMobile) {
       shareMessage =
-        `🏠 Savariya Property\n\n` +
+        `🏠 ClickAangan\n\n` +
         `Your trusted destination for Buy • Sell • Rent.\n\n` +
         `Explore a wide range of residential and commercial properties, discover suitable opportunities, and connect with property owners and builders — all in one place.\n\n` +
         `Shared by ${userName}\n` +
         `Registered Mobile: ${userMobile}\n\n` +
-        `Begin your property journey with Savariya Property — simple, convenient and reliable.`;
+        `Begin your property journey with ClickAangan — simple, convenient and reliable.`;
     } else {
       shareMessage =
-        `🏠 Savariya Property\n\n` +
+        `🏠 ClickAangan\n\n` +
         `Your trusted destination for Buy • Sell • Rent.\n\n` +
         `Explore a wide range of residential and commercial properties, discover suitable opportunities, and connect with property owners and builders — all in one place.\n\n` +
-        `Begin your property journey with Savariya Property — simple, convenient and reliable.`;
+        `Begin your property journey with ClickAangan — simple, convenient and reliable.`;
     }
 
     await Share.share({

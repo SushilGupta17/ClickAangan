@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
-  Alert,
   Animated,
   Pressable,
   Keyboard,
@@ -16,6 +15,9 @@ import {
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useAppAlert} from '../utils/AppAlert';
+
+
 
 /* =========================================================
    INPUT COMPONENT
@@ -74,6 +76,9 @@ const InputBox = ({
 ========================================================= */
 
 const RoleBasedRegistrationScreen = ({navigation, route}) => {
+
+  const {success, error, warning} = useAppAlert();
+
   const {height: screenHeight} = useWindowDimensions();
 
   const role = route?.params?.role || 'CUSTOMER';
@@ -217,7 +222,7 @@ const RoleBasedRegistrationScreen = ({navigation, route}) => {
   } catch (error) {
     console.log('❌ GO HOME ERROR:', error);
 
-    Alert.alert(
+    error(
       'Storage Error',
       String(error?.message || error),
     );
@@ -376,17 +381,18 @@ useEffect(() => {
 
   const validateStepOne = () => {
     if (!name.trim()) {
-      Alert.alert(
+      error(
         'Required',
         'Please enter your full name.',
       );
+
       return false;
     }
 
     const cleanMobile = mobile.replace(/[^0-9]/g, '');
 
     if (!cleanMobile) {
-      Alert.alert(
+      error(
         'Required',
         'Please enter your mobile number.',
       );
@@ -394,7 +400,7 @@ useEffect(() => {
     }
 
     if (cleanMobile.length !== 10) {
-      Alert.alert(
+      error(
         'Invalid Mobile',
         'Please enter a valid 10 digit mobile number.',
       );
@@ -402,7 +408,7 @@ useEffect(() => {
     }
 
     if (!email.trim()) {
-      Alert.alert(
+      error(
         'Required',
         'Please enter your email address.',
       );
@@ -413,7 +419,7 @@ useEffect(() => {
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(email.trim())) {
-      Alert.alert(
+      error(
         'Invalid Email',
         'Please enter a valid email address.',
       );
@@ -421,7 +427,7 @@ useEffect(() => {
     }
 
     if (!password) {
-      Alert.alert(
+      error(
         'Required',
         'Please enter your password.',
       );
@@ -429,7 +435,7 @@ useEffect(() => {
     }
 
     if (password.length < 6) {
-      Alert.alert(
+      error(
         'Password',
         'Password must be at least 6 characters.',
       );
@@ -437,7 +443,7 @@ useEffect(() => {
     }
 
     if (!confirmPassword) {
-      Alert.alert(
+      error(
         'Required',
         'Please confirm your password.',
       );
@@ -445,7 +451,7 @@ useEffect(() => {
     }
 
     if (password !== confirmPassword) {
-      Alert.alert(
+      error(
         'Password Mismatch',
         'Password and confirm password do not match.',
       );
@@ -461,7 +467,7 @@ useEffect(() => {
 
   const validateStepTwo = () => {
     if (!city.trim()) {
-      Alert.alert(
+      error(
         'Required',
         'Please enter your city.',
       );
@@ -474,7 +480,7 @@ useEffect(() => {
 
     if (role === 'BUILDER') {
       if (!companyName.trim()) {
-        Alert.alert(
+        error(
           'Required',
           'Please enter company / firm name.',
         );
@@ -482,7 +488,7 @@ useEffect(() => {
       }
 
       if (!businessType.trim()) {
-        Alert.alert(
+        error(
           'Required',
           'Please enter business type.',
         );
@@ -498,7 +504,7 @@ useEffect(() => {
 
     if (role === 'PARTNER') {
       if (!companyName.trim()) {
-        Alert.alert(
+        error(
           'Required',
           'Please enter agency / company name.',
         );
@@ -506,7 +512,7 @@ useEffect(() => {
       }
 
       if (!workingArea.trim()) {
-        Alert.alert(
+        error(
           'Required',
           'Please enter your working area.',
         );
@@ -522,7 +528,7 @@ useEffect(() => {
 
     if (role === 'OWNER') {
       if (!propertyType.trim()) {
-        Alert.alert(
+        error(
           'Required',
           'Please enter property type.',
         );
@@ -530,7 +536,7 @@ useEffect(() => {
       }
 
       if (!propertyLocation.trim()) {
-        Alert.alert(
+        error(
           'Required',
           'Please enter property location.',
         );
@@ -538,7 +544,7 @@ useEffect(() => {
       }
 
       if (!purpose.trim()) {
-        Alert.alert(
+        error(
           'Required',
           'Please enter Sell or Rent.',
         );
@@ -554,7 +560,7 @@ useEffect(() => {
 
     if (role === 'CUSTOMER') {
       if (!lookingFor.trim()) {
-        Alert.alert(
+        error(
           'Required',
           'Please enter Buy or Rent.',
         );
@@ -562,7 +568,7 @@ useEffect(() => {
       }
 
       if (!propertyType.trim()) {
-        Alert.alert(
+        error(
           'Required',
           'Please enter property type.',
         );
@@ -570,7 +576,7 @@ useEffect(() => {
       }
 
       if (!preferredLocation.trim()) {
-        Alert.alert(
+        error(
           'Required',
           'Please enter preferred location.',
         );
@@ -652,7 +658,7 @@ useEffect(() => {
 
 
     const response = await fetch(
-      'https://savariyaproperty.in/api/Register',
+      'https://clickaangan.in/api/Register',
       {
         method: 'POST',
         headers: {
@@ -687,7 +693,7 @@ useEffect(() => {
     } else {
       setLoading(false);
 
-      Alert.alert(
+      error(
         'Registration Failed',
         result.message ||
           'Unable to create your account.',
@@ -701,7 +707,7 @@ useEffect(() => {
 
     setLoading(false);
 
-    Alert.alert(
+    error(
       'Registration Error',
       String(error?.message || error),
     );
@@ -1228,7 +1234,7 @@ useEffect(() => {
     </Text>
 
     <Text style={styles.successSubtitle}>
-      Welcome to Savariya Property
+      Welcome to ClickAangan
     </Text>
 
     <Text style={styles.joinText}>
@@ -1274,7 +1280,7 @@ useEffect(() => {
           </Text>
 
           <Text style={styles.successSubtitle}>
-            Welcome to Savariya Property
+            Welcome to ClickAangan
           </Text>
 
           <Text style={styles.joinText}>

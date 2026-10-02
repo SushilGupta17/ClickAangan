@@ -14,7 +14,7 @@ import Video from 'react-native-video';
 import {formatPrice} from '../../helpers/priceHelper';
 import PropImageRotator from '../../components/PropImgRotator';
 
-const API_URL = 'https://savariyaproperty.in';
+const API_URL = 'https://clickaangan.in';
 
 /*
 ==================================================

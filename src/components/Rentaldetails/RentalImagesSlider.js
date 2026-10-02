@@ -13,7 +13,7 @@ import ImageViewing from 'react-native-image-viewing';
 
 const {width} = Dimensions.get('window');
 
-const API_URL = 'https://savariyaproperty.in';
+const API_URL = 'https://clickaangan.in';
 const API_URL1 = 'http://192.168.1.3:7045';
 const IMAGE_HEIGHT = 300;
 

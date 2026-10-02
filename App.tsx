@@ -21,6 +21,7 @@ import RentalDetailsScreen from './src/screens/RentalDetailedScreen';
 import RoleBasedRegistrationScreen from './src/screens/RoleBasedRegistrationScreen'
 import OTPScreen  from './src/screens/OTPScreen'
 import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen'
+import {AppAlertProvider} from './src/utils/AppAlert';
 
 
 const Stack = createNativeStackNavigator();
@@ -49,7 +50,9 @@ function App() {
 }, []);
 
   return (
-  <NavigationContainer linking={linking}>
+
+     <AppAlertProvider>
+        <NavigationContainer linking={linking}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
@@ -139,7 +142,8 @@ function App() {
         <Stack.Screen name="RentDetails" component={RentalDetailsScreen} />
         </Stack.Navigator>
 
-    </NavigationContainer>
+        </NavigationContainer>
+    </AppAlertProvider>
   );
 }
 

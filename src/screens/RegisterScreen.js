@@ -195,7 +195,7 @@ function RegisterScreen({navigation, route}) {
         </Text>
 
         <Text style={styles.brand}>
-          Savariya Property
+          ClickAangan
         </Text>
 
         <Text style={styles.desc}>

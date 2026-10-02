@@ -17,7 +17,7 @@ import Share from 'react-native-share';
 
 const {width} = Dimensions.get('window');
 
-const API_URL = 'https://savariyaproperty.in';
+const API_URL = 'https://clickaangan.in';
 
 const IMAGE_HEIGHT = 300;
 

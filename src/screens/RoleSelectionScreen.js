@@ -76,7 +76,7 @@ function RoleSelectionScreen({navigation}) {
           </View>
 
           <Text style={styles.appName}>
-            Savariya Property
+            ClickAangan
           </Text>
 
           <Text style={styles.tagline}>

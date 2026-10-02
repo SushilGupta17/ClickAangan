@@ -25,7 +25,7 @@ import PropertyPriceCard from '../components/propertydetails/PropertyPriceCard';
 import PropertyOverviewCard from '../components/propertydetails/PropertyOverviewCard';
 import PropertyAmenities from '../components/propertydetails/PropertyAmenities';
 
-const API_URL = 'https://savariyaproperty.in';
+const API_URL = 'https://clickaangan.in';
 
 const DetailsScreen = ({route}) => {
 

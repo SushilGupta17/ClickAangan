@@ -1,8 +1,9 @@
 import axios from 'axios';
 import {API_BASE_URL} from '../config';
 
-const API_URL2 = 'http://192.168.1.3:7045/api/project';
-const API_URL = 'https://savariyaproperty.in/api/project';
+const API_URL1= 'http://192.168.1.5:7045/api/project';
+const API_URL2= 'https://clickaangan.in/api/project';
+const API_URL= 'https://savariyaproperty.in/api/project';
 
 export const addProject = async (formData) => {
   
@@ -15,7 +16,6 @@ export const addProject = async (formData) => {
       },
     },
   );
-
   return response.data;
 };
 

@@ -1,6 +1,4 @@
-
 import React, {useEffect, useMemo, useState} from 'react';
-
 import {
   View,
   Text,
@@ -9,78 +7,89 @@ import {
   SafeAreaView,
   ScrollView,
   Image,
-  Alert,
 } from 'react-native';
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import {formatPrice} from '../helpers/priceHelper';
+import {useAppAlert} from '../utils/AppAlert';
 
-const API_URL = 'https://savariyaproperty.in';
+const API_URL = 'https://clickaangan.in';
 
 const WishlistScreen = ({navigation}) => {
+  const {error} = useAppAlert();
+
   const [wishlist, setWishlist] = useState([]);
 
-  // ==========================================
-  // MEDIA URL
-  // ==========================================
+  // REMOVE CONFIRMATION MODAL
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [selectedWishlistItem, setSelectedWishlistItem] = useState(null);
 
-  const getMediaUrl = path => {
-    if (!path) {
-      return '';
+  // =========================================================
+  // MEDIA URL
+  // =========================================================
+  const getMediaUrl = url => {
+    if (!url) {
+      return null;
     }
 
-    const cleanPath = String(path)
-      .replace(/\\/g, '/')
-      .trim();
+    const value = String(url).trim();
+
+    if (!value) {
+      return null;
+    }
 
     if (
-      cleanPath.startsWith('http://') ||
-      cleanPath.startsWith('https://')
+      value.startsWith('http://') ||
+      value.startsWith('https://')
     ) {
-      return cleanPath;
+      return value;
     }
 
-    return `${API_URL}/${cleanPath.replace(/^\/+/, '')}`;
+    if (value.startsWith('/')) {
+      return `${API_URL}${value}`;
+    }
+
+    return `${API_URL}/${value}`;
   };
 
-  // ==========================================
+  // =========================================================
   // LOAD WISHLIST
-  // ==========================================
-
+  // =========================================================
   const loadWishlist = async () => {
     try {
-      const savedWishlist = await AsyncStorage.getItem('wishlist');
+      const storedWishlist = await AsyncStorage.getItem('wishlist');
 
-      console.log('================================');
-      console.log('WISHLIST RAW:', savedWishlist);
-      console.log('================================');
-
-      if (!savedWishlist) {
+      if (!storedWishlist) {
         setWishlist([]);
         return;
       }
 
-      const parsedWishlist = JSON.parse(savedWishlist);
+      const parsedWishlist = JSON.parse(storedWishlist);
 
       if (Array.isArray(parsedWishlist)) {
         setWishlist(parsedWishlist);
       } else {
         setWishlist([]);
       }
-    } catch (error) {
-      console.log('WISHLIST LOAD ERROR:', error);
+    } catch (err) {
+      console.log('LOAD WISHLIST ERROR:', err);
       setWishlist([]);
     }
   };
 
-  // ==========================================
-  // SCREEN FOCUS
-  // ==========================================
+  // =========================================================
+  // INITIAL LOAD
+  // =========================================================
+  useEffect(() => {
+    loadWishlist();
+  }, []);
 
+  // =========================================================
+  // RELOAD WHEN SCREEN GETS FOCUS
+  // =========================================================
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       loadWishlist();
@@ -89,10 +98,9 @@ const WishlistScreen = ({navigation}) => {
     return unsubscribe;
   }, [navigation]);
 
-  // ==========================================
-  // REMOVE
-  // ==========================================
-
+  // =========================================================
+  // REMOVE FROM WISHLIST
+  // =========================================================
   const removeFromWishlist = async id => {
     try {
       const updatedWishlist = wishlist.filter(
@@ -107,51 +115,53 @@ const WishlistScreen = ({navigation}) => {
       setWishlist(updatedWishlist);
 
       console.log('REMOVED FROM WISHLIST:', id);
-    } catch (error) {
-      console.log('REMOVE WISHLIST ERROR:', error);
 
-      Alert.alert(
+      return true;
+    } catch (err) {
+      console.log('REMOVE WISHLIST ERROR:', err);
+
+      error(
         'Error',
         'Unable to remove property from wishlist.',
       );
+
+      return false;
     }
   };
 
-  // ==========================================
-  // CONFIRM REMOVE
-  // ==========================================
-
+  // =========================================================
+  // OPEN REMOVE CONFIRMATION
+  // =========================================================
   const confirmRemove = item => {
-    const title =
-      item?.propertyTitle ||
-      item?.PropertyTitle ||
-      item?.title ||
-      item?.Title ||
-      item?.propertyName ||
-      item?.PropertyName ||
-      'this property';
+    console.log('REMOVE BUTTON CLICKED:', item);
 
-    Alert.alert(
-      'Remove from Wishlist',
-      `Remove "${title}" from your wishlist?`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: () => removeFromWishlist(item?.id),
-        },
-      ],
-    );
+    setSelectedWishlistItem(item);
+    setShowRemoveConfirm(true);
   };
 
-  // ==========================================
-  // OPEN PROPERTY
-  // ==========================================
+  // =========================================================
+  // PERFORM REMOVE
+  // =========================================================
+  const performRemove = async () => {
+    if (!selectedWishlistItem?.id) {
+      setShowRemoveConfirm(false);
+      setSelectedWishlistItem(null);
+      return;
+    }
 
+    const removed = await removeFromWishlist(
+      selectedWishlistItem.id,
+    );
+
+    if (removed) {
+      setShowRemoveConfirm(false);
+      setSelectedWishlistItem(null);
+    }
+  };
+
+  // =========================================================
+  // OPEN PROPERTY
+  // =========================================================
   const openProperty = item => {
     navigation.navigate('PropertyDetails', {
       property: item,
@@ -159,91 +169,65 @@ const WishlistScreen = ({navigation}) => {
     });
   };
 
-  // ==========================================
-  // PROPERTY IMAGES
-  // ProjectCard style handling
-  // ==========================================
-
+  // =========================================================
+  // GET PROPERTY IMAGES
+  // =========================================================
   const getPropertyImages = item => {
     let images = [];
 
-    // ------------------------------------------
-    // 1. images
-    // ------------------------------------------
-
-    if (item?.images) {
-      if (typeof item.images === 'string') {
-        images = item.images
-          .split(',')
-          .map(x => x.trim())
-          .filter(Boolean);
-      }
-
-      if (Array.isArray(item.images)) {
-        images = item.images
-          .map(x => {
-            if (typeof x === 'string') {
-              return x;
-            }
-
-            return (
-              x?.imageUrl ||
-              x?.ImageUrl ||
-              x?.url ||
-              x?.Url ||
-              x?.path ||
-              x?.Path ||
-              ''
-            );
-          })
-          .filter(Boolean);
-      }
+    // Images string
+    if (typeof item?.images === 'string') {
+      images = item.images
+        .split(',')
+        .map(x => x.trim())
+        .filter(Boolean);
     }
 
-    // ------------------------------------------
-    // 2. cover image
-    // ------------------------------------------
-
-    if (images.length === 0) {
-      const coverImage =
-        item?.coverImage ||
-        item?.CoverImage ||
-        item?.coverImagePath ||
-        item?.CoverImagePath ||
-        item?.propertyImage ||
-        item?.PropertyImage ||
-        item?.imageUrl ||
-        item?.ImageUrl ||
-        item?.image ||
-        item?.Image ||
-        '';
-
-      if (coverImage) {
-        images.push(coverImage);
-      }
+    // Images array
+    if (Array.isArray(item?.images)) {
+      images = item.images;
     }
 
-    // ------------------------------------------
-    // FINAL URL
-    // ------------------------------------------
+    // Other possible fields
+    if (!images.length && item?.coverImage) {
+      images = [item.coverImage];
+    }
 
-    const finalImages = images
-      .map(x => getMediaUrl(x))
+    if (!images.length && item?.CoverImage) {
+      images = [item.CoverImage];
+    }
+
+    if (!images.length && item?.image) {
+      images = [item.image];
+    }
+
+    if (!images.length && item?.Image) {
+      images = [item.Image];
+    }
+
+    return images
+      .map(image => {
+        if (typeof image === 'object') {
+          return (
+            image?.imageUrl ||
+            image?.ImageUrl ||
+            image?.url ||
+            image?.Url ||
+            null
+          );
+        }
+
+        return image;
+      })
+      .filter(Boolean)
+      .slice(0, 5)
+      .map(getMediaUrl)
       .filter(Boolean);
-
-    console.log('================================');
-    console.log('PROPERTY:', item?.propertyTitle || item?.title);
-    console.log('IMAGE PATHS:', images);
-    console.log('FINAL IMAGE URLS:', finalImages);
-    console.log('================================');
-
-    return finalImages;
   };
 
-  // ==========================================
+  // =========================================================
   // PROPERTY TITLE
-  // ==========================================
-
+  // =========================================================
   const getPropertyTitle = item => {
     return (
       item?.propertyTitle ||
@@ -256,728 +240,768 @@ const WishlistScreen = ({navigation}) => {
     );
   };
 
-  // ==========================================
+  // =========================================================
   // LOCATION
-  // ==========================================
-
+  // =========================================================
   const getLocation = item => {
-    const locality =
-      item?.locality ||
-      item?.Locality ||
-      '';
-
-    const city =
-      item?.city ||
-      item?.City ||
-      '';
-
-    if (locality && city) {
-      return `${locality}, ${city}`;
-    }
-
     return (
-      locality ||
-      city ||
       item?.location ||
       item?.Location ||
+      item?.locality ||
+      item?.Locality ||
+      item?.city ||
+      item?.City ||
       'Location not available'
     );
   };
 
-  // ==========================================
+  // =========================================================
   // PRICE
-  // ==========================================
-
+  // =========================================================
   const getPrice = item => {
     const price =
       item?.price ??
       item?.Price ??
-      item?.minPrice ??
-      item?.MinPrice ??
+      item?.propertyPrice ??
+      item?.PropertyPrice ??
       0;
 
-    return formatPrice(price);
+    if (!price) {
+      return 'Price on Request';
+    }
+
+    try {
+      return formatPrice(price);
+    } catch (err) {
+      return String(price);
+    }
   };
 
-  // ==========================================
+  // =========================================================
   // STATUS
-  // ==========================================
-
+  // =========================================================
   const getStatus = item => {
     return (
-      item?.propertyStatus ||
-      item?.PropertyStatus ||
       item?.status ||
       item?.Status ||
-      item?.listingType ||
-      item?.ListingType ||
-      'Available'
+      item?.purpose ||
+      item?.Purpose ||
+      'SALE'
     );
   };
 
-  // ==========================================
-  // OWNER / BUILDER
-  // ==========================================
-
+  // =========================================================
+  // OWNER
+  // =========================================================
   const getOwner = item => {
     return (
-      item?.builderName ||
-      item?.BuilderName ||
       item?.ownerName ||
       item?.OwnerName ||
-      item?.postedBy ||
-      item?.PostedBy ||
-      ''
+      item?.name ||
+      item?.Name ||
+      'Property Owner'
     );
   };
 
-  // ==========================================
-  // EMPTY
-  // ==========================================
-
-  if (wishlist.length === 0) {
-    return (
-      <SafeAreaView style={styles.safeContainer}>
-        <Header />
-
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.container}>
-
-          <View style={styles.headingCard}>
-            <Text style={styles.heading}>
-              My Wishlist
-            </Text>
-
-            <Text style={styles.subHeading}>
-              Your favourite properties are saved here.
-            </Text>
-          </View>
-
-          <View style={styles.emptyCard}>
-            <View style={styles.emptyIconCircle}>
-              <Icon
-                name="heart"
-                size={38}
-                color="#E53935"
-              />
-            </View>
-
-            <Text style={styles.emptyTitle}>
-              No Favourite Properties
-            </Text>
-
-            <Text style={styles.emptyText}>
-              Save your favourite properties and they
-              {'\n'}
-              will appear here.
-            </Text>
-
-            <TouchableOpacity
-              style={styles.exploreButton}
-              activeOpacity={0.8}
-              onPress={() => navigation.navigate('Home')}>
-
-              <Icon
-                name="search"
-                size={14}
-                color="#FFF"
-              />
-
-              <Text style={styles.exploreButtonText}>
-                Explore Properties
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-
-        <Footer />
-      </SafeAreaView>
-    );
-  }
-
-  // ==========================================
-  // MAIN
-  // ==========================================
-
+  // =========================================================
+  // RENDER
+  // =========================================================
   return (
-    <SafeAreaView style={styles.safeContainer}>
-      <Header />
+    <SafeAreaView style={styles.container}>
+      <Header navigation={navigation} />
 
       <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.container}>
-
-        {/* ======================================
+        style={styles.scrollView}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}>
+        
+        {/* =====================================================
             HEADER
-        ====================================== */}
+        ====================================================== */}
+        <View style={styles.pageHeader}>
+          <View>
+            <Text style={styles.pageTitle}>My Wishlist</Text>
 
-        <View style={styles.headingCard}>
-          <Text style={styles.heading}>
-            My Wishlist
-          </Text>
+            <Text style={styles.pageSubtitle}>
+              Properties you have saved
+            </Text>
+          </View>
 
-          <Text style={styles.subHeading}>
-            Your favourite properties are saved here.
-          </Text>
-
-          <View style={styles.countRow}>
+          <View style={styles.countBadge}>
             <Icon
               name="heart"
               size={13}
-              color="#E53935"
+              color="#F58220"
             />
 
             <Text style={styles.countText}>
-              {wishlist.length}{' '}
-              {wishlist.length === 1
-                ? 'Favourite Property'
-                : 'Favourite Properties'}
+              {wishlist.length}
             </Text>
           </View>
         </View>
 
-        {/* ======================================
-            WISHLIST CARDS
-        ====================================== */}
-
-        {wishlist.map((item, index) => {
-          const images = getPropertyImages(item);
-
-          const title = getPropertyTitle(item);
-          const location = getLocation(item);
-          const price = getPrice(item);
-          const status = getStatus(item);
-          const owner = getOwner(item);
-
-          const imageUrl =
-            images.length > 0
-              ? images[0]
-              : '';
-
-          return (
-            <View
-              key={`${item?.id}-${index}`}
-              style={styles.card}>
-
-              {/* ==================================
-                  MEDIA
-              ================================== */}
-
-              <TouchableOpacity
-                activeOpacity={0.95}
-                onPress={() => openProperty(item)}>
-
-                {imageUrl ? (
-                  <Image
-                    source={{uri: imageUrl}}
-                    style={styles.propertyImage}
-                    resizeMode="cover"
-
-                    onLoad={() => {
-                      console.log(
-                        'WISHLIST IMAGE LOADED:',
-                        imageUrl,
-                      );
-                    }}
-
-                    onError={error => {
-                      console.log(
-                        '================================',
-                      );
-
-                      console.log(
-                        'WISHLIST IMAGE ERROR',
-                      );
-
-                      console.log(
-                        'IMAGE URL:',
-                        imageUrl,
-                      );
-
-                      console.log(
-                        'ERROR:',
-                        error?.nativeEvent,
-                      );
-
-                      console.log(
-                        '================================',
-                      );
-                    }}
-                  />
-                ) : (
-                  <View style={styles.noMedia}>
-                    <Icon
-                      name="image"
-                      size={35}
-                      color="#999"
-                    />
-
-                    <Text style={styles.noMediaText}>
-                      No Image Available
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-
-              {/* ==================================
-                  STATUS BADGES
-              ================================== */}
-
-              <View style={styles.statusRow}>
-
-                <View style={styles.statusBadge}>
-                  <Text style={styles.statusText}>
-                    {status}
-                  </Text>
-                </View>
-
-                <View style={styles.reraBadge}>
-                  <Icon
-                    name="check-circle"
-                    color="#28A745"
-                    size={12}
-                  />
-
-                  <Text style={styles.reraText}>
-                    Verified
-                  </Text>
-                </View>
-
-              </View>
-
-              {/* ==================================
-                  BODY
-              ================================== */}
-
-              <View style={styles.body}>
-
-                {/* PROPERTY NAME */}
-
-                <Text
-                  numberOfLines={1}
-                  style={styles.propertyName}>
-
-                  {title}
-
-                </Text>
-
-                {/* OWNER */}
-
-                {owner ? (
-                  <Text
-                    numberOfLines={1}
-                    style={styles.builder}>
-
-                    By {owner}
-
-                  </Text>
-                ) : null}
-
-                {/* LOCATION */}
-
-                <View style={styles.locationRow}>
-
-                  <Icon
-                    name="map-marker-alt"
-                    color="#FF5722"
-                    size={13}
-                  />
-
-                  <Text
-                    numberOfLines={1}
-                    style={styles.location}>
-
-                    {location}
-
-                  </Text>
-
-                </View>
-
-                {/* PRICE */}
-
-                <View style={styles.priceRow}>
-
-                  <Text style={styles.price}>
-                    ₹ {price}
-                  </Text>
-
-                </View>
-
-                {/* ==================================
-                    BUTTONS
-                ================================== */}
-
-                <View style={styles.buttonRow}>
-
-                  {/* VIEW DETAILS */}
-
-                  <TouchableOpacity
-                    style={styles.detailsBtn}
-                    activeOpacity={0.8}
-                    onPress={() => openProperty(item)}>
-
-                    <Icon
-                      name="eye"
-                      size={13}
-                      color="#FFF"
-                    />
-
-                    <Text style={styles.detailsText}>
-                      View Details
-                    </Text>
-
-                  </TouchableOpacity>
-
-                  {/* REMOVE */}
-
-                  <TouchableOpacity
-                    style={styles.removeBtn}
-                    activeOpacity={0.8}
-                    onPress={() => confirmRemove(item)}>
-
-                    <Icon
-                      name="heart-broken"
-                      size={13}
-                      color="#FFF"
-                    />
-
-                    <Text style={styles.removeText}>
-                      Remove
-                    </Text>
-
-                  </TouchableOpacity>
-
-                </View>
-
-              </View>
+        {/* =====================================================
+            EMPTY WISHLIST
+        ====================================================== */}
+        {wishlist.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyIcon}>
+              <Icon
+                name="heart"
+                size={34}
+                color="#F58220"
+              />
             </View>
-          );
-        })}
+
+            <Text style={styles.emptyTitle}>
+              Your Wishlist is Empty
+            </Text>
+
+            <Text style={styles.emptyText}>
+              Save properties you like and easily find them
+              here later.
+            </Text>
+
+            <TouchableOpacity
+              style={styles.browseButton}
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate('Home')}>
+              <Icon
+                name="search"
+                size={13}
+                color="#FFFFFF"
+              />
+
+              <Text style={styles.browseButtonText}>
+                Browse Properties
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          /* ===================================================
+             WISHLIST LIST
+          ==================================================== */
+          <View style={styles.listContainer}>
+            {wishlist.map((item, index) => {
+              const images = getPropertyImages(item);
+              const title = getPropertyTitle(item);
+              const location = getLocation(item);
+              const price = getPrice(item);
+              const status = getStatus(item);
+              const owner = getOwner(item);
+
+              const imageUrl =
+                images.length > 0 ? images[0] : null;
+
+              return (
+                <TouchableOpacity
+                  key={`${item?.id || 'property'}-${index}`}
+                  style={styles.propertyCard}
+                  activeOpacity={0.92}
+                  onPress={() => openProperty(item)}>
+
+                  {/* =================================================
+                      IMAGE
+                  ================================================== */}
+                  <View style={styles.imageContainer}>
+                    {imageUrl ? (
+                      <Image
+                        source={{uri: imageUrl}}
+                        style={styles.propertyImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={styles.noImage}>
+                        <Icon
+                          name="home"
+                          size={32}
+                          color="#B8C4D1"
+                        />
+
+                        <Text style={styles.noImageText}>
+                          No Image
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* STATUS */}
+                    <View style={styles.statusBadge}>
+                      <Text style={styles.statusText}>
+                        {String(status).toUpperCase()}
+                      </Text>
+                    </View>
+
+                    {/* IMAGE COUNT */}
+                    {images.length > 1 && (
+                      <View style={styles.imageCount}>
+                        <Icon
+                          name="images"
+                          size={11}
+                          color="#FFFFFF"
+                        />
+
+                        <Text style={styles.imageCountText}>
+                          {images.length}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* =================================================
+                      DETAILS
+                  ================================================== */}
+                  <View style={styles.detailsContainer}>
+                    <Text
+                      style={styles.propertyTitle}
+                      numberOfLines={2}>
+                      {title}
+                    </Text>
+
+                    <View style={styles.locationRow}>
+                      <Icon
+                        name="map-marker-alt"
+                        size={12}
+                        color="#F58220"
+                      />
+
+                      <Text
+                        style={styles.locationText}
+                        numberOfLines={1}>
+                        {location}
+                      </Text>
+                    </View>
+
+                    <Text style={styles.priceText}>
+                      {price}
+                    </Text>
+
+                    <View style={styles.ownerRow}>
+                      <Icon
+                        name="user"
+                        size={11}
+                        color="#7A8795"
+                      />
+
+                      <Text
+                        style={styles.ownerText}
+                        numberOfLines={1}>
+                        {owner}
+                      </Text>
+                    </View>
+
+                    {/* REMOVE BUTTON */}
+                    <TouchableOpacity
+                      style={styles.removeBtn}
+                      activeOpacity={0.8}
+                      onPress={e => {
+                        e.stopPropagation();
+                        confirmRemove(item);
+                      }}>
+                      <Icon
+                        name="heart-broken"
+                        size={13}
+                        color="#FFFFFF"
+                      />
+
+                      <Text style={styles.removeText}>
+                        Remove
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
+
+        <View style={styles.bottomSpace} />
       </ScrollView>
 
       <Footer />
+
+      {/* =========================================================
+          REMOVE CONFIRMATION MODAL
+      ========================================================== */}
+      {showRemoveConfirm && (
+        <View style={styles.removeOverlay}>
+          <View style={styles.removeDialog}>
+
+            {/* ICON */}
+            <View style={styles.removeIcon}>
+              <Icon
+                name="heart-broken"
+                size={22}
+                color="#E53935"
+              />
+            </View>
+
+            {/* TITLE */}
+            <Text style={styles.removeTitle}>
+              Remove from Wishlist
+            </Text>
+
+            {/* MESSAGE */}
+            <Text style={styles.removeMessage}>
+              Remove "
+              {selectedWishlistItem
+                ? getPropertyTitle(selectedWishlistItem)
+                : 'this property'}
+              " from your wishlist?
+            </Text>
+
+            {/* ACTION BUTTONS */}
+            <View style={styles.removeActions}>
+
+              {/* CANCEL */}
+              <TouchableOpacity
+                style={styles.cancelRemoveBtn}
+                activeOpacity={0.8}
+                onPress={() => {
+                  setShowRemoveConfirm(false);
+                  setSelectedWishlistItem(null);
+                }}>
+                <Text style={styles.cancelRemoveText}>
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+
+              {/* REMOVE */}
+              <TouchableOpacity
+                style={styles.confirmRemoveBtn}
+                activeOpacity={0.8}
+                onPress={performRemove}>
+                <Icon
+                  name="heart-broken"
+                  size={12}
+                  color="#FFFFFF"
+                />
+
+                <Text style={styles.confirmRemoveText}>
+                  Remove
+                </Text>
+              </TouchableOpacity>
+
+            </View>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
 
 export default WishlistScreen;
 
-
-// ==========================================
+// =============================================================
 // STYLES
-// Same ProjectCard Theme
-// ==========================================
+// =============================================================
 
 const styles = StyleSheet.create({
-
-  // ========================================
-  // SAFE CONTAINER
-  // ========================================
-
-  safeContainer: {
-    flex: 1,
-    backgroundColor: '#F5F7FA',
-  },
-
-  // ========================================
-  // CONTAINER
-  // ========================================
-
   container: {
-    padding: 12,
-    paddingBottom: 110,
+    flex: 1,
+    backgroundColor: '#F7F9FC',
   },
 
-  // ========================================
-  // HEADING CARD
-  // ========================================
-
-  headingCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 8,
-    elevation: 4,
+  scrollView: {
+    flex: 1,
   },
 
-  heading: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#222',
-    textAlign: 'center',
+  contentContainer: {
+    paddingHorizontal: 15,
+    paddingTop: 15,
   },
 
-  subHeading: {
-    marginTop: 6,
+  // ===========================================================
+  // PAGE HEADER
+  // ===========================================================
+
+  pageHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+
+  pageTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#012353',
+  },
+
+  pageSubtitle: {
     fontSize: 13,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 20,
+    color: '#7A8795',
+    marginTop: 3,
   },
 
-  countRow: {
-    marginTop: 12,
+  countBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#FFF3E8',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
   },
 
   countText: {
     marginLeft: 6,
-    fontSize: 12,
-    color: '#E53935',
+    fontSize: 13,
     fontWeight: '700',
+    color: '#012353',
   },
 
-  // ========================================
-  // CARD
-  // ========================================
+  // ===========================================================
+  // LIST
+  // ===========================================================
 
-  card: {
-    marginVertical: 8,
-    backgroundColor: '#FFF',
-    borderRadius: 18,
+  listContainer: {
+    width: '100%',
+  },
+
+  propertyCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    marginBottom: 14,
     overflow: 'hidden',
-    elevation: 5,
+    flexDirection: 'row',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 5,
   },
 
-  // ========================================
+  // ===========================================================
   // IMAGE
-  // ========================================
+  // ===========================================================
+
+  imageContainer: {
+    width: 125,
+    height: 155,
+    backgroundColor: '#EEF2F6',
+    position: 'relative',
+  },
 
   propertyImage: {
     width: '100%',
-    height: 220,
-    backgroundColor: '#F2F2F2',
+    height: '100%',
   },
 
-  // ========================================
-  // NO MEDIA
-  // ========================================
-
-  noMedia: {
-    width: '100%',
-    height: 220,
-    backgroundColor: '#F2F2F2',
+  noImage: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  noMediaText: {
-    marginTop: 8,
-    color: '#999',
-    fontSize: 13,
-  },
-
-  // ========================================
-  // STATUS
-  // ========================================
-
-  statusRow: {
-    position: 'absolute',
-    top: 15,
-    left: 15,
-    right: 15,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    zIndex: 10,
+  noImageText: {
+    marginTop: 5,
+    fontSize: 11,
+    color: '#9AA5B1',
   },
 
   statusBadge: {
-    backgroundColor: '#28A745',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: '#012353',
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: 5,
   },
 
   statusText: {
-    color: '#FFF',
-    fontWeight: '700',
-    fontSize: 12,
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
 
-  reraBadge: {
+  imageCount: {
+    position: 'absolute',
+    right: 7,
+    bottom: 7,
     flexDirection: 'row',
-    backgroundColor: '#FFF',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.60)',
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: 5,
   },
 
-  reraText: {
-    marginLeft: 5,
-    fontSize: 11,
+  imageCountText: {
+    fontSize: 10,
+    color: '#FFFFFF',
     fontWeight: '700',
+    marginLeft: 4,
   },
 
-  // ========================================
-  // BODY
-  // ========================================
+  // ===========================================================
+  // DETAILS
+  // ===========================================================
 
-  body: {
-    padding: 15,
+  detailsContainer: {
+    flex: 1,
+    padding: 12,
   },
 
-  // ========================================
-  // PROPERTY NAME
-  // ========================================
-
-  propertyName: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#222',
+  propertyTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#012353',
+    lineHeight: 21,
+    marginBottom: 7,
   },
-
-  // ========================================
-  // BUILDER
-  // ========================================
-
-  builder: {
-    marginTop: 4,
-    color: '#666',
-    fontSize: 14,
-  },
-
-  // ========================================
-  // LOCATION
-  // ========================================
 
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 10,
+    marginBottom: 7,
   },
 
-  location: {
-    marginLeft: 8,
-    color: '#555',
+  locationText: {
     flex: 1,
+    marginLeft: 5,
     fontSize: 12,
+    color: '#6B7280',
   },
 
-  // ========================================
-  // PRICE
-  // ========================================
-
-  priceRow: {
-    marginTop: 14,
+  priceText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#F58220',
+    marginBottom: 6,
   },
 
-  price: {
-    fontSize: 14,
-    color: '#555',
-    fontWeight: 'bold',
-  },
-
-  // ========================================
-  // BUTTON ROW
-  // ========================================
-
-  buttonRow: {
+  ownerRow: {
     flexDirection: 'row',
-    marginTop: 18,
-  },
-
-  // ========================================
-  // DETAILS
-  // ========================================
-
-  detailsBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#102A47',
-    paddingVertical: 14,
-    borderRadius: 10,
-    marginRight: 6,
+    marginBottom: 9,
   },
 
-  detailsText: {
-    color: '#FFF',
-    textAlign: 'center',
-    fontWeight: '700',
-    fontSize: 13,
-    marginLeft: 7,
+  ownerText: {
+    flex: 1,
+    marginLeft: 5,
+    fontSize: 11,
+    color: '#7A8795',
   },
 
-  // ========================================
-  // REMOVE
-  // ========================================
+  // ===========================================================
+  // REMOVE BUTTON
+  // ===========================================================
 
   removeBtn: {
-    flex: 1,
+    alignSelf: 'flex-start',
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#E53935',
-    paddingVertical: 14,
-    borderRadius: 10,
-    marginLeft: 6,
+    paddingVertical: 7,
+    paddingHorizontal: 11,
+    borderRadius: 6,
   },
 
   removeText: {
-    color: '#FFF',
-    textAlign: 'center',
+    color: '#FFFFFF',
+    fontSize: 11,
     fontWeight: '700',
-    fontSize: 13,
-    marginLeft: 7,
+    marginLeft: 5,
   },
 
-  // ========================================
-  // EMPTY
-  // ========================================
+  // ===========================================================
+  // EMPTY STATE
+  // ===========================================================
 
-  emptyCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 18,
-    padding: 40,
+  emptyContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingHorizontal: 25,
+    paddingVertical: 45,
     alignItems: 'center',
-    elevation: 4,
-    marginTop: 8,
+    marginTop: 20,
+    elevation: 2,
   },
 
-  emptyIconCircle: {
-    width: 75,
-    height: 75,
-    borderRadius: 38,
-    backgroundColor: '#FFF0F0',
+  emptyIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#FFF3E8',
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
+    marginBottom: 15,
   },
 
   emptyTitle: {
-    marginTop: 20,
-    fontSize: 21,
-    fontWeight: '700',
-    color: '#222',
+    fontSize: 19,
+    fontWeight: '800',
+    color: '#012353',
+    textAlign: 'center',
+    marginBottom: 7,
   },
 
   emptyText: {
-    marginTop: 10,
-    fontSize: 14,
-    color: '#666',
+    fontSize: 13,
+    color: '#7A8795',
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 20,
+    maxWidth: 300,
+    marginBottom: 20,
   },
 
-  exploreButton: {
-    marginTop: 25,
-    backgroundColor: '#0A8754',
-    paddingHorizontal: 25,
-    paddingVertical: 14,
-    borderRadius: 12,
+  browseButton: {
     flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#012353',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 7,
+  },
+
+  browseButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+    marginLeft: 7,
+  },
+
+  bottomSpace: {
+    height: 130,
+  },
+
+  // ===========================================================
+  // REMOVE MODAL
+  // ===========================================================
+
+  removeOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+
+    backgroundColor: 'rgba(0,0,0,0.35)',
+
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+
+    zIndex: 999999,
+    elevation: 999999,
+  },
+
+  removeDialog: {
+    width: '88%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+
+    marginTop: 85,
+
+    padding: 20,
+
+    elevation: 20,
+
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+  },
+
+  removeIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+
+    backgroundColor: '#FFF0F0',
+
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    alignSelf: 'center',
+
+    marginBottom: 12,
+  },
+
+  removeTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#012353',
+
+    textAlign: 'center',
+
+    marginBottom: 7,
+  },
+
+  removeMessage: {
+    fontSize: 14,
+    color: '#6B7280',
+
+    textAlign: 'center',
+
+    lineHeight: 21,
+
+    marginBottom: 20,
+  },
+
+  removeActions: {
+    flexDirection: 'row',
+
+    justifyContent: 'flex-end',
+
     alignItems: 'center',
   },
 
-  exploreButtonText: {
-    color: '#FFF',
-    fontSize: 15,
+  cancelRemoveBtn: {
+    minWidth: 80,
+
+    paddingVertical: 9,
+    paddingHorizontal: 18,
+
+    borderRadius: 7,
+
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    marginRight: 10,
+  },
+
+  cancelRemoveText: {
+    color: '#6B7280',
+
+    fontSize: 13,
+
     fontWeight: '700',
-    marginLeft: 8,
+  },
+
+  confirmRemoveBtn: {
+    minWidth: 90,
+
+    paddingVertical: 9,
+    paddingHorizontal: 18,
+
+    borderRadius: 7,
+
+    backgroundColor: '#E53935',
+
+    flexDirection: 'row',
+
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  confirmRemoveText: {
+    color: '#FFFFFF',
+
+    fontSize: 13,
+
+    fontWeight: '700',
+
+    marginLeft: 6,
   },
 });
-

@@ -22,7 +22,7 @@ import {formatPrice} from '../../helpers/priceHelper';
 
 const {width} = Dimensions.get('window');
 
-const API_URL = 'https://savariyaproperty.in';
+const API_URL = 'https://clickaangan.in';
 const IMAGE_HEIGHT = 300;
 
 const tabs = [
@@ -219,7 +219,7 @@ ${project?.locality || ''}, ${project?.city || ''}
           project?.maxPrice,
         )}
 
-https://savariyaproperty.in`,
+https://clickaangan.in`,
       });
     } catch (e) {
       console.log(e);

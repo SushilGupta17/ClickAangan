@@ -9,8 +9,8 @@ import {
   Animated,
   Dimensions,
   TextInput,
-  Alert,
 } from 'react-native';
+import {useAppAlert} from '../utils/AppAlert';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome5';
@@ -28,7 +28,7 @@ const LoginPopup = ({
   // =====================================================
   // ANIMATION
   // =====================================================
-
+const {success, error, warning} = useAppAlert();
   const scaleAnim = useRef(
     new Animated.Value(0.7),
   ).current;
@@ -129,200 +129,118 @@ const LoginPopup = ({
   // LOGIN API
   // =====================================================
 
-  const handleLogin = async () => {
-    const cleanMobile = mobile.replace(
-      /[^0-9]/g,
-      '',
+   const handleLogin = async () => {
+  const cleanMobile = mobile.replace(/[^0-9]/g, '');
+
+  // Mobile empty
+  if (cleanMobile === '') {
+    error('Error', 'Please enter mobile number');
+    return;
+  }
+
+  // Mobile less/more than 10 digits
+  if (cleanMobile.length !== 10) {
+    warning('Error', 'Please enter valid 10 digit mobile number');
+    return;
+  }
+
+  // Password empty
+  if (password.trim() === '') {
+    error('Error', 'Please enter password');
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      'https://clickaangan.in/api/Login',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          mobile: cleanMobile,
+          password: password,
+        }),
+      },
     );
 
-    // MOBILE VALIDATION
-    if (cleanMobile === '') {
-      Alert.alert(
-        'Error',
-        'Please enter mobile number',
-      );
-      return;
-    }
+    const result = await response.json();
 
-    if (cleanMobile.length !== 10) {
-      Alert.alert(
-        'Error',
-        'Please enter valid 10 digit mobile number',
-      );
-      return;
-    }
+    console.log('LOGIN RESPONSE:', result);
 
-    // PASSWORD VALIDATION
-    if (password.trim() === '') {
-      Alert.alert(
-        'Error',
-        'Please enter password',
-      );
-      return;
-    }
+    if (
+      response.ok &&
+      result.success === true &&
+      result.statusCode === 1 &&
+      result.data
+    ) {
+      const user = result.data;
 
-    try {
-      // =================================================
-      // LOGIN API
-      // =================================================
+      await AsyncStorage.setItem('userLogin', 'true');
 
-      const response = await fetch(
-        'https://savariyaproperty.in/api/Login',
-        {
-          method: 'POST',
-
-          headers: {
-            'Content-Type': 'application/json',
-          },
-
-          body: JSON.stringify({
-            mobile: cleanMobile,
-            password: password,
-          }),
-        },
-      );
-
-      console.log(
-        'LOGIN HTTP STATUS:',
-        response.status,
-      );
-
-      // =================================================
-      // RESPONSE
-      // =================================================
-
-      const result = await response.json();
-
-      console.log(
-        'LOGIN RESPONSE:',
-        JSON.stringify(result, null, 2),
-      );
-
-      // =================================================
-      // SUCCESS
-      // =================================================
-
-      if (
-        response.ok &&
-        result.success === true &&
-        result.statusCode === 1 &&
-        result.data
-      ) {
-        const user = result.data;
-
-        console.log(
-          'LOGIN USER:',
-          JSON.stringify(user, null, 2),
-        );
-
-        // =================================================
-        // SAVE LOGIN DATA
-        // =================================================
-
+      if (user.id !== undefined && user.id !== null) {
         await AsyncStorage.setItem(
-          'userLogin',
-          'true',
-        );
-
-        // USER ID
-        if (
-          user.id !== undefined &&
-          user.id !== null
-        ) {
-          await AsyncStorage.setItem(
-            'userId',
-            user.id.toString(),
-          );
-        }
-
-        // NAME
-        await AsyncStorage.setItem(
-          'userName',
-          user.name || '',
-        );
-
-        // MOBILE
-        await AsyncStorage.setItem(
-          'userMobile',
-          user.mobile || cleanMobile,
-        );
-
-        // EMAIL
-        await AsyncStorage.setItem(
-          'userEmail',
-          user.email || '',
-        );
-
-        // =================================================
-        // ROLE
-        // =================================================
-
-        const actualRole =
-          user.role ||
-          user.roleType ||
-          user.Role ||
-          user.RoleType ||
-          '';
-
-        await AsyncStorage.setItem(
-          'userRole',
-          actualRole.toString(),
-        );
-
-        console.log(
-          'LOGIN ROLE SAVED:',
-          actualRole,
-        );
-
-        // =================================================
-        // SUCCESS ALERT
-        // =================================================
-
-        Alert.alert(
-          'Success',
-          result.message ||
-            'Login Successful',
-          [
-            {
-              text: 'OK',
-
-              onPress: () => {
-                resetPopup();
-
-                if (onLogin) {
-                  onLogin(user);
-                }
-              },
-            },
-          ],
-        );
-      } else {
-        // =================================================
-        // LOGIN FAILED
-        // =================================================
-
-        Alert.alert(
-          'Error',
-          result.message ||
-            'Invalid Mobile Number or Password',
+          'userId',
+          user.id.toString(),
         );
       }
-    } catch (error) {
-      // =================================================
-      // API ERROR
-      // =================================================
 
-      console.log(
-        'LOGIN ERROR:',
-        error,
+      await AsyncStorage.setItem(
+        'userName',
+        user.name || '',
       );
 
-      Alert.alert(
+      await AsyncStorage.setItem(
+        'userMobile',
+        user.mobile || cleanMobile,
+      );
+
+      await AsyncStorage.setItem(
+        'userEmail',
+        user.email || '',
+      );
+
+      const actualRole =
+        user.role ||
+        user.roleType ||
+        user.Role ||
+        user.RoleType ||
+        '';
+
+      await AsyncStorage.setItem(
+        'userRole',
+        actualRole.toString(),
+      );
+
+      success(
+        'Success',
+        result.message || 'Login Successful',
+        2500,
+      );
+
+      resetPopup();
+
+      if (onLogin) {
+        onLogin(user);
+      } else if (onClose) {
+        onClose();
+      }
+    } else {
+      error(
         'Error',
-        'Unable to connect server.',
+        result.message || 'Invalid Mobile Number or Password',
       );
     }
-  };
+  } catch (err) {
+    console.log('LOGIN ERROR:', err);
+
+    error(
+      'Error',
+      'Unable to connect server.',
+    );
+  }
+};
 
   // =====================================================
   // REGISTER
@@ -405,7 +323,7 @@ const LoginPopup = ({
             </View>
 
             <Text style={styles.brand}>
-              Savariya Property
+              ClickAangan
             </Text>
 
             <Text style={styles.desc}>
@@ -586,7 +504,7 @@ const LoginPopup = ({
             </Text>
 
             <Text style={styles.brand}>
-              Savariya Property
+              ClickAangan
             </Text>
 
             <Text style={styles.desc}>

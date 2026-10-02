@@ -8,7 +8,7 @@ import {
 
 // =========================================================
 // RENTAL DETAILS CARD
-// Savariya Property
+// ClickAangan
 // Professional Magicbricks / Square Yards style
 // =========================================================
 

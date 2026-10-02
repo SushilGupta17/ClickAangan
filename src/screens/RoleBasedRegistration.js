@@ -260,7 +260,7 @@ const [budget, setBudget] = useState('');
       setIsLoading(true);
 
       const response = await fetch(
-        'https://savariyaproperty.in/api/Login',
+        'https://clickaangan.in/api/Login',
         {
           method: 'POST',
 
@@ -337,7 +337,7 @@ const [budget, setBudget] = useState('');
 
         Alert.alert(
           'Login Successful',
-          'Welcome to Savariya Property',
+          'Welcome to ClickAangan',
           [
             {
               text: 'OK',
@@ -550,7 +550,7 @@ alert('5');
 alert('10');
       Alert.alert(
         'Registration Successful',
-        `Welcome to Savariya Property, ${name.trim()}!`,
+        `Welcome to ClickAangan, ${name.trim()}!`,
         [
           {
             text: 'Continue',
@@ -741,7 +741,7 @@ alert('10');
               </Text>
 
               <Text style={styles.brand}>
-                Savariya Property
+                ClickAangan
               </Text>
 
               <Text style={styles.desc}>

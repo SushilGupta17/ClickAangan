@@ -11,7 +11,7 @@ const VideoSection = ({project}) => {
 
   const videoUrl = videoPath.startsWith('http')
     ? videoPath
-    : `https://savariyaproperty.in/${videoPath}`;
+    : `https://clickaangan.in/${videoPath}`;
 
   return (
     <View style={styles.card}>

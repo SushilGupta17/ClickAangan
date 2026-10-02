@@ -18,7 +18,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import {formatPrice} from '../helpers/priceHelper';
 
-const API_URL = 'https://savariyaproperty.in';
+const API_URL = 'https://clickaangan.in';
 
 const SearchScreen = ({navigation}) => {
   const [location, setLocation] = useState('');
