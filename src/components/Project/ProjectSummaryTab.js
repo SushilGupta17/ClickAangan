@@ -9,9 +9,6 @@ import {
 } from 'react-native';
 import {useAppAlert} from '../../utils/AppAlert';
 
-
-
-
 import Animated, {
   FadeInDown,
 } from 'react-native-reanimated';
@@ -93,6 +90,7 @@ const Row = ({label, value}) => {
 const ProjectSummaryTab = ({
   property,
   previousTab,
+  navigation,
 }) => {
 
   const {success, error, warning} = useAppAlert();
@@ -337,6 +335,10 @@ const ProjectSummaryTab = ({
       "Success",
       "Project Added Successfully"
     );
+
+    setTimeout(() => {
+        navigation.navigate('Home');
+      }, 1000);
 
   } catch (e) {
 

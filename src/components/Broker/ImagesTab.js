@@ -335,67 +335,7 @@ setProperty(prev => ({
 
       </View>
 
-<View style={styles.card}>
 
-  <Text style={styles.title}>
-    Project Brochure
-  </Text>
-
-  <TouchableOpacity
-    style={styles.imagePickerButton}
-    onPress={pickBrochure}>
-
-    <Text style={styles.imagePickerText}>
-      📄 Upload Brochure (PDF)
-    </Text>
-
-  </TouchableOpacity>
-
-  {property.brochure && (
-
-    <View
-      style={{
-        marginTop:15,
-        flexDirection:'row',
-        justifyContent:'space-between',
-        alignItems:'center',
-      }}>
-
-      <Text
-        style={{
-          flex:1,
-          fontSize:14,
-        }}>
-
-        {property.brochure.name}
-
-      </Text>
-
-      <TouchableOpacity
-        onPress={()=>
-          setProperty(prev=>({
-            ...prev,
-            brochure:null,
-          }))
-        }>
-
-        <Text
-          style={{
-            color:'red',
-            fontWeight:'600',
-          }}>
-
-          Remove
-
-        </Text>
-
-      </TouchableOpacity>
-
-    </View>
-
-  )}
-
-</View>
 
     </Animated.ScrollView>
 

@@ -9,7 +9,7 @@ StyleSheet
 
 } from 'react-native';
 
-const API_URL = 'https://clickaangan.in/';
+const API_URL = 'https://savariyaproperty.in/';
 const API_URL1 = 'http://192.168.1.3:7045';
 
 

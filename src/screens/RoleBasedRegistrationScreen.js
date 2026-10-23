@@ -658,7 +658,7 @@ useEffect(() => {
 
 
     const response = await fetch(
-      'https://clickaangan.in/api/Register',
+      'https://savariyaproperty.in/api/Register',
       {
         method: 'POST',
         headers: {

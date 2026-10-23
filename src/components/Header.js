@@ -11,6 +11,7 @@ import {
 
 import {useFocusEffect} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import Menu from '../components/Menu';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
@@ -65,13 +66,13 @@ const Header = () => {
   );
 
   // ========================================
-  // ROLE DISPLAY
+  // SAME ROLE DISPLAY AS HOME HEADER
   // ========================================
 
   const displayRole =
-    userRole === 'PROPERTY_SEEKER' || userRole === 'USER'
+    userRole === 'PROPERTY_SEEKER'
       ? 'SEEKER'
-      : userRole || 'SEEKER';
+      : userRole || '';
 
   // ========================================
   // HEADER
@@ -87,14 +88,14 @@ const Header = () => {
         backgroundColor="#012353"
         barStyle="light-content"
         translucent={false}
-        hidden={false}
       />
 
-      {/* ========================================
-          TOP STATUS BAR STRIP
-      ======================================== */}
-
-      <View style={styles.statusBarStrip} />
+      <View
+        style={{
+          height: StatusBar.currentHeight,
+          backgroundColor: '#012353',
+        }}
+      />
 
       {/* ========================================
           MENU POPUP
@@ -119,7 +120,8 @@ const Header = () => {
         <TouchableOpacity
           style={styles.menuButton}
           onPress={() => setShowMenu(!showMenu)}
-          activeOpacity={0.7}>
+          activeOpacity={0.7}
+        >
           <Icon
             name="bars"
             size={24}
@@ -128,62 +130,18 @@ const Header = () => {
         </TouchableOpacity>
 
         {/* ========================================
-            CLICK AANGAN LOGO
+            LOGO
         ======================================== */}
 
         <View style={styles.logoSection}>
           <Image
             source={{
-              uri: 'https://clickaangan.in/assets/img/logo/logo.png',
+              uri: 'https://savariyaproperty.in/assets/img/logo/logo.png',
             }}
             style={styles.logo}
             resizeMode="contain"
           />
         </View>
-
-        {/* ========================================
-            USER
-            NO LOGIN BUTTON
-            NO LOGOUT BUTTON
-        ======================================== */}
-
-        {isLoggedIn && (
-          <View style={styles.userSection}>
-
-            {/* ====================================
-                FIRST LINE
-                USER + MOBILE + ROLE
-            ==================================== */}
-
-            <View style={styles.userRow}>
-
-              {/* USER ICON */}
-
-              <Icon
-                name="user"
-                size={12}
-                color="#012353"
-              />
-
-              {/* MOBILE */}
-
-              <Text
-                style={styles.userMobile}
-                numberOfLines={1}>
-                {userMobile}
-              </Text>
-
-              {/* ROLE */}
-
-              {displayRole !== '' && (
-                <Text style={styles.userRole}>
-                  ({displayRole})
-                </Text>
-              )}
-
-            </View>
-          </View>
-        )}
       </View>
     </>
   );
@@ -191,20 +149,12 @@ const Header = () => {
 
 export default Header;
 
+
 // ========================================
 // STYLES
 // ========================================
 
 const styles = StyleSheet.create({
-
-  // ========================================
-  // TOP STATUS BAR STRIP
-  // ========================================
-
-  statusBarStrip: {
-    height: StatusBar.currentHeight || 24,
-    backgroundColor: '#012353',
-  },
 
   // ========================================
   // HEADER
@@ -214,10 +164,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     flexDirection: 'row',
     alignItems: 'center',
-    height: 64,
-    paddingHorizontal: 3,
+    paddingVertical: 8,
+    paddingHorizontal: 5,
     elevation: 4,
-    zIndex: 100,
   },
 
   // ========================================
@@ -225,9 +174,7 @@ const styles = StyleSheet.create({
   // ========================================
 
   menuButton: {
-    width: 34,
-    paddingHorizontal: 0,
-    marginRight: 0,
+    paddingHorizontal: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -240,7 +187,6 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: -15,
   },
 
   // ========================================
@@ -248,10 +194,8 @@ const styles = StyleSheet.create({
   // ========================================
 
   logo: {
-    width: 220,
-    height: 60,
-    marginLeft: -10,
-    resizeMode: 'contain',
+    width: 145,
+    height: 45,
   },
 
   // ========================================
@@ -303,16 +247,12 @@ const styles = StyleSheet.create({
 
   menuWrapper: {
     position: 'absolute',
-
-    // Status bar + header ke hisaab se
-    top: (StatusBar.currentHeight || 24) + 4,
-
+    top: 60,
     left: 10,
-
     backgroundColor: '#fff',
     borderRadius: 10,
-
     elevation: 10,
     zIndex: 9999,
   },
+
 });

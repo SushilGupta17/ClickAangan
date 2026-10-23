@@ -12,13 +12,9 @@ import {
 } from 'react-native';
 
 import {useFocusEffect} from '@react-navigation/native';
-
 import Share from 'react-native-share';
 import LoginPopup from '../screens/LoginPopup';
 import {getRentalProperties} from '../services/RentalService';
-import ImageRotator from '../components/ImageRotator';
-import PropImageRotator from '../components/PropImgRotator';
-import Icon from 'react-native-vector-icons/FontAwesome5';
 import PropertyTabs from '../components/PropertyTabs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {formatPrice} from '../helpers/priceHelper';
@@ -30,6 +26,9 @@ import RentalCard from '../components/Rental/RentalCard';
 // =========================================================
 
 const RentalListScreen = ({navigation}) => {
+
+  const API_URL = 'https://savariyaproperty.in/';
+const API_URL2= 'http://192.168.1.4:7045';
 
   // =======================================================
   // STATES
@@ -344,35 +343,6 @@ const RentalListScreen = ({navigation}) => {
 
       : [];
 
-
-  // =======================================================
-  // DEBUG
-  // =======================================================
-
-  console.log(
-    '=========================='
-  );
-
-  console.log(
-    'RENT SCREEN PROPERTIES:',
-    properties.length
-  );
-
-  console.log(
-    'SELECTED PROPERTY:',
-    selectedProperty
-  );
-
-  console.log(
-    'FILTERED DATA:',
-    filteredData.length
-  );
-
-  console.log(
-    '=========================='
-  );
-
-
   // =======================================================
   // WISHLIST
   // =======================================================
@@ -535,7 +505,7 @@ const RentalListScreen = ({navigation}) => {
 
 
     const webLink =
-      `https://clickaangan.in/properties/${item.id}`;
+      `https://savariyaproperty.in/properties/${item.id}`;
 
 
     const message = `
@@ -578,6 +548,7 @@ ${webLink}
 
   };
 
+  
 
   // =======================================================
   // PROPERTY CARD
@@ -585,12 +556,25 @@ ${webLink}
 
   const renderItem = ({item}) => (
 
+     <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.9}
+      onPress={() =>
+        navigation &&
+        navigation.navigate('PropertyDetails', {
+          property: item,
+          id: item.id,
+        })
+      }>
+
+
     <RentalCard
       item={item}
       navigation={navigation}
       checkLogin={checkLogin}
     />
 
+  </TouchableOpacity>
   );
 
 

@@ -20,12 +20,14 @@ import ProjectTitle from '../components/projectdetails/ProjectTitle';
 import ProjectStatusCard from '../components/projectdetails/ProjectStatusCard';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import MapSection from '../components/projectdetails/MapSection';
 import NearbyPlaces from '../components/projectdetails/NearbyPlaces';
-import BuilderCard from '../components/projectdetails/BuilderCard';
 import VideoSection from '../components/projectdetails/VideoSection';
 import FloorPlans from '../components/projectdetails/FloorPlans';
 import MasterPlan from '../components/projectdetails/MasterPlan';
+import PropertyContactDetails from '../components/propertydetails/PropertyContactDetails';
+import PropertyAmenities from '../components/propertydetails/PropertyAmenities';
+
+
 import EnquiryForm from '../components/projectdetails/EnquiryForm';
 import StickyBottomBar from '../components/projectdetails/StickyBottomBar';
 
@@ -57,12 +59,7 @@ const ProjectDetailsScreen = ({route}) => {
     }
 
     try {
-      console.log('Loading full project details:', projectId);
-
       const response = await getProjectDetails(projectId);
-
-      console.log('FULL PROJECT DETAILS:', response);
-
       if (response) {
         setProject(response);
       }
@@ -125,9 +122,11 @@ const ProjectDetailsScreen = ({route}) => {
 
         {Array.isArray(project?.amenities) &&
           project.amenities.length > 0 && (
-            <AmenitiesGrid
-              amenities={project.amenities}
+              <PropertyAmenities  amenities={
+                project.amenities
+              }
             />
+
           )}
 
         {project?.masterPlan &&
@@ -155,7 +154,9 @@ const ProjectDetailsScreen = ({route}) => {
           }
         />
 
-        <BuilderCard project={project} />
+ <PropertyContactDetails
+          property={project}
+        /> 
 
         {/*
         <VideoSection project={project} />

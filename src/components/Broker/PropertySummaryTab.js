@@ -22,6 +22,7 @@ const PropertySummaryTab=({
 property,
 
 previousTab,
+navigation
 
 })=>{
 
@@ -89,6 +90,31 @@ formData.append(
 );
 
 formData.append(
+  'FamilyType',
+  property.familyType ?? '',
+);
+
+formData.append(
+  'FurnishingType',
+  property.furnishingType ?? '',
+);
+
+formData.append(
+  'AvailableFrom',
+  property.availableFrom ?? ''
+);
+
+formData.append(
+  'facing',
+  property.facing ?? ''
+);
+
+formData.append(
+  'JDA_Approved',
+  property.jdaApproved ?? ''
+);
+
+formData.append(
 'Area',
 property.area,
 );
@@ -146,6 +172,11 @@ property.bathrooms,
 );
 
 formData.append(
+'Balconies',
+property.balconies,
+);
+
+formData.append(
 'Amenities',
 JSON.stringify(property.amenities),
 );
@@ -189,6 +220,18 @@ formData.append(
 'BrokerRera',
 property.brokerRera,
 );
+
+formData.append(
+'Owner',
+property.partnerOwnerName,
+);
+
+formData.append(
+'Mobile',
+property.partnerOwnerMobile,
+);
+
+
 
 formData.append(
 'BuilderName',
@@ -264,18 +307,16 @@ type:property.brochure.type,
 
 }
 
-const res=
-
-await addProperty(formData);
+const res = await addProperty(formData);
 
 success(
-
-'Success',
-
-'Property Added Successfully'
-
+  'Success',
+  'Property Added Successfully'
 );
 
+setTimeout(() => {
+  navigation.navigate('Home');
+}, 1000);
 }
 catch(e){
 

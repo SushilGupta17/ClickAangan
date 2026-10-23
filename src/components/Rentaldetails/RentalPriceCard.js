@@ -39,10 +39,8 @@ const RentalPriceCard = ({property}) => {
   // =======================================================
 
   const rent =
+    property?.Price ??
     property?.price ??
-    property?.rent ??
-    property?.monthlyRent ??
-    property?.MonthlyRent ??
     0;
 
   // =======================================================
@@ -61,11 +59,9 @@ const RentalPriceCard = ({property}) => {
   // =======================================================
 
   const maintenanceAmount =
-    property?.maintenanceAmount ??
-    property?.MaintenanceAmount ??
-    property?.maintenance ??
-    property?.Maintenance ??
-    0;
+  property?.maintenanceAmount ??
+  property?.MaintenanceAmount ??
+  0;
 
   // =======================================================
   // LOCKING PERIOD
@@ -73,9 +69,17 @@ const RentalPriceCard = ({property}) => {
   // =======================================================
 
   const lockingPeriod =
-    property?.lockingPeriod ??
     property?.LockingPeriod ??
+    property?.lockingPeriod ??
     6;
+
+    // =======================================================
+// FAMILY TYPE
+// =======================================================
+const familyType =
+  property?.familyType ??
+  property?.FamilyType ??
+  'Any One';
 
   return (
     <View style={styles.card}>

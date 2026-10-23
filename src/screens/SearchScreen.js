@@ -20,7 +20,7 @@ import Footer from '../components/Footer';
 import PropImageRotator from '../components/PropImgRotator';
 import {formatPrice} from '../helpers/priceHelper';
 
-const API_URL = 'https://clickaangan.in';
+const API_URL = 'https://savariyaproperty.in';
 const API_URL2 = 'http://192.168.1.3:7045';
 
 

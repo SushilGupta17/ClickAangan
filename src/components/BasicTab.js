@@ -13,23 +13,29 @@ import Chip from './Chip';
 import styles from '../styles/AddPropertyStyle';
 
 const propertyTypes = [
-  'Apartment',
-  'Villa',
-  'Independent House',
-  'Plot',
-  'Farm House',
-  'Office',
-  'Shop',
-  'Showroom',
-  'Warehouse',
-];
+   'Villa',
+   '4+ BHK',
+   '3 BHK',
+   '2 BHK',
+   '1 BHK',
+   'Plot',
+   'Shop',
+  ];
+
+  const rentPpropertyTypes = [
+   'Hotel',
+   'Airbnb',
+   'Apartment',
+   'House',
+   'Boys PG',
+   'Girls PG',
+  ];
+
 
 const builderProjectTypes = [
-  'Residential Project',
-  'Commercial Project',
-  'Township',
+  'Apartment Project',
   'Villa Project',
-  'Plots Project',
+  'Plot Project',
 ];
 
 const BasicTab = ({
@@ -85,7 +91,13 @@ const BasicTab = ({
           Who are you?
         </Text>
 
-     <View style={styles.rowWrap}>
+<View style={styles.rowWrap}>
+  <Chip
+    label="🏗️ Builder"
+    selected={property.listingType === "Builder"}
+    onPress={() => update("listingType", "Builder")}
+  />
+
   <Chip
     label="🏠 Owner"
     selected={property.listingType === "Owner"}
@@ -93,16 +105,12 @@ const BasicTab = ({
   />
 
   <Chip
-    label="🤝 Broker"
-    selected={property.listingType === "Broker"}
-    onPress={() => update("listingType", "Broker")}
+    label="🤝 Partner"
+    selected={property.listingType === "Partner"}
+    onPress={() => update("listingType", "Partner")}
   />
 
-  <Chip
-    label="🏗️ Builder"
-    selected={property.listingType === "Builder"}
-    onPress={() => update("listingType", "Builder")}
-  />
+  
 </View>
 
       </View>
@@ -155,67 +163,78 @@ const BasicTab = ({
           Property Purpose
         </Text>
 
-        <View style={styles.rowWrap}>
+<View style={styles.rowWrap}>
 
-         <Chip
-              label="Sale"
-              selected={property.purpose === "Sale"}
-              onPress={() => update("purpose", "Sale")}
-            />
+  {property.listingType === "Builder" ? (
+    <Chip
+      label="Project"
+      selected={property.purpose === "Project"}
+      onPress={() => update("purpose", "Project")}
+    />
+  ) : (
+    <>
+      <Chip
+        label="Sale"
+        selected={property.purpose === "Sale"}
+        onPress={() => {
+          setProperty("purpose", "Sale");
+          setProperty("propertyType", "");
+        }}
+      />
 
-          <Chip
-            label="Rent"
-            selected={property.purpose === "Rent"}
-            onPress={() => update("purpose", "Rent")}
-          />
+      <Chip
+        label="Rent"
+        selected={property.purpose === "Rent"}
+        onPress={() => {
+          setProperty("purpose", "Rent");
+          setProperty("propertyType", "");
+        }}
+      />
+    </>
+  )}
 
-          {property.listingType === "Builder" && (
-            <Chip
-              label="Project"
-              selected={property.purpose === "Project"}
-              onPress={() => update("purpose", "Project")}
-            />
-          )}
-
-        </View>
+</View>
 
       </View>
 
       {/* Property Type */}
-            <View style={styles.card}>
+{/* Property Type */}
+<View style={styles.card}>
 
-        <Text style={styles.title}>
-          Property Type
-        </Text>
+  <Text style={styles.title}>
+    Property Type
+  </Text>
 
-        <View style={styles.rowWrap}>
+  <View style={styles.rowWrap}>
 
-      {(property.listingType === "Builder"
-  ? builderProjectTypes
-  : propertyTypes
-).map(item => (
-  <Chip
-    key={item}
-    label={item}
-    selected={property.propertyType === item}
-    onPress={() => update("propertyType", item)}
-  />
-))}
+    {(property.listingType === "Builder"
+      ? builderProjectTypes
+      : property.purpose === "Rent"
+        ? rentPpropertyTypes
+        : propertyTypes
+    ).map(item => (
+      <Chip
+        key={item}
+        label={item}
+        selected={property.propertyType === item}
+        onPress={() => update("propertyType", item)}
+      />
+    ))}
 
-        </View>
+  </View>
 
-      </View>
+</View>
 
    
 
-      {/* Broker Information */}
+      {/* Partner Information */}
 
-      {property.listingType === 'Broker' && (
+      {property.listingType === 'Partner' && (
 
         <View style={styles.card}>
 
           <Text style={styles.title}>
-            Broker Information
+            Partner Information
           </Text>
 
           <Text
@@ -227,7 +246,7 @@ const BasicTab = ({
 
             In the next step you will enter:
 
-            {'\n'}• Broker Name
+            {'\n'}• Partner Name
 
             {'\n'}• Company Name
 

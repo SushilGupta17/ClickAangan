@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from 'react';
+import React, {useMemo, useState, useEffect, useRef} from 'react';
 
 import {
   View,
@@ -14,350 +14,381 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import ImageViewing from 'react-native-image-viewing';
 import Share from 'react-native-share';
+import Video from 'react-native-video';
+
+import {formatPrice} from '../../helpers/priceHelper';
 
 const {width} = Dimensions.get('window');
 
-const API_URL = 'https://clickaangan.in';
-
+const API_URL = 'https://savariyaproperty.in';
 const IMAGE_HEIGHT = 300;
 
+// ============================================================
+// PROPERTY IMAGE CAROUSEL
+// ClickAangan
+// Common Images - No Tabs
+// Auto Slide + Manual Swipe
+// ============================================================
 
 const PropertyImageCarousel = ({property}) => {
-
   const [visible, setVisible] = useState(false);
+  const [isFavourite, setIsFavourite] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  const [currentIndex, setCurrentIndex] =
-    useState(0);
+  // ==========================================================
+  // AUTO SLIDE REF
+  // ==========================================================
 
-  const [isFavourite, setIsFavourite] =
-    useState(false);
+  const flatListRef = useRef(null);
 
+  // ==========================================================
+  // BUILD IMAGE URL
+  // ==========================================================
 
-  /* ================================================= */
-  /* IMAGES */
-  /* ================================================= */
-
-  const images = useMemo(() => {
-
-    const result = [];
-
-    /*
-     * Cover / Main Image
-     */
-
-    const coverImage =
-      property?.imageUrl ||
-      property?.coverImage ||
-      property?.image;
-
-    if (coverImage) {
-
-      result.push({
-        uri: getImageUrl(coverImage),
-      });
-
+  const buildImageUrl = path => {
+    if (!path || typeof path !== 'string') {
+      return null;
     }
 
-
-    /*
-     * Property Images
-     */
-
-    if (Array.isArray(property?.images)) {
-
-      property.images.forEach(item => {
-
-        const image =
-          item?.imageUrl ||
-          item?.imagePath ||
-          item?.url ||
-          item;
-
-        if (image) {
-
-          const uri = getImageUrl(image);
-
-          /*
-           * Duplicate image avoid
-           */
-
-          if (
-            !result.some(
-              x => x.uri === uri,
-            )
-          ) {
-
-            result.push({
-              uri,
-            });
-
-          }
-
-        }
-
-      });
-
-    }
-
-
-    return result;
-
-  }, [property]);
-
-
-  /* ================================================= */
-  /* IMAGE URL */
-  /* ================================================= */
-
-  function getImageUrl(image) {
-
-    if (!image) {
-      return '';
-    }
-
-    /*
-     * Already complete URL
-     */
-
+    // Already complete URL
     if (
-      image.startsWith('http://') ||
-      image.startsWith('https://')
+      path.startsWith('http://') ||
+      path.startsWith('https://')
     ) {
-
-      return image;
-
+      return path;
     }
 
-
-    /*
-     * Windows slash fix
-     */
-
-    const cleanPath =
-      image.replace(/\\/g, '/');
-
-
-    /*
-     * Avoid double slash
-     */
-
-    if (cleanPath.startsWith('/')) {
-
-      return `${API_URL}${cleanPath}`;
-
-    }
+    const cleanPath = path
+      .replace(/\\/g, '/')
+      .replace(/^\/+/, '');
 
     return `${API_URL}/${cleanPath}`;
-
-  }
-
-
-  /* ================================================= */
-  /* SHARE */
-  /* ================================================= */
-
-  const onShare = async () => {
-
-    try {
-
-      await Share.open({
-
-        title:
-          property?.title ||
-          'Property',
-
-        message:
-          `${property?.title || 'Property'}
-
-📍 ${property?.location || ''}
-
-💰 Price: ₹ ${
-  property?.price || ''
-}
-
-${API_URL}`,
-
-      });
-
-    } catch (error) {
-
-      console.log(
-        'Share Error =>',
-        error,
-      );
-
-    }
-
   };
 
+  // ==========================================================
+  // VIDEO URL
+  // ==========================================================
 
-  /* ================================================= */
-  /* RENDER IMAGE */
-  /* ================================================= */
+  const videoPath =
+    property?.videoUrl ||
+    property?.VideoUrl ||
+    property?.videoPath ||
+    property?.VideoPath ||
+    '';
 
-  const renderItem = ({
-    item,
-    index,
-  }) => (
+  const videoUrl = useMemo(() => {
+    return buildImageUrl(videoPath);
+  }, [videoPath]);
 
-    <TouchableOpacity
-      activeOpacity={0.95}
-      onPress={() => {
+  const hasVideo = !!videoUrl;
 
-        setCurrentIndex(index);
+  // ==========================================================
+  // ALL COMMON IMAGES
+  // Cover Image + All propertyImages
+  // NO imageType FILTER
+  // ==========================================================
 
-        setVisible(true);
+  const images = useMemo(() => {
+    const result = [];
 
-      }}>
+    // --------------------------------------------------------
+    // COVER IMAGE
+    // --------------------------------------------------------
 
-      <FastImage
-        source={{
-          uri: item.uri,
-          priority:
-            FastImage.priority.high,
-        }}
+    if (property?.coverImage) {
+      const coverUrl = buildImageUrl(property.coverImage);
 
-        resizeMode={
-          FastImage.resizeMode.cover
+      if (coverUrl) {
+        result.push({
+          uri: coverUrl,
+        });
+      }
+    }
+
+    // --------------------------------------------------------
+    // ALL IMAGES
+    // --------------------------------------------------------
+
+    if (Array.isArray(property?.propertyImages)) {
+      property.propertyImages.forEach(item => {
+        if (!item) {
+          return;
         }
 
-        style={styles.image}
+        const imagePath =
+          item?.imageUrl ||
+          item?.ImageUrl ||
+          item?.imagePath ||
+          item?.ImagePath ||
+          '';
 
-      />
+        const imageUrl = buildImageUrl(imagePath);
 
-    </TouchableOpacity>
+        if (imageUrl) {
+          result.push({
+            uri: imageUrl,
+          });
+        }
+      });
+    }
 
-  );
+    // --------------------------------------------------------
+    // REMOVE EMPTY + DUPLICATE IMAGES
+    // --------------------------------------------------------
 
-
-  /* ================================================= */
-  /* EMPTY IMAGE */
-  /* ================================================= */
-
-  if (images.length === 0) {
-
-    return (
-
-      <View style={styles.emptyContainer}>
-
-        <Icon
-          name="image-off-outline"
-          size={55}
-          color="#999"
-        />
-
-        <Text style={styles.emptyText}>
-          No Property Images
-        </Text>
-
-      </View>
-
+    const uniqueImages = result.filter(
+      (item, index, self) =>
+        item?.uri &&
+        self.findIndex(x => x.uri === item.uri) === index,
     );
 
-  }
+    return uniqueImages;
+  }, [property]);
 
+  // ==========================================================
+  // HAS IMAGES
+  // ==========================================================
 
-  /* ================================================= */
-  /* UI */
-  /* ================================================= */
+  const hasAnyImages = images.length > 0;
 
-  return (
+  // ==========================================================
+  // RESET INDEX WHEN PROPERTY / IMAGES CHANGE
+  // ==========================================================
 
-    <View style={styles.container}>
+  useEffect(() => {
+    setCurrentIndex(0);
 
-      {/* ============================================= */}
-      {/* IMAGE SLIDER */}
-      {/* ============================================= */}
+    if (flatListRef.current && images.length > 0) {
+      flatListRef.current.scrollToIndex({
+        index: 0,
+        animated: false,
+      });
+    }
+  }, [images]);
 
-      <FlatList
-        data={images}
+  // ==========================================================
+  // AUTO SLIDE
+  // 5 SECONDS
+  // ==========================================================
 
-        horizontal
+  useEffect(() => {
+    if (images.length <= 1) {
+      return;
+    }
 
-        pagingEnabled
+    const autoSlide = setInterval(() => {
+      setCurrentIndex(prevIndex => {
+        const nextIndex =
+          prevIndex + 1 >= images.length
+            ? 0
+            : prevIndex + 1;
 
-        showsHorizontalScrollIndicator={false}
-
-        keyExtractor={(_, index) =>
-          index.toString()
+        if (flatListRef.current) {
+          flatListRef.current.scrollToIndex({
+            index: nextIndex,
+            animated: true,
+          });
         }
 
-        renderItem={renderItem}
+        return nextIndex;
+      });
+    }, 5000);
 
-        onMomentumScrollEnd={event => {
+    return () => {
+      clearInterval(autoSlide);
+    };
+  }, [images.length]);
 
-          const index =
-            Math.round(
-              event.nativeEvent.contentOffset.x /
-              width,
+  // ==========================================================
+  // SHARE
+  // ==========================================================
+
+  const onShare = async () => {
+    try {
+      await Share.open({
+        title: property?.projectName || '',
+
+        message: `${property?.projectName || ''}
+
+${property?.builderName || ''}
+
+${property?.locality || ''}, ${property?.city || ''}
+
+₹ ${formatPrice(property?.minPrice)} - ₹ ${formatPrice(
+          property?.maxPrice,
+        )}
+
+https://savariyaproperty.in`,
+      });
+    } catch (e) {
+      console.log('SHARE ERROR:', e);
+    }
+  };
+
+  // ==========================================================
+  // IMAGE ITEM
+  // ==========================================================
+
+  const renderItem = ({item, index}) => {
+    return (
+      <TouchableOpacity
+        activeOpacity={0.95}
+        onPress={() => {
+          setCurrentIndex(index);
+          setVisible(true);
+        }}>
+        <FastImage
+          source={{
+            uri: item.uri,
+            priority: FastImage.priority.normal,
+          }}
+          resizeMode={FastImage.resizeMode.cover}
+          style={styles.image}
+          onError={error => {
+            console.log(
+              'IMAGE LOAD ERROR:',
+              item.uri,
+              JSON.stringify(error),
+            );
+          }}
+        />
+      </TouchableOpacity>
+    );
+  };
+
+  // ==========================================================
+  // RETURN
+  // ==========================================================
+
+  return (
+    <View>
+
+      {/* ======================================================
+          IMAGE SLIDER
+          Auto Slide + Manual Swipe
+      ====================================================== */}
+
+      {hasAnyImages && (
+        <FlatList
+          ref={flatListRef}
+          data={images}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item, index) =>
+            `${item.uri}-${index}`
+          }
+          renderItem={renderItem}
+
+          // ---------------------------------------------------
+          // MANUAL SWIPE
+          // ---------------------------------------------------
+
+          onMomentumScrollEnd={event => {
+            const index = Math.round(
+              event.nativeEvent.contentOffset.x / width,
             );
 
-          setCurrentIndex(index);
+            setCurrentIndex(index);
+          }}
 
-        }}
+          // ---------------------------------------------------
+          // PREVENT scrollToIndex warning
+          // ---------------------------------------------------
 
-      />
+          getItemLayout={(data, index) => ({
+            length: width,
+            offset: width * index,
+            index,
+          })}
+        />
+      )}
 
+      {/* ======================================================
+          VIDEO
+          ONLY WHEN NO IMAGE EXISTS
+      ====================================================== */}
 
-      {/* ============================================= */}
-      {/* GRADIENT */}
-      {/* ============================================= */}
+      {!hasAnyImages && hasVideo && (
+        <Video
+          source={{
+            uri: videoUrl,
+          }}
+          style={styles.headerVideo}
+          controls={true}
+          resizeMode="cover"
+          paused={true}
+          repeat={false}
+          onError={error => {
+            console.log(
+              'HEADER VIDEO ERROR:',
+              JSON.stringify(error),
+            );
+          }}
+        />
+      )}
 
-      <LinearGradient
-        colors={[
-          'transparent',
-          'rgba(0,0,0,0.15)',
-          'rgba(0,0,0,0.90)',
-        ]}
+      {/* ======================================================
+          NO MEDIA
+      ====================================================== */}
 
-        style={styles.overlay}>
+      {!hasAnyImages && !hasVideo && (
+        <View style={styles.noMedia}>
+          <Icon
+            name="image-off-outline"
+            size={50}
+            color="#999"
+          />
 
-        <Text
-          style={styles.propertyTitle}
-          numberOfLines={2}>
-
-          {property?.title ||
-            'Property'}
-
-        </Text>
-
-
-        <Text style={styles.location}>
-
-          {property?.location
-            ? `📍 ${property.location}`
-            : ''}
-
-        </Text>
-
-
-        {property?.price ? (
-
-          <Text style={styles.price}>
-
-            ₹ {formatPrice(property.price)}
-
+          <Text style={styles.noMediaText}>
+            No Media Available
           </Text>
+        </View>
+      )}
 
-        ) : null}
+      {/* ======================================================
+    GRADIENT OVERLAY
+    Click → Full Screen Image
+====================================================== */}
 
-      </LinearGradient>
+{(hasAnyImages || hasVideo) && (
+  <TouchableOpacity
+    activeOpacity={1}
+    style={styles.overlay}
+    onPress={() => {
+      if (hasAnyImages) {
+        setVisible(true);
+      }
+    }}>
 
+    <LinearGradient
+      colors={[
+        'transparent',
+        'rgba(0,0,0,.15)',
+        'rgba(0,0,0,.90)',
+      ]}
+      style={StyleSheet.absoluteFill}
+      pointerEvents="none"
+    />
+    <Text style={styles.fullScreenHint}>
+      Tap to view full screen
+    </Text>
+  </TouchableOpacity>
+)}
 
-      {/* ============================================= */}
-      {/* FAVOURITE + SHARE */}
-      {/* ============================================= */}
+    
 
-      <View style={styles.actionContainer}>
+      {/* ======================================================
+          FAVORITE + SHARE
+      ====================================================== */}
+
+      {/* <View style={styles.actionContainer}>
 
         <TouchableOpacity
           style={styles.iconButton}
-
-          onPress={() =>
-            setIsFavourite(
-              !isFavourite,
-            )
-          }>
+          onPress={() => {
+            setIsFavourite(!isFavourite);
+          }}>
 
           <Icon
             name={
@@ -365,19 +396,11 @@ ${API_URL}`,
                 ? 'heart'
                 : 'heart-outline'
             }
-
-            size={25}
-
-            color={
-              isFavourite
-                ? '#FF5252'
-                : '#fff'
-            }
-
+            size={24}
+            color="#fff"
           />
 
         </TouchableOpacity>
-
 
         <TouchableOpacity
           style={[
@@ -386,214 +409,162 @@ ${API_URL}`,
               marginLeft: 10,
             },
           ]}
-
           onPress={onShare}>
 
           <Icon
             name="share-variant"
-            size={23}
+            size={24}
             color="#fff"
           />
 
         </TouchableOpacity>
 
-      </View>
+      </View> */}
 
+      {/* ======================================================
+          IMAGE COUNTER
+      ====================================================== */}
 
-      {/* ============================================= */}
-      {/* IMAGE COUNTER */}
-      {/* ============================================= */}
+      {hasAnyImages && (
+        <View style={styles.counter}>
+          <Text style={styles.counterText}>
+            {currentIndex + 1} / {images.length}
+          </Text>
+        </View>
+      )}
 
-      <View style={styles.counter}>
+      {/* ======================================================
+          IMAGE DOTS
+      ====================================================== */}
 
-        <Icon
-          name="image-multiple-outline"
-          size={15}
-          color="#fff"
-        />
-
-        <Text style={styles.counterText}>
-
-          {currentIndex + 1}
-          {' / '}
-          {images.length}
-
-        </Text>
-
-      </View>
-
-
-      {/* ============================================= */}
-      {/* DOTS */}
-      {/* ============================================= */}
-
-      {images.length > 1 ? (
-
+      {hasAnyImages && images.length > 1 && (
         <View style={styles.dots}>
 
-          {images.map((_, index) => (
-
+          {images.map((item, index) => (
             <View
-              key={index}
-
+              key={`${item.uri}-${index}`}
               style={[
                 styles.dot,
-
                 currentIndex === index &&
                   styles.activeDot,
               ]}
-
             />
-
           ))}
 
         </View>
+      )}
 
-      ) : null}
+      {/* ======================================================
+          FULL SCREEN IMAGE VIEWER
+      ====================================================== */}
 
-
-      {/* ============================================= */}
-      {/* FULL SCREEN IMAGE */}
-      {/* ============================================= */}
-
-      <ImageViewing
-        images={images}
-
-        imageIndex={currentIndex}
-
-        visible={visible}
-
-        onRequestClose={() =>
-          setVisible(false)
-        }
-
-      />
+      {images.length > 0 && (
+        <ImageViewing
+          images={images}
+          imageIndex={currentIndex}
+          visible={visible}
+          onRequestClose={() => {
+            setVisible(false);
+          }}
+        />
+      )}
 
     </View>
-
   );
-
 };
-
-
-/* ================================================= */
-/* PRICE FORMAT */
-/* ================================================= */
-
-const formatPrice = value => {
-
-  if (
-    value === null ||
-    value === undefined ||
-    value === ''
-  ) {
-
-    return '';
-
-  }
-
-  /*
-   * Agar already string hai
-   */
-
-  const number =
-    Number(
-      String(value)
-        .replace(/,/g, ''),
-    );
-
-
-  if (Number.isNaN(number)) {
-
-    return value;
-
-  }
-
-
-  return number.toLocaleString(
-    'en-IN',
-    {
-      maximumFractionDigits: 0,
-    },
-  );
-
-};
-
 
 export default PropertyImageCarousel;
 
-
-/* ================================================= */
-/* STYLES */
-/* ================================================= */
+// ============================================================
+// STYLES
+// ============================================================
 
 const styles = StyleSheet.create({
 
-  container: {
-    width: '100%',
-    height: IMAGE_HEIGHT,
-    backgroundColor: '#ddd',
-  },
+  // ----------------------------------------------------------
+  // IMAGE
+  // ----------------------------------------------------------
 
   image: {
     width: width,
     height: IMAGE_HEIGHT,
+    backgroundColor: '#eee',
   },
 
-  /* EMPTY */
+  // ----------------------------------------------------------
+  // VIDEO
+  // ----------------------------------------------------------
 
-  emptyContainer: {
-    width: '100%',
+  headerVideo: {
+    width: width,
     height: IMAGE_HEIGHT,
-    backgroundColor: '#EEF1F5',
+    backgroundColor: '#000',
+  },
+
+  // ----------------------------------------------------------
+  // NO MEDIA
+  // ----------------------------------------------------------
+
+  noMedia: {
+    width: width,
+    height: IMAGE_HEIGHT,
+    backgroundColor: '#f5f5f5',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  emptyText: {
-    marginTop: 8,
-    color: '#777',
-    fontSize: 13,
+  noMediaText: {
+    marginTop: 10,
+    color: '#999',
+    fontSize: 14,
   },
 
-  /* GRADIENT */
+  // ----------------------------------------------------------
+  // GRADIENT OVERLAY
+  // ----------------------------------------------------------
 
   overlay: {
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 0,
-    height: 145,
+    bottom: 25,
     paddingHorizontal: 18,
-    paddingTop: 55,
-    justifyContent: 'flex-end',
-    paddingBottom: 22,
+    paddingTop: 60,
+    paddingBottom: 10,
   },
 
-  propertyTitle: {
+  projectName: {
     color: '#fff',
     fontSize: 22,
     fontWeight: '700',
   },
 
-  location: {
+  builder: {
     color: '#fff',
     marginTop: 5,
-    fontSize: 12,
+    fontSize: 14,
+  },
+
+  location: {
+    color: '#fff',
+    marginTop: 4,
+    fontSize: 13,
   },
 
   price: {
     color: '#fff',
-    marginTop: 7,
+    marginTop: 8,
     fontSize: 18,
     fontWeight: '700',
   },
 
-  /* ACTION */
+  // ----------------------------------------------------------
+  // ACTION BUTTONS
+  // ----------------------------------------------------------
 
   actionContainer: {
     position: 'absolute',
-    top: 18,
+    top: 15,
     right: 15,
     flexDirection: 'row',
     zIndex: 20,
@@ -603,49 +574,47 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor:
-      'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(0,0,0,.55)',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  /* COUNTER */
+  // ----------------------------------------------------------
+  // COUNTER
+  // ----------------------------------------------------------
 
   counter: {
     position: 'absolute',
     bottom: 55,
     right: 15,
-    backgroundColor:
-      'rgba(0,0,0,0.70)',
-    paddingHorizontal: 11,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
   },
 
   counterText: {
     color: '#fff',
     fontWeight: '700',
     fontSize: 12,
-    marginLeft: 5,
   },
 
-  /* DOTS */
+  // ----------------------------------------------------------
+  // DOTS
+  // ----------------------------------------------------------
 
   dots: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 55,
     alignSelf: 'center',
     flexDirection: 'row',
   },
 
   dot: {
-    width: 7,
-    height: 7,
+    width: 8,
+    height: 8,
     borderRadius: 4,
-    backgroundColor:
-      'rgba(255,255,255,0.50)',
+    backgroundColor: '#ffffff80',
     marginHorizontal: 3,
   },
 
@@ -653,5 +622,19 @@ const styles = StyleSheet.create({
     width: 20,
     backgroundColor: '#fff',
   },
+
+fullScreenHint: {
+  position: 'absolute',
+  top: '50%',
+  left: 0,
+  right: 0,
+  textAlign: 'center',
+  color: '#fff',
+  fontSize: 14,
+  fontWeight: '600',
+  textShadowColor: 'rgba(0,0,0,0.8)',
+  textShadowOffset: {width: 1, height: 1},
+  textShadowRadius: 3,
+},
 
 });

@@ -50,7 +50,7 @@ const handleVerify = async () => {
 
   try {
     const response = await axios.post(
-      'https://clickaangan.in/api/auth/VerifyOTP',
+      'https://savariyaproperty.in/api/auth/VerifyOTP',
       {
         mobile: mobile,
         otp: otp,
@@ -100,7 +100,7 @@ const handleResend = async () => {
 
   try {
     const response = await axios.post(
-      'https://clickaangan.in/api/auth/SendOTP',
+      'https://savariyaproperty.in/api/auth/SendOTP',
       {
         mobile: mobile,
       },

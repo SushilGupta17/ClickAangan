@@ -38,23 +38,21 @@ const PropertyTabs = ({
   if (selectedType === 'Buy') {
     tabs = [
       'Villa',
+      '4+ BHK',
       '3 BHK',
       '2 BHK',
       '1 BHK',
-      'Plots',
+      'Plot',
       'Shop',
-      'Farm House',
     ];
   } else if (selectedType === 'Rent') {
     tabs = [
-      'Apartment',
-      'House',
-      'Boys PG',
-      'Girls PG',
-      'Office',
-      'Shop',
-      'Showroom',
-      'Warehouse',
+   'Apartment',
+   'House',
+   'Boys PG',
+   'Girls PG',
+   'Airbnb',
+   'Hotel',
     ];
   } 
 
@@ -126,25 +124,20 @@ const PropertyTabs = ({
               onPress={() => onTabChange(item)}
             >
               <Text style={styles.icon}>
-                {item === '3 BHK' ? '🏠' :
-                  item === '2 BHK' ? '🏡' :
-                  item === '1 BHK' ? '🏘️' :
-                  item === 'Villa' ? '🏡' :
-                  item === 'House' ? '🏠' :
-                  item === 'Plots' ? '📍' :
-                  item === 'Farm House' ? '🌳' :
-                  item === 'Apartment' ? '🏢' :
-                  item === 'Boys PG' ? '👨‍🎓' :
-                  item === 'Girls PG' ? '👩‍🎓' :
-                  item === 'Office' ? '💼' :
-                  item === 'Shop' ? '🏪' :
-                  item === 'Showroom' ? '🏬' :
-                  item === 'Warehouse' ? '📦' :
-                  item === 'Ready to Move' ? '🏠' :
-                  item === 'New Launch' ? '🚀' :
-                  item === 'Under Construction' ? '🏗️' :
-                  '🏢'}
-              </Text>
+  {item === '4+ BHK' ? '🏘️' :
+    item === '3 BHK' ? '🏠' :
+    item === '2 BHK' ? '🏡' :
+    item === '1 BHK' ? '🏘️' :
+    item === 'Villa' ? '🏡' :
+    item === 'House' ? '🏠' :
+    item === 'Apartment' ? '🏢' :
+    item === 'Hotel' ? '🏨' :
+    item === 'Airbnb' ? '🏡' :
+    item === 'Boys PG' ? '👨‍🎓' :
+    item === 'Girls PG' ? '👩‍🎓' :
+    item === 'Shop' ? '🏪' :
+    '🏢'}
+</Text>
 
               <Text
                 style={[

@@ -392,13 +392,12 @@ useEffect(() => {
           <Image
             source={{
               uri:
-                'https://clickaangan.in/assets/img/logo/logo.png',
+                'https://savariyaproperty.in/assets/img/logo/logo.png',
             }}
             style={styles.logo}
             resizeMode="contain"
           />
 
-          <View style={styles.divider} />
         </View>
 
         {/* ==================================================
@@ -424,11 +423,6 @@ useEffect(() => {
                 {userMobile}
               </Text>
 
-              <Text
-                style={styles.userRole}
-                numberOfLines={1}>
-                ({displayRole})
-              </Text>
             </View>
 
             {/* ==============================================
@@ -568,44 +562,47 @@ const styles = StyleSheet.create({
   // HEADER
   // ====================================================
 
-header: {
-  backgroundColor: '#fff',
-  flexDirection: 'row',
-  alignItems: 'center',
-  height: 64,
-  paddingHorizontal: 3,
-  elevation: 4,
-  zIndex: 100,
-},
+  header: {
+    backgroundColor: '#fff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 5,
+    elevation: 4,
+    zIndex: 100,
+  },
 
-menuButton: {
-  width: 34,
-  paddingHorizontal: 0,
-  marginRight: 0,
-  justifyContent: 'center',
-  alignItems: 'center',
-},
+  // ====================================================
+  // MENU BUTTON
+  // ====================================================
 
-logoSection: {
-  flex: 1,
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginLeft: -15,
-},
+  menuButton: {
+    paddingHorizontal: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // ====================================================
+  // LOGO SECTION
+  // ====================================================
+
+  logoSection: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
 
   divider: {
-    width: 0,
+    width: 1,
     height: 28,
     backgroundColor: '#ddd',
     marginHorizontal: 10,
   },
 
-logo: {
-  width: 220,
-  height: 60,
-  marginLeft: -10,
-  resizeMode: 'contain',
-},
+  logo: {
+    width: 180,
+    height: 45,
+  },
 
   // ====================================================
   // USER SECTION

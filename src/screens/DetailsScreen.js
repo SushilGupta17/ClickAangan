@@ -1,4 +1,3 @@
-
 import React, {useCallback, useEffect, useState} from 'react';
 
 import {
@@ -18,22 +17,22 @@ import {
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {WebView} from 'react-native-webview';
-
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-
+import PropertyPriceCard from '../components/propertydetails/PropertyPriceCard';
+import RentalDetailsCard from '../components/Rentaldetails/RentalDetailsCard';
 import PropertyImageCarousel from '../components/propertydetails/PropertyImageCarousel';
 import PropertyTitle from '../components/propertydetails/PropertyTitle';
-import PropertyStatusCard from '../components/propertydetails/PropertyStatusCard';
-import PropertyPriceCard from '../components/propertydetails/PropertyPriceCard';
-import PropertyOverviewCard from '../components/propertydetails/PropertyOverviewCard';
+import PropDescription from '../components/propertydetails/PropertyDescription';
 import PropertyAmenities from '../components/propertydetails/PropertyAmenities';
+import PropertyContactDetails from '../components/propertydetails/PropertyContactDetails';
+import PropertyVideoSection from '../components/propertydetails/PropertyVideoSection';
 
-const API_URL = 'https://clickaangan.in';
 
-// =========================================================
-// PROPERTY DETAILS SCREEN
-// =========================================================
+ const API_URL1= 'http://192.168.1.4:7045';
+
+// Live
+const API_URL= 'https://savariyaproperty.in';
 
 const DetailsScreen = ({route}) => {
   // =======================================================
@@ -63,39 +62,18 @@ const DetailsScreen = ({route}) => {
   const [refreshing, setRefreshing] =
     useState(false);
 
-  // =======================================================
-  // LOAD PROPERTY
-  // =======================================================
-
   const loadPropertyDetails = useCallback(async () => {
     try {
       if (!propertyId) {
         console.log(
           'Property ID not available',
         );
-
         setLoading(false);
         setRefreshing(false);
         return;
       }
 
-      console.log(
-        '=================================',
-      );
-
-      console.log(
-        'LOADING PROPERTY DETAILS',
-      );
-
-      console.log(
-        'PROPERTY ID:',
-        propertyId,
-      );
-
-      console.log(
-        '=================================',
-      );
-
+    
       setLoading(true);
 
       const response = await fetch(
@@ -333,10 +311,18 @@ const DetailsScreen = ({route}) => {
         <PropertyTitle
           property={property}
         />
+ 
+        <PropertyPriceCard
+                  property={property}
+        />
 
-        <PropertyOverviewCard
+        <RentalDetailsCard
           property={property}
         />
+
+ <PropDescription property={property} /> 
+
+    
 
 
         {/* =================================================
@@ -347,26 +333,18 @@ const DetailsScreen = ({route}) => {
           property?.amenities,
         ) &&
           property.amenities.length > 0 && (
-
             <PropertyAmenities
               amenities={
                 property.amenities
               }
             />
-
           )}
-   
 
-        {/* =================================================
-            OWNER
-        ================================================= */}
-
-        <OwnerCard
+   <PropertyContactDetails
           property={property}
-        />
-
-      
-
+        /> 
+        
+        <PropertyVideoSection  property={property} />
       </ScrollView>
 
       {/* =================================================

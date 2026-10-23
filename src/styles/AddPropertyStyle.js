@@ -37,7 +37,7 @@ elevation:4,
 },
 
 title:{
-fontSize:15,
+fontSize:13,
 fontWeight:'700',
 color:TEXT,
 marginBottom:15,
@@ -441,6 +441,37 @@ badgeText:{
 
 bottomSpace:{
     height:80,
+},
+
+chipContainer: {
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  gap: 8,
+  marginTop: 8,
+},
+
+chip: {
+  borderWidth: 1,
+  borderColor: '#D1D5DB',
+  borderRadius: 20,
+  paddingHorizontal: 14,
+  paddingVertical: 9,
+  backgroundColor: '#fff',
+},
+
+chipSelected: {
+  backgroundColor: '#012353',
+  borderColor: '#012353',
+},
+
+chipText: {
+  color: '#555',
+  fontSize: 11,
+  fontWeight: '600',
+},
+
+chipTextSelected: {
+  color: '#fff',
 },
 
 });

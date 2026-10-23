@@ -1,4 +1,3 @@
-
 import React, {useEffect, useRef, useState} from 'react';
 
 import {
@@ -152,7 +151,7 @@ const {success, error, warning} = useAppAlert();
 
   try {
     const response = await fetch(
-      'https://clickaangan.in/api/Login',
+      'https://savariyaproperty.in/api/Login',
       {
         method: 'POST',
         headers: {

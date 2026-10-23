@@ -216,7 +216,7 @@ const previousTab = () => {
       />
 
       <View style={{flex:1}}>
-      {activeTab === 0 && (
+            {activeTab === 0 && (
                 <BasicTab
                     property={property}
                     setProperty={updateProperty}

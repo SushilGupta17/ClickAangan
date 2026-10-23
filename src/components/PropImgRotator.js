@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Image, StyleSheet } from 'react-native';
+import { View, Image, StyleSheet , Alert} from 'react-native';
 import Swiper from 'react-native-swiper';
-
+ 
 const PropImageRotator = ({ images }) => {
 
   if (!images || images.length === 0) {

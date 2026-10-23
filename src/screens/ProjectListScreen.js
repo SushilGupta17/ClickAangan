@@ -20,7 +20,7 @@ import ProjectCard from '../components/ProjectListing/ProjectCard';
 import {getProjects} from '../services/ProjectService';
 
 const API_URL1 = 'http://192.168.1.3:7045';
-const API_URL = 'https://clickaangan.in';
+const API_URL = 'https://savariyaproperty.in';
 
 const ProjectListScreen = ({navigation}) => {
 
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     paddingVertical:80,
     alignItems:'center',
   },
-
+  
   emptyText:{
     fontSize:16,
     color:'#777',

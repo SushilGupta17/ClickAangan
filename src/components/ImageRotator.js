@@ -13,21 +13,21 @@ const ImageRotator = () => {
         
         <Image
           source={{
-            uri: 'https://clickaangan.in/assets/img/banner/banner2.jpg',
+            uri: 'https://savariyaproperty.in/assets/img/banner/banner2.jpg',
           }}
           style={styles.image}
         />
 
         <Image
           source={{
-            uri: 'https://clickaangan.in/assets/img/banner/banner.png',
+            uri: 'https://savariyaproperty.in/assets/img/banner/banner.png',
           }}
           style={styles.image}
         />
 
         <Image
           source={{
-            uri: 'https://clickaangan.in/assets/img/banner/banner1.jpg',
+            uri: 'https://savariyaproperty.in/assets/img/banner/banner1.jpg',
           }}
           style={styles.image}
         />

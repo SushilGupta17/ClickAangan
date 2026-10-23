@@ -1,12 +1,12 @@
 import axios from 'axios';
+  import {Alert} from 'react-native';
 
-const API_URL1 = 'http://192.168.1.5:7045/api/Property';
-const API_URL2 = 'https://clickaangan.in/api/property'
+const API_URL1 = 'http://192.168.1.4:7045/api/Property';
 const API_URL= 'https://savariyaproperty.in/api/property';
 
 export const getProperties = async () => {
   try {
-   
+
     const response = await axios.get(API_URL);
     return response.data;
   } catch (error) {

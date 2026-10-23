@@ -202,13 +202,17 @@ const RentalDetailsCard = ({property}) => {
 
   const furnishing = formatValue(
     getValue(
-      'furnishing',
-      'Furnishing',
-      'propertyFurnished',
-      'Property_Furnished',
       'PropertyFurnished',
-      'furnished',
-      'Furnished',
+      'propertyFurnished',
+    ),
+  );
+
+    const rentalType = formatValue(
+    getValue(
+      'RENTALTYPE',
+      'rentalType',
+      'RentalType',
+      'rentaltype',
     ),
   );
 
@@ -272,14 +276,12 @@ const RentalDetailsCard = ({property}) => {
     ),
   );
 
+ 
+
   const availability = formatDate(
     getValue(
-      'availableFrom',
       'AvailableFrom',
-      'availability',
-      'Availability',
-      'availableDate',
-      'AvailableDate',
+      'availableFrom',
     ),
   );
 
@@ -482,6 +484,11 @@ const RentalDetailsCard = ({property}) => {
       icon: '🛋️',
       label: 'Furnishing',
       value: furnishing,
+    },
+    {
+      icon: '👨‍👩‍👧',
+      label: 'Rental Type',
+      value: rentalType,
     },
     {
       icon: '🏢',

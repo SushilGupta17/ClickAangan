@@ -154,7 +154,7 @@ const LoginPopup = ({
     setIsLoading(true);
 
     const response = await fetch(
-      'https://clickaangan.in/api/Login',
+      'https://savariyaproperty.in/api/Login',
       {
         method: 'POST',
         headers: {

@@ -9,7 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useFocusEffect} from '@react-navigation/native';
 
-import HomeHeader from '../components/HomeHeader';
+import RentHeader from '../components/RentHeader';
 import Footer from '../components/Footer';
 import LoginPopup from '../screens/LoginPopup';
 import RentalListScreen from '../screens/RentalListScreen';
@@ -141,7 +141,7 @@ function RentHomeScreen({navigation}) {
           HEADER
       ====================================================== */}
 
-      <HomeHeader
+      <RentHeader
         loggedInUser={loggedInUser}
       />
 

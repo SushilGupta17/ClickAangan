@@ -1,15 +1,24 @@
-import React from 'react';
+
+import React, {useState} from 'react';
 
 import {
   View,
   Text,
   StyleSheet,
+  TouchableOpacity,
 } from 'react-native';
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 
 const PropertyAmenities = ({amenities = []}) => {
+
+  // =========================================================
+  // READ MORE / READ LESS
+  // =========================================================
+
+  const [expanded, setExpanded] = useState(false);
+
 
   // Agar API se amenities object ke form mein aa rahi hain
   // jaise [{name:"Lift"}, {name:"Parking"}]
@@ -123,6 +132,23 @@ const PropertyAmenities = ({amenities = []}) => {
   }
 
 
+  // =========================================================
+  // FIRST 8 / ALL AMENITIES
+  // =========================================================
+
+  const visibleAmenities = expanded
+    ? validAmenities
+    : validAmenities.slice(0, 8);
+
+
+  // =========================================================
+  // READ MORE BUTTON TABHI AAYEGA
+  // JAB 8 SE ZYADA AMENITIES HONGI
+  // =========================================================
+
+  const isLongAmenities = validAmenities.length > 8;
+
+
   return (
 
     <View style={styles.card}>
@@ -134,7 +160,7 @@ const PropertyAmenities = ({amenities = []}) => {
 
       <View style={styles.grid}>
 
-        {validAmenities.map((name, index) => (
+        {visibleAmenities.map((name, index) => (
 
           <View
             key={`${name}-${index}`}
@@ -165,6 +191,31 @@ const PropertyAmenities = ({amenities = []}) => {
 
       </View>
 
+
+      {/* =================================================
+          READ MORE / READ LESS
+      ================================================= */}
+
+      {isLongAmenities && (
+
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => setExpanded(!expanded)}
+          style={styles.readMoreButton}
+        >
+
+          <Text style={styles.readMoreText}>
+            {expanded ? 'Read Less' : 'Read More'}
+          </Text>
+
+          <Text style={styles.readMoreArrow}>
+            {expanded ? ' ▲' : ' ▼'}
+          </Text>
+
+        </TouchableOpacity>
+
+      )}
+
     </View>
 
   );
@@ -188,8 +239,8 @@ const styles = StyleSheet.create({
   },
 
   heading: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '600',
     color: '#102A47',
     marginBottom: 18,
   },
@@ -222,6 +273,33 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#444',
     fontWeight: '500',
+  },
+
+
+  // =======================================================
+  // READ MORE BUTTON
+  // =======================================================
+
+  readMoreButton: {
+    alignSelf: 'flex-end',
+
+    flexDirection: 'row',
+    alignItems: 'center',
+
+    marginTop: 2,
+    paddingVertical: 4,
+  },
+
+  readMoreText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#F7941D',
+  },
+
+  readMoreArrow: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#F7941D',
   },
 
 });

@@ -22,7 +22,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatPrice } from '../helpers/priceHelper';
 import ProjectPopup from '../components/ProjectListing/ProjectPopup';
 
-const API_URL = 'https://clickaangan.in/';
+const API_URL = 'https://savariyaproperty.in';
 const API_URL1 = 'http://192.168.1.5:7045';
 
 const PropertyListScreen = ({

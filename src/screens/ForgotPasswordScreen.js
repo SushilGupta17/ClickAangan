@@ -109,7 +109,7 @@ const ForgotPasswordScreen = ({navigation}) => {
     console.log('CHECK MOBILE:', cleanMobile);
 
     const response = await fetch(
-      'https://clickaangan.in/api/Login/CheckMobile',
+      'https://savariyaproperty.in/api/Login/CheckMobile',
       {
         method: 'POST',
         headers: {
@@ -305,7 +305,7 @@ const ForgotPasswordScreen = ({navigation}) => {
       // CHANGE PASSWORD API
       // =====================================================
       const response = await fetch(
-        'https://clickaangan.in/api/login/ChangePassword',
+        'https://savariyaproperty.in/api/login/ChangePassword',
         {
           method: 'POST',
           headers: {

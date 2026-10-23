@@ -28,6 +28,8 @@ const RentalDescription = ({property}) => {
   if (!description) {
     return null;
   }
+  
+
 
   // =======================================================
   // DESCRIPTION HTML

@@ -243,7 +243,7 @@ const EnquiryScreen = ({navigation, route}) => {
       // =====================================================
 
       const response = await fetch(
-        'https://clickaangan.in/api/Enquiry',
+        'https://savariyaproperty.in/api/Enquiry',
         {
           method: 'POST',
 

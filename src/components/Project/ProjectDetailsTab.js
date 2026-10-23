@@ -1,4 +1,4 @@
-import React, {useState } from 'react';
+import React, {useEffect} from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 import Animated, {
   FadeInDown,
 } from 'react-native-reanimated';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import AvailableUnits from './AvailableUnits';
 import Chip from '../Chip';
@@ -33,16 +34,21 @@ const unitTypes = [
 
 const amenitiesList = [
   'Parking',
-  'Lift',
-  'Security',
-  'CCTV',
-  'Garden',
-  'Gym',
-  'Temple',
-  'Kids Play Area',
-  'Power Backup',
-  'Swimming Pool',
-  'Club House',
+            'Lift',
+            'Power Backup',
+            'Security',
+            'CCTV',
+            'Garden',
+            'Gym',
+            'Swimming Pool',
+            'Club House',
+            'Kids Play Area',
+            'Temple',
+            'Park',
+            'Visitor Parking',
+            'WiFi',
+            'Intercom',
+            'Rain Water Harvesting',
 ];
 
 const ProjectDetailsTab = ({
@@ -68,6 +74,35 @@ const ProjectDetailsTab = ({
 
     update('amenities', data);
   };
+
+  useEffect(() => {
+  const loadBuilderDetails = async () => {
+    try {
+      const userName = await AsyncStorage.getItem('userName');
+      const userMobile = await AsyncStorage.getItem('userMobile');
+      const userEmail = await AsyncStorage.getItem('userEmail');
+
+      if (property.listingType === 'Builder') {
+        if (userName && !property.contactPerson) {
+          update('contactPerson', userName);
+        }
+
+        if (userMobile && !property.contactMobile) {
+          update('contactMobile', userMobile);
+        }
+
+        if (userEmail && !property.contactEmail) {
+          update('contactEmail', userEmail);
+        }
+      }
+    } catch (error) {
+      console.log('Error loading builder details:', error);
+    }
+  };
+
+  loadBuilderDetails();
+}, [property.listingType]);
+
 
   const validate = () => {
 
@@ -104,7 +139,7 @@ const ProjectDetailsTab = ({
 
 <TextInput
     style={styles.input}
-    placeholder="Project Name"
+    placeholder="Project Name (Heading / Title)"
     placeholderTextColor="#999"
     value={property.projectName}
     onChangeText={text => update('projectName', text)}
@@ -118,16 +153,6 @@ const ProjectDetailsTab = ({
     value={property.builderName}
     onChangeText={text => update('builderName', text)}
   />
-
-  <TextInput
-    style={[styles.input,{marginTop:15}]}
-    placeholder="Company Name"
-    placeholderTextColor="#999"
-    value={property.companyName}
-    onChangeText={text => update('companyName', text)}
-  />
-
-  
 
   <TextInput
     style={[styles.input,{marginTop:15}]}
@@ -264,61 +289,65 @@ const ProjectDetailsTab = ({
           }
         />
 
-        <TextInput
-          style={[styles.input,{marginTop:15}]}
-          placeholder="Total Towers"
-          placeholderTextColor="#999"
-          keyboardType="numeric"
-          value={property.totalTowers}
-          onChangeText={text => update('totalTowers', text)}
-        />
+{property.propertyType === 'Apartment Project' && (
+  <>
+    <TextInput
+      style={[styles.input, {marginTop: 15}]}
+      placeholder="Total Towers"
+      placeholderTextColor="#999"
+      keyboardType="numeric"
+      value={property.totalTowers}
+      onChangeText={text => update('totalTowers', text)}
+    />
 
-        <TextInput
-          style={[styles.input,{marginTop:15}]}
-          placeholder="Total Floors"
-          placeholderTextColor="#999"
-          keyboardType="numeric"
-          value={property.totalFloors}
-          onChangeText={text => update('totalFloors', text)}
-        />
+    <TextInput
+      style={[styles.input, {marginTop: 15}]}
+      placeholder="Total Floors"
+      placeholderTextColor="#999"
+      keyboardType="numeric"
+      value={property.totalFloors}
+      onChangeText={text => update('totalFloors', text)}
+    />
 
-        <TextInput
-          style={[styles.input,{marginTop:15}]}
-          placeholder="Total Units"
-          placeholderTextColor="#999"
-          keyboardType="numeric"
-          value={property.totalUnits}
-          onChangeText={text => update('totalUnits', text)}
-        />
+    <TextInput
+      style={[styles.input, {marginTop: 15}]}
+      placeholder="Total Units"
+      placeholderTextColor="#999"
+      keyboardType="numeric"
+      value={property.totalUnits}
+      onChangeText={text => update('totalUnits', text)}
+    />
 
-        <TextInput
-          style={[styles.input,{marginTop:15}]}
-          placeholder="Possession Date"
-          placeholderTextColor="#999"
-          value={property.possessionDate}
-          onChangeText={text => update('possessionDate', text)}
-        />
+    <TextInput
+      style={[styles.input, {marginTop: 15}]}
+      placeholder="Possession Date"
+      placeholderTextColor="#999"
+      value={property.possessionDate}
+      onChangeText={text => update('possessionDate', text)}
+    />
+  </>
+)}
 
       </View>
 
     
 
-      {/* Unit Types */}
+     {/* Unit Types */}
 
-      <View style={styles.card}>
+{property.propertyType === 'Apartment Project' && (
+  <View style={styles.card}>
+    <Text style={styles.title}>
+      Available Unit Types
+    </Text>
 
-        <Text style={styles.title}>
-          Available Unit Types
-        </Text>
-
-      <View style={styles.card}>
-        <AvailableUnits
-            property={property}
-            setProperty={setProperty}
-        />
-      </View>
-
-      </View>
+    <View style={styles.card}>
+      <AvailableUnits
+        property={property}
+        setProperty={setProperty}
+      />
+    </View>
+  </View>
+)}
 
       {/* Amenities */}
 

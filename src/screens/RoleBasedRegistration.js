@@ -260,7 +260,7 @@ const [budget, setBudget] = useState('');
       setIsLoading(true);
 
       const response = await fetch(
-        'https://clickaangan.in/api/Login',
+        'https://savariyaproperty.in/api/Login',
         {
           method: 'POST',
 
@@ -462,10 +462,8 @@ MOBILE: ${registerMobile}
 EMAIL: ${email}`,
 );
 
-alert('3');
-
    const response = await fetch(
-  'http://192.168.1.3:7045/api/Register',
+  'https://savariyaproperty.in/api/Register',
   {
     method: 'POST',
     headers: {

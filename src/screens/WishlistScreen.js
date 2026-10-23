@@ -16,7 +16,7 @@ import Footer from '../components/Footer';
 import {formatPrice} from '../helpers/priceHelper';
 import {useAppAlert} from '../utils/AppAlert';
 
-const API_URL = 'https://clickaangan.in';
+const API_URL = 'https://savariyaproperty.in';
 
 const WishlistScreen = ({navigation}) => {
   const {error} = useAppAlert();
